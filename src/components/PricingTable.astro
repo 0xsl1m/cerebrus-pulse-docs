@@ -66,11 +66,11 @@ const freeEndpoints = [
 <div class="section-divider"></div>
 <section class="landing-section landing-section-dark" id="pricing">
   <div class="mx-auto max-w-5xl">
-    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]">
+    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
       <span class="gradient-text">Pay Per Query</span>
     </h2>
-    <p class="mb-4 text-center text-[#94A3B8] text-lg">Two protocols. Same intelligence. Choose your path.</p>
-    <p class="mb-12 text-center text-sm text-[#64748B]">
+    <p class="mb-4 text-center text-[#94A3B8] text-lg" data-reveal="slide-up">Two protocols. Same intelligence. Choose your path.</p>
+    <p class="mb-12 text-center text-sm text-[#64748B]" data-reveal="slide-up">
       x402 for structured data via HTTP. ACP for AI-synthesized insights via Virtuals Protocol.
     </p>
 
@@ -81,7 +81,7 @@ const freeEndpoints = [
     </div>
     <div class="grid gap-5 md:grid-cols-2">
       {x402Endpoints.map((ep) => (
-        <div class={`price-card ${ep.highlight ? 'price-card-highlight' : ''}`}>
+        <div class={`price-card ${ep.highlight ? 'price-card-highlight' : ''}`} data-reveal="stagger">
           <div class="mb-3 flex items-center justify-between">
             <code class="text-sm font-mono">
               <span class="text-[#60A5FA]">{ep.method}</span>{' '}
@@ -111,7 +111,7 @@ const freeEndpoints = [
       ))}
     </div>
 
-    <div class="duality-line my-10"></div>
+    <div class="duality-line my-10" data-reveal="grow"></div>
 
     <!-- ACP Pricing -->
     <div class="flex items-center gap-3 mb-6">
@@ -120,7 +120,7 @@ const freeEndpoints = [
     </div>
     <div class="grid gap-5 md:grid-cols-3">
       {acpTiers.map((tier) => (
-        <div class={`price-card ${tier.highlight ? 'price-card-highlight' : ''}`}>
+        <div class={`price-card ${tier.highlight ? 'price-card-highlight' : ''}`} data-reveal="stagger">
           <div class="mb-3 flex items-center justify-between">
             <span class="text-sm font-mono font-semibold text-[#FBBF24]">{tier.tier}</span>
             <span class={tier.highlight ? 'price-badge-acp' : 'price-badge'}>{tier.price}</span>

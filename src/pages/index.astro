@@ -19,21 +19,22 @@ import Footer from '../components/Footer.astro';
   <!-- CTA Banner -->
   <div class="section-divider"></div>
   <section class="landing-section landing-section-dark relative overflow-hidden">
-    <!-- Subtle ambient glow -->
+    <!-- Subtle ambient glow (parallax background) -->
     <div class="absolute inset-0 pointer-events-none">
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full blur-[120px]"
+           data-parallax="slow"
            style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(245, 158, 11, 0.04));">
       </div>
     </div>
 
     <div class="relative z-10 mx-auto max-w-3xl text-center">
-      <h2 class="mb-4 text-3xl font-bold md:text-4xl text-[#E8ECF4]">
+      <h2 class="mb-4 text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
         <span class="gradient-text">Start Building</span>
       </h2>
-      <p class="mb-8 text-lg text-[#94A3B8]">
+      <p class="mb-8 text-lg text-[#94A3B8]" data-reveal="slide-up">
         Whether you're building with <span class="text-[#60A5FA] font-medium">x402 micropayments</span> or deploying autonomous agents on <span class="text-[#FBBF24] font-medium">Virtuals</span>, get started in under 5 minutes.
       </p>
-      <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+      <div class="flex flex-col items-center justify-center gap-4 sm:flex-row" data-reveal="slide-up">
         <a href="/quickstart" class="btn-primary">
           x402 Quickstart
         </a>

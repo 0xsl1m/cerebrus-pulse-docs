@@ -11,10 +11,10 @@ const timeframes = ['15m', '1h', '4h'];
 <div class="section-divider"></div>
 <section class="landing-section landing-section-alt" id="coins">
   <div class="mx-auto max-w-5xl">
-    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]">
+    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
       <span class="gradient-text">30+ Hyperliquid Perpetuals</span>
     </h2>
-    <p class="mb-6 text-center text-[#94A3B8] text-lg">Real-time data across three timeframes</p>
+    <p class="mb-6 text-center text-[#94A3B8] text-lg" data-reveal="slide-up">Real-time data across three timeframes</p>
 
     <div class="mb-10 flex items-center justify-center gap-3">
       {timeframes.map((tf) => (
@@ -24,9 +24,9 @@ const timeframes = ['15m', '1h', '4h'];
 
     <div class="flex flex-wrap justify-center gap-2.5">
       {coins.map((coin, i) => (
-        <span class="coin-chip" style={`animation-delay: ${i * 30}ms`}>{coin}</span>
+        <span class="coin-chip" data-reveal="wave" style={`transition-delay: ${i * 40}ms`}>{coin}</span>
       ))}
-      <span class="coin-chip text-[#64748B]">+ more</span>
+      <span class="coin-chip text-[#64748B]" data-reveal="wave" style={`transition-delay: ${coins.length * 40}ms`}>+ more</span>
     </div>
 
     <p class="mt-8 text-center text-sm text-[#64748B]">

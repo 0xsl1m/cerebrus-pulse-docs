@@ -81,5 +81,104 @@ const ogImage = canonicalURL + '/favicon.svg';
     <main>
       <slot />
     </main>
+
+    <script>
+      // Cerebrus Pulse — Parallax & Scroll-Reveal Engine
+      // Vanilla JS, no dependencies. ~90 lines.
+      (function () {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // ── Reveal Animations (IntersectionObserver) ──────────────
+        const revealEls = document.querySelectorAll('[data-reveal]');
+
+        if (!prefersReducedMotion && revealEls.length) {
+          // Group stagger siblings: assign incremental transition-delay
+          // within each parent grid/flex container
+          const staggerParents = new Set();
+          revealEls.forEach((el) => {
+            if (el.dataset.reveal === 'stagger' && el.parentElement) {
+              staggerParents.add(el.parentElement);
+            }
+          });
+          staggerParents.forEach((parent) => {
+            const children = parent.querySelectorAll(':scope > [data-reveal="stagger"]');
+            children.forEach((child, i) => {
+              child.style.transitionDelay = `${i * 120}ms`;
+            });
+          });
+
+          const revealObserver = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add('revealed');
+                  revealObserver.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+          );
+
+          revealEls.forEach((el) => revealObserver.observe(el));
+        } else {
+          // Reduced motion: reveal everything immediately
+          revealEls.forEach((el) => el.classList.add('revealed'));
+        }
+
+        // ── Parallax Depth (scroll-driven) ───────────────────────
+        if (prefersReducedMotion) return;
+
+        const parallaxEls = document.querySelectorAll('[data-parallax]');
+        if (!parallaxEls.length) return;
+
+        // Speed multipliers for each layer type
+        const speeds = {
+          brain: 0.3,        // brain moves slower (depth illusion)
+          'hero-text': -0.15, // text moves slightly faster (negative = opposite)
+          slow: 0.2,
+          slower: 0.35,
+          medium: 0.15,
+        };
+
+        let ticking = false;
+        const heroSection = document.querySelector('.landing-hero');
+        const heroHeight = heroSection ? heroSection.offsetHeight : 800;
+
+        function onScroll() {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(() => {
+            const scrollY = window.scrollY;
+
+            parallaxEls.forEach((el) => {
+              const type = el.dataset.parallax;
+              const speed = speeds[type] || 0.2;
+              const yOffset = scrollY * speed;
+
+              if (type === 'brain') {
+                // Brain: translate slower + scale down as user scrolls away
+                const progress = Math.min(scrollY / heroHeight, 1);
+                const scale = 1 - progress * 0.12; // scale to 0.88 at hero exit
+                el.style.transform = `translateY(${yOffset}px) scale(${scale})`;
+              } else if (type === 'hero-text') {
+                // Hero text: slight upward push + fade out
+                const progress = Math.min(scrollY / (heroHeight * 0.6), 1);
+                const opacity = 1 - progress;
+                el.style.transform = `translateY(${yOffset}px)`;
+                el.style.opacity = opacity;
+              } else {
+                // Ambient orbs / CTA glow: simple vertical offset
+                el.style.transform = `translateY(${yOffset}px)`;
+              }
+            });
+
+            ticking = false;
+          });
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll(); // initial position
+      })();
+    </script>
   </body>
 </html>

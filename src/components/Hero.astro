@@ -2,13 +2,13 @@
 ---
 
 <section class="landing-hero pt-24">
-  <!-- Ambient orbs for depth -->
-  <div class="orb orb-blue"></div>
-  <div class="orb orb-amber"></div>
-  <div class="orb orb-blue-secondary"></div>
+  <!-- Ambient orbs for depth (parallax layers) -->
+  <div class="orb orb-blue" data-parallax="slow"></div>
+  <div class="orb orb-amber" data-parallax="slower"></div>
+  <div class="orb orb-blue-secondary" data-parallax="medium"></div>
 
   <!-- 3D Electrified Brain -->
-  <div class="brain-container" aria-hidden="true">
+  <div class="brain-container" aria-hidden="true" data-parallax="brain">
     <div class="brain-glow"></div>
     <div class="brain-glow-amber"></div>
     <div class="brain-perspective">
@@ -450,7 +450,7 @@
     </div>
   </div>
 
-  <div class="relative z-10 mx-auto max-w-5xl px-6 py-24 text-center">
+  <div class="relative z-10 mx-auto max-w-5xl px-6 py-24 text-center" data-parallax="hero-text">
     <!-- Dual protocol badges -->
     <div class="mb-8 flex items-center justify-center gap-3 animate-slide-up">
       <span class="hero-badge-x402">
