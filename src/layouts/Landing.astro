@@ -19,21 +19,27 @@ const { title, description } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
-  <body class="bg-gray-900 text-white antialiased">
-    <nav class="fixed top-0 z-50 w-full border-b border-gray-800 bg-gray-900/80 backdrop-blur-md">
+  <body class="bg-[#0A0A0A] text-white antialiased">
+    <nav class="nav-glass fixed top-0 z-50 w-full">
       <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <a href="/" class="flex items-center gap-3 text-xl font-bold">
+        <a href="/" class="flex items-center gap-3 text-xl font-bold group">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" class="h-8 w-8">
-            <circle cx="24" cy="24" r="20" stroke="#0088cc" stroke-width="2.5" fill="none"/>
-            <path d="M12 24h6l4-10 4 20 4-14 4 8h6" stroke="#0088cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <circle cx="24" cy="24" r="3" fill="#0088cc"/>
+            <defs>
+              <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B3FD9"/>
+                <stop offset="100%" stop-color="#00D4FF"/>
+              </linearGradient>
+            </defs>
+            <circle cx="24" cy="24" r="20" stroke="url(#logo-grad)" stroke-width="2.5" fill="none"/>
+            <path d="M12 24h6l4-10 4 20 4-14 4 8h6" stroke="url(#logo-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <circle cx="24" cy="24" r="3" fill="#00D4FF"/>
           </svg>
-          <span>Cerebrus <span class="text-accent-200">Pulse</span></span>
+          <span>Cerebrus <span class="gradient-text-subtle">Pulse</span></span>
         </a>
         <div class="flex items-center gap-6">
-          <a href="#pricing" class="text-sm text-gray-300 hover:text-white transition-colors">Pricing</a>
-          <a href="#coins" class="text-sm text-gray-300 hover:text-white transition-colors">Coins</a>
-          <a href="/overview" class="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-600/80 transition-colors">
+          <a href="#pricing" class="text-sm text-gray-400 hover:text-white transition-colors duration-200">Pricing</a>
+          <a href="#coins" class="text-sm text-gray-400 hover:text-white transition-colors duration-200">Coins</a>
+          <a href="/overview" class="btn-primary !px-5 !py-2 !text-sm !rounded-lg">
             Documentation
           </a>
         </div>

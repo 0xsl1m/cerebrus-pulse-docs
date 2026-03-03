@@ -8,28 +8,29 @@ const coins = [
 const timeframes = ['15m', '1h', '4h'];
 ---
 
+<div class="section-divider"></div>
 <section class="landing-section landing-section-light" id="coins">
   <div class="mx-auto max-w-5xl">
-    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">30+ Hyperliquid Perpetuals</h2>
+    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">
+      <span class="gradient-text-subtle">30+ Hyperliquid Perpetuals</span>
+    </h2>
     <p class="mb-6 text-center text-gray-400 text-lg">Real-time data across three timeframes</p>
 
     <div class="mb-10 flex items-center justify-center gap-3">
       {timeframes.map((tf) => (
-        <span class="rounded-lg border border-accent-600/30 bg-accent-600/10 px-4 py-1.5 text-sm font-mono font-semibold text-accent-200">
-          {tf}
-        </span>
+        <span class="tf-pill">{tf}</span>
       ))}
     </div>
 
     <div class="flex flex-wrap justify-center gap-2.5">
-      {coins.map((coin) => (
-        <span class="coin-chip">{coin}</span>
+      {coins.map((coin, i) => (
+        <span class="coin-chip" style={`animation-delay: ${i * 30}ms`}>{coin}</span>
       ))}
       <span class="coin-chip text-gray-500">+ more</span>
     </div>
 
     <p class="mt-8 text-center text-sm text-gray-500">
-      Use <code class="text-gray-400">GET /coins</code> for the live list. It's free.
+      Use <code class="text-[#B388FF]">GET /coins</code> for the live list. It's free.
     </p>
   </div>
 </section>

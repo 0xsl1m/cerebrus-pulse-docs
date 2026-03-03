@@ -41,25 +41,28 @@ const freeEndpoints = [
 ];
 ---
 
+<div class="section-divider"></div>
 <section class="landing-section landing-section-dark" id="pricing">
   <div class="mx-auto max-w-5xl">
-    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">Pay Per Query</h2>
+    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">
+      <span class="gradient-text-subtle">Pay Per Query</span>
+    </h2>
     <p class="mb-4 text-center text-gray-400 text-lg">USDC micropayments on Base. No subscriptions.</p>
     <p class="mb-12 text-center text-sm text-gray-500">
       Payments are handled automatically by the x402 protocol. Your wallet is your API key.
     </p>
 
-    <div class="grid gap-4 md:grid-cols-2">
+    <div class="grid gap-5 md:grid-cols-2">
       {endpoints.map((ep) => (
-        <div class={`price-card ${ep.highlight ? 'border-accent-600/50 ring-1 ring-accent-600/20' : ''}`}>
+        <div class={`price-card ${ep.highlight ? 'price-card-highlight' : ''}`}>
           <div class="mb-3 flex items-center justify-between">
             <code class="text-sm font-mono">
-              <span class="text-green-400">{ep.method}</span>{' '}
+              <span class="text-cyan-400">{ep.method}</span>{' '}
               <span class="text-gray-200">{ep.path}</span>
             </code>
-            <span class="price-badge">{ep.price} USDC</span>
+            <span class={ep.highlight ? 'price-badge-pink' : 'price-badge'}>{ep.price} USDC</span>
           </div>
-          <h3 class="mb-2 text-lg font-semibold">{ep.description}</h3>
+          <h3 class="mb-2 text-lg font-semibold text-white">{ep.description}</h3>
           <p class="mb-3 text-sm text-gray-400">{ep.details}</p>
           {ep.params !== 'none' && (
             <div class="text-xs text-gray-500">
@@ -68,8 +71,12 @@ const freeEndpoints = [
           )}
           {ep.highlight && (
             <div class="mt-3">
-              <span class="rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-400">
-                Best Value — 20% Discount
+              <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                    style="background: rgba(0, 212, 255, 0.1); color: #00D4FF; border: 1px solid rgba(0, 212, 255, 0.2);">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
+                </svg>
+                Best Value  --  20% Discount
               </span>
             </div>
           )}
@@ -77,16 +84,16 @@ const freeEndpoints = [
       ))}
     </div>
 
-    <div class="mt-8 rounded-xl border border-gray-700/50 bg-gray-800/30 p-6">
-      <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Free Endpoints</h3>
+    <div class="mt-8 rounded-xl p-6" style="background: rgba(14, 11, 20, 0.5); border: 1px solid rgba(139, 63, 217, 0.1);">
+      <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">Free Endpoints</h3>
       <div class="grid gap-3 sm:grid-cols-2">
         {freeEndpoints.map((ep) => (
           <div class="flex items-center gap-3">
             <code class="text-sm font-mono">
-              <span class="text-green-400">{ep.method}</span>{' '}
+              <span class="text-cyan-400">{ep.method}</span>{' '}
               <span class="text-gray-300">{ep.path}</span>
             </code>
-            <span class="text-sm text-gray-500">— {ep.description}</span>
+            <span class="text-sm text-gray-500"> -- {ep.description}</span>
           </div>
         ))}
       </div>

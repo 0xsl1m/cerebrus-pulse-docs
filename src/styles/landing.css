@@ -2,85 +2,386 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Landing page custom styles */
+/* ============================================================
+   CEREBRUS PULSE — N3XUSBVSS Brand Design System
+   Primary: #8B3FD9 | Accent: #00D4FF | Highlight: #FF006E
+   Background: #0A0A0A | Vibe: Dark, glitchy, hypnotic, cyberpunk
+   ============================================================ */
+
+/* ---- Starlight Theme Overrides ---- */
+:root {
+  --sl-color-accent-low: #2D1065;
+  --sl-color-accent: #8B3FD9;
+  --sl-color-accent-high: #B388FF;
+  --sl-color-white: #F0EEFF;
+  --sl-color-gray-1: #DDD8F0;
+  --sl-color-gray-2: #B0A8C8;
+  --sl-color-gray-3: #8B83A8;
+  --sl-color-gray-4: #6B6185;
+  --sl-color-gray-5: #2A2438;
+  --sl-color-gray-6: #1A1525;
+  --sl-color-black: #0A0A0A;
+  --sl-color-bg: #0A0A0A;
+  --sl-color-bg-nav: rgba(10, 10, 10, 0.85);
+  --sl-color-bg-sidebar: #0E0B14;
+  --sl-color-hairline-light: #2A2438;
+  --sl-color-hairline: #1E1A2A;
+  --sl-font-system: Inter, system-ui, -apple-system, sans-serif;
+  --sl-font-system-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+[data-theme='dark'] {
+  --sl-color-bg: #0A0A0A;
+  --sl-color-bg-nav: rgba(10, 10, 10, 0.85);
+}
+
+/* ---- Base ---- */
+body {
+  background-color: #0A0A0A;
+}
+
+/* ---- Landing Hero ---- */
 .landing-hero {
-  @apply relative overflow-hidden bg-gray-900 text-white;
-  min-height: 80vh;
+  @apply relative overflow-hidden text-white;
+  background: #0A0A0A;
+  min-height: 90vh;
   display: flex;
   align-items: center;
 }
 
+/* Layered ambient glow: purple top-left, cyan top-right, pink bottom */
 .landing-hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(0, 136, 204, 0.15) 0%, transparent 70%);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(139, 63, 217, 0.20) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 15%, rgba(0, 212, 255, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 90%, rgba(255, 0, 110, 0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
+/* Subtle grid overlay for cyberpunk feel */
+.landing-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(139, 63, 217, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 63, 217, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+}
+
+/* ---- Section Styles ---- */
 .landing-section {
-  @apply py-20 px-6;
+  @apply py-24 px-6;
 }
 
 .landing-section-dark {
-  @apply bg-gray-900 text-white;
+  background: #0A0A0A;
+  @apply text-white;
 }
 
 .landing-section-light {
-  @apply bg-gray-800 text-gray-100;
+  background: #0E0B14;
+  @apply text-gray-100;
 }
 
+/* ---- Gradient Text (brand tri-color) ---- */
+.gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, #B388FF 0%, #00D4FF 50%, #FF006E 100%);
+}
+
+.gradient-text-subtle {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, #B388FF 0%, #00D4FF 100%);
+}
+
+/* ---- Price Cards ---- */
 .price-card {
-  @apply rounded-xl border border-gray-700 bg-gray-800/50 p-6 backdrop-blur transition-all;
+  @apply relative rounded-xl p-6 backdrop-blur transition-all duration-300;
+  background: rgba(26, 21, 37, 0.6);
+  border: 1px solid rgba(139, 63, 217, 0.15);
 }
 
 .price-card:hover {
-  @apply border-accent-600 shadow-lg shadow-accent-600/10;
+  border-color: rgba(139, 63, 217, 0.5);
+  box-shadow:
+    0 0 20px rgba(139, 63, 217, 0.10),
+    0 0 60px rgba(139, 63, 217, 0.05);
+  transform: translateY(-4px);
+}
+
+.price-card-highlight {
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: linear-gradient(135deg, rgba(139, 63, 217, 0.08), rgba(0, 212, 255, 0.06));
+}
+
+.price-card-highlight::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 0.75rem;
+  padding: 1px;
+  background: linear-gradient(135deg, #8B3FD9, #00D4FF, #FF006E);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.price-card-highlight:hover::before {
+  opacity: 1;
+}
+
+/* ---- Price Badge ---- */
+.price-badge {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold;
+  background: rgba(139, 63, 217, 0.15);
+  color: #B388FF;
+  border: 1px solid rgba(139, 63, 217, 0.25);
+}
+
+.price-badge-pink {
+  background: rgba(255, 0, 110, 0.12);
+  color: #FF4D94;
+  border: 1px solid rgba(255, 0, 110, 0.25);
+}
+
+/* ---- Coin Chips ---- */
+.coin-chip {
+  @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-mono transition-all duration-300;
+  background: rgba(42, 36, 56, 0.6);
+  color: #DDD8F0;
+  border: 1px solid rgba(139, 63, 217, 0.1);
+}
+
+.coin-chip:hover {
+  border-color: rgba(0, 212, 255, 0.4);
+  background: rgba(42, 36, 56, 0.9);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.1);
   transform: translateY(-2px);
 }
 
-.price-badge {
-  @apply inline-flex items-center rounded-full bg-accent-600/20 px-3 py-1 text-sm font-semibold text-accent-200;
-}
-
-.coin-chip {
-  @apply inline-flex items-center gap-1.5 rounded-lg bg-gray-700/60 px-3 py-1.5 text-sm font-mono text-gray-200;
-}
-
+/* ---- Code Block ---- */
 .code-block-wrapper {
-  @apply rounded-xl border border-gray-700 bg-gray-900 overflow-hidden;
+  @apply rounded-xl overflow-hidden;
+  background: rgba(10, 10, 10, 0.9);
+  border: 1px solid rgba(139, 63, 217, 0.2);
+  box-shadow: 0 0 40px rgba(139, 63, 217, 0.06);
 }
 
-.code-block-tabs {
-  @apply flex gap-0 border-b border-gray-700;
-}
-
-.code-block-tab {
-  @apply px-4 py-2 text-sm font-medium text-gray-400 cursor-pointer transition-colors;
-}
-
-.code-block-tab.active {
-  @apply text-accent-200 border-b-2 border-accent-600;
-}
-
-/* Pulse animation for hero */
-@keyframes pulse-line {
-  0% { stroke-dashoffset: 100; }
-  100% { stroke-dashoffset: 0; }
-}
-
-.animate-pulse-line {
-  stroke-dasharray: 100;
-  animation: pulse-line 2s ease-in-out infinite;
-}
-
-/* Gradient text */
-.gradient-text {
-  @apply bg-clip-text text-transparent;
-  background-image: linear-gradient(135deg, #99d6ff 0%, #0088cc 50%, #00cc88 100%);
-}
-
-/* Step indicators */
+/* ---- Step Numbers (gradient fill) ---- */
 .step-number {
-  @apply flex h-10 w-10 items-center justify-center rounded-full bg-accent-600 text-white font-bold text-lg;
+  @apply flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg text-white;
+  background: linear-gradient(135deg, #8B3FD9, #00D4FF);
+  box-shadow: 0 0 20px rgba(139, 63, 217, 0.3);
+}
+
+/* ---- Step Cards ---- */
+.step-card {
+  @apply relative rounded-xl p-8 transition-all duration-300;
+  background: rgba(14, 11, 20, 0.7);
+  border: 1px solid rgba(139, 63, 217, 0.12);
+}
+
+.step-card:hover {
+  border-color: rgba(139, 63, 217, 0.35);
+  box-shadow: 0 0 30px rgba(139, 63, 217, 0.08);
+}
+
+/* ---- CTA Buttons ---- */
+.btn-primary {
+  @apply relative rounded-xl px-8 py-3.5 text-lg font-semibold text-white transition-all duration-300 overflow-hidden;
+  background: linear-gradient(135deg, #8B3FD9, #7C3ACD);
+  box-shadow: 0 4px 20px rgba(139, 63, 217, 0.3);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 30px rgba(139, 63, 217, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(0, 212, 255, 0.2));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-primary:hover::after {
+  opacity: 1;
+}
+
+.btn-secondary {
+  @apply rounded-xl px-8 py-3.5 text-lg font-semibold transition-all duration-300;
+  color: #DDD8F0;
+  border: 1px solid rgba(139, 63, 217, 0.3);
+  background: transparent;
+}
+
+.btn-secondary:hover {
+  border-color: rgba(0, 212, 255, 0.5);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+/* ---- Hero Badge ---- */
+.hero-badge {
+  @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold;
+  background: rgba(139, 63, 217, 0.12);
+  color: #00D4FF;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 212, 255, 0.1); }
+  50% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.25); }
+}
+
+/* ---- Ambient Orbs (for hero background depth) ---- */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.orb-purple {
+  width: 500px;
+  height: 500px;
+  background: rgba(139, 63, 217, 0.12);
+  top: -10%;
+  left: -5%;
+  animation: float 8s ease-in-out infinite;
+}
+
+.orb-cyan {
+  width: 400px;
+  height: 400px;
+  background: rgba(0, 212, 255, 0.08);
+  top: 20%;
+  right: -10%;
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+.orb-pink {
+  width: 300px;
+  height: 300px;
+  background: rgba(255, 0, 110, 0.06);
+  bottom: 5%;
+  left: 30%;
+  animation: float 12s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+/* ---- Shimmer effect for text ---- */
+.shimmer-text {
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ---- Slide-up entrance animation ---- */
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out both;
+}
+
+.animate-slide-up-delay-1 {
+  animation: slide-up 0.6s ease-out 0.1s both;
+}
+
+.animate-slide-up-delay-2 {
+  animation: slide-up 0.6s ease-out 0.2s both;
+}
+
+.animate-slide-up-delay-3 {
+  animation: slide-up 0.6s ease-out 0.3s both;
+}
+
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Timeframe pills ---- */
+.tf-pill {
+  @apply rounded-lg px-4 py-1.5 text-sm font-mono font-semibold transition-all duration-300;
+  background: rgba(0, 212, 255, 0.08);
+  color: #00D4FF;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.tf-pill:hover {
+  background: rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+
+/* ---- Tech Pills (footer) ---- */
+.tech-pill {
+  @apply rounded-full px-3 py-1 text-xs transition-all duration-300;
+  color: #8B83A8;
+  border: 1px solid rgba(139, 63, 217, 0.2);
+}
+
+.tech-pill:hover {
+  color: #B388FF;
+  border-color: rgba(139, 63, 217, 0.5);
+}
+
+/* ---- Focus-visible for accessibility ---- */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #00D4FF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Nav Glass Effect ---- */
+.nav-glass {
+  background: rgba(10, 10, 10, 0.80);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(139, 63, 217, 0.1);
+}
+
+/* ---- Section Divider Gradient ---- */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 63, 217, 0.3), rgba(0, 212, 255, 0.3), transparent);
+}
+
+/* ---- Scrollbar Styling (Webkit) ---- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2438;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8B3FD9;
 }

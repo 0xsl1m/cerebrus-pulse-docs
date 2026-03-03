@@ -2,55 +2,67 @@
 ---
 
 <section class="landing-hero pt-24">
+  <!-- Ambient orbs for depth -->
+  <div class="orb orb-purple"></div>
+  <div class="orb orb-cyan"></div>
+  <div class="orb orb-pink"></div>
+
   <div class="relative z-10 mx-auto max-w-5xl px-6 py-24 text-center">
-    <div class="mb-6">
-      <span class="price-badge">x402 Micropayments on Base</span>
+    <!-- Glowing badge -->
+    <div class="mb-8 animate-slide-up">
+      <span class="hero-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+        </svg>
+        x402 Micropayments on Base
+      </span>
     </div>
-    <h1 class="mb-6 text-5xl font-extrabold leading-tight tracking-tight md:text-7xl">
+
+    <!-- Main headline -->
+    <h1 class="mb-6 text-5xl font-extrabold leading-tight tracking-tight md:text-7xl lg:text-8xl animate-slide-up-delay-1">
       <span class="gradient-text">Cerebrus Pulse</span>
     </h1>
-    <p class="mx-auto mb-4 max-w-2xl text-xl text-gray-300 md:text-2xl">
-      Real-time crypto intelligence. Pay per query.
+
+    <!-- Tagline -->
+    <p class="mx-auto mb-4 max-w-2xl text-xl text-gray-300 md:text-2xl animate-slide-up-delay-1">
+      Real-time crypto intelligence. <span class="text-cyan-400">Pay per query.</span>
     </p>
-    <p class="mx-auto mb-10 max-w-xl text-base text-gray-400">
+    <p class="mx-auto mb-10 max-w-xl text-base text-gray-400 animate-slide-up-delay-2">
       Multi-timeframe technical analysis for 30+ Hyperliquid perpetuals.
       No API keys. No subscriptions. Just USDC micropayments.
     </p>
-    <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
-      <a
-        href="/quickstart"
-        class="rounded-xl bg-accent-600 px-8 py-3.5 text-lg font-semibold text-white shadow-lg shadow-accent-600/25 hover:bg-accent-600/80 transition-all"
-      >
+
+    <!-- CTA buttons -->
+    <div class="flex flex-col items-center justify-center gap-4 sm:flex-row animate-slide-up-delay-2">
+      <a href="/quickstart" class="btn-primary">
         Get Started
       </a>
-      <a
-        href="#pricing"
-        class="rounded-xl border border-gray-600 px-8 py-3.5 text-lg font-semibold text-gray-200 hover:border-gray-400 hover:text-white transition-all"
-      >
+      <a href="#pricing" class="btn-secondary">
         View Pricing
       </a>
     </div>
 
-    <div class="mt-16 mx-auto max-w-2xl">
+    <!-- Code example -->
+    <div class="mt-16 mx-auto max-w-2xl animate-slide-up-delay-3">
       <div class="code-block-wrapper text-left">
-        <div class="flex items-center gap-2 border-b border-gray-700 px-4 py-2.5">
-          <div class="h-3 w-3 rounded-full bg-red-500/60"></div>
-          <div class="h-3 w-3 rounded-full bg-yellow-500/60"></div>
-          <div class="h-3 w-3 rounded-full bg-green-500/60"></div>
+        <div class="flex items-center gap-2 border-b border-[rgba(139,63,217,0.15)] px-4 py-2.5">
+          <div class="h-3 w-3 rounded-full bg-[#FF006E]/60"></div>
+          <div class="h-3 w-3 rounded-full bg-[#FFD600]/60"></div>
+          <div class="h-3 w-3 rounded-full bg-[#00D4FF]/60"></div>
           <span class="ml-2 text-xs text-gray-500 font-mono">terminal</span>
         </div>
         <pre class="p-4 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-gray-500">$</span> curl https://pulse.openclaw.ai/pulse/BTC?timeframes=1h,4h
-<span class="text-gray-500"># 402 Payment Required → x402 SDK auto-pays $0.02 USDC</span>
+<span class="text-gray-500"># 402 Payment Required  &#8594;  x402 SDK auto-pays $0.02 USDC</span>
 
-<span class="text-accent-200">&#123;</span>
-  <span class="text-green-400">"coin"</span>: <span class="text-yellow-300">"BTC"</span>,
-  <span class="text-green-400">"price"</span>: &#123; <span class="text-green-400">"current"</span>: <span class="text-accent-200">98765.43</span> &#125;,
-  <span class="text-green-400">"confluence"</span>: &#123;
-    <span class="text-green-400">"score"</span>: <span class="text-accent-200">0.75</span>,
-    <span class="text-green-400">"bias"</span>: <span class="text-yellow-300">"bullish"</span>
-  <span class="text-accent-200">&#125;</span>
+<span class="text-[#B388FF]">&#123;</span>
+  <span class="text-[#00D4FF]">"coin"</span>: <span class="text-[#FFD600]">"BTC"</span>,
+  <span class="text-[#00D4FF]">"price"</span>: &#123; <span class="text-[#00D4FF]">"current"</span>: <span class="text-[#B388FF]">98765.43</span> &#125;,
+  <span class="text-[#00D4FF]">"confluence"</span>: &#123;
+    <span class="text-[#00D4FF]">"score"</span>: <span class="text-[#B388FF]">0.75</span>,
+    <span class="text-[#00D4FF]">"bias"</span>: <span class="text-[#FFD600]">"bullish"</span>
+  <span class="text-[#B388FF]">&#125;</span>
   ...
-<span class="text-accent-200">&#125;</span></code></pre>
+<span class="text-[#B388FF]">&#125;</span></code></pre>
       </div>
     </div>
   </div>

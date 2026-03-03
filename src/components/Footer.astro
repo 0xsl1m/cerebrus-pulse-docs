@@ -1,17 +1,23 @@
 ---
 ---
 
-<footer class="border-t border-gray-800 bg-gray-900 px-6 py-12">
+<footer class="border-t border-[rgba(139,63,217,0.1)] bg-[#0A0A0A] px-6 py-12">
   <div class="mx-auto max-w-5xl">
     <div class="grid gap-8 md:grid-cols-3">
       <div>
         <div class="mb-3 flex items-center gap-2 text-lg font-bold">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" class="h-6 w-6">
-            <circle cx="24" cy="24" r="20" stroke="#0088cc" stroke-width="2.5" fill="none"/>
-            <path d="M12 24h6l4-10 4 20 4-14 4 8h6" stroke="#0088cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <circle cx="24" cy="24" r="3" fill="#0088cc"/>
+            <defs>
+              <linearGradient id="footer-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B3FD9"/>
+                <stop offset="100%" stop-color="#00D4FF"/>
+              </linearGradient>
+            </defs>
+            <circle cx="24" cy="24" r="20" stroke="url(#footer-logo-grad)" stroke-width="2.5" fill="none"/>
+            <path d="M12 24h6l4-10 4 20 4-14 4 8h6" stroke="url(#footer-logo-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <circle cx="24" cy="24" r="3" fill="#00D4FF"/>
           </svg>
-          Cerebrus Pulse
+          <span>Cerebrus <span class="gradient-text-subtle">Pulse</span></span>
         </div>
         <p class="text-sm text-gray-500">
           Real-time crypto intelligence via x402 micropayments.
@@ -19,28 +25,29 @@
       </div>
 
       <div>
-        <h4 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Documentation</h4>
+        <h4 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Documentation</h4>
         <ul class="space-y-2 text-sm">
-          <li><a href="/quickstart" class="text-gray-400 hover:text-white transition-colors">Quickstart</a></li>
-          <li><a href="/api/pulse" class="text-gray-400 hover:text-white transition-colors">API Reference</a></li>
-          <li><a href="/guides/x402-payments" class="text-gray-400 hover:text-white transition-colors">x402 Payments</a></li>
-          <li><a href="/reference/response-schemas" class="text-gray-400 hover:text-white transition-colors">Schemas</a></li>
+          <li><a href="/quickstart" class="text-gray-400 hover:text-[#B388FF] transition-colors duration-200">Quickstart</a></li>
+          <li><a href="/api/pulse" class="text-gray-400 hover:text-[#B388FF] transition-colors duration-200">API Reference</a></li>
+          <li><a href="/guides/x402-payments" class="text-gray-400 hover:text-[#B388FF] transition-colors duration-200">x402 Payments</a></li>
+          <li><a href="/reference/response-schemas" class="text-gray-400 hover:text-[#B388FF] transition-colors duration-200">Schemas</a></li>
         </ul>
       </div>
 
       <div>
-        <h4 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Built With</h4>
+        <h4 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Built With</h4>
         <div class="flex flex-wrap gap-2">
-          <span class="rounded-full border border-gray-700 px-3 py-1 text-xs text-gray-400">x402</span>
-          <span class="rounded-full border border-gray-700 px-3 py-1 text-xs text-gray-400">Base</span>
-          <span class="rounded-full border border-gray-700 px-3 py-1 text-xs text-gray-400">USDC</span>
-          <span class="rounded-full border border-gray-700 px-3 py-1 text-xs text-gray-400">Hyperliquid</span>
+          <span class="tech-pill">x402</span>
+          <span class="tech-pill">Base</span>
+          <span class="tech-pill">USDC</span>
+          <span class="tech-pill">Hyperliquid</span>
         </div>
       </div>
     </div>
 
-    <div class="mt-10 border-t border-gray-800 pt-6 text-center text-sm text-gray-600">
-      Powered by <a href="https://openclaw.ai" class="text-gray-400 hover:text-white">OpenClaw</a>
+    <div class="section-divider mt-10"></div>
+    <div class="pt-6 text-center text-sm text-gray-500">
+      Powered by <a href="https://openclaw.ai" class="text-gray-400 hover:text-[#00D4FF] transition-colors duration-200">OpenClaw</a>
     </div>
   </div>
 </footer>
