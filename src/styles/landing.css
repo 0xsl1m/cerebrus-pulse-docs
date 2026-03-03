@@ -131,8 +131,10 @@ nav.sidebar a[aria-current='page'] {
 }
 
 /* ---- Base ---- */
-body {
+html, body {
   background-color: #0B0F1A;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* ---- Landing Hero ---- */
