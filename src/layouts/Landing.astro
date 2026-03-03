@@ -1,5 +1,6 @@
 ---
 import '../styles/landing.css';
+import StructuredData from '../components/StructuredData.astro';
 
 interface Props {
   title: string;
@@ -7,6 +8,8 @@ interface Props {
 }
 
 const { title, description } = Astro.props;
+const canonicalURL = 'https://pulse.openclaw.ai';
+const ogImage = canonicalURL + '/favicon.svg';
 ---
 
 <!doctype html>
@@ -14,12 +17,40 @@ const { title, description } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- AI/LLM Discovery -->
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <meta name="keywords" content="crypto API, cryptocurrency analysis, Hyperliquid, technical analysis, x402, micropayments, USDC, Base blockchain, ACP, Agent Commerce Protocol, Virtuals Protocol, RSI, EMA, Bollinger Bands, funding rates, market sentiment, AI agent, pay per query, no API key" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title}</title>
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content="Cerebrus Pulse" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Structured Data -->
+    <StructuredData
+      title={title}
+      description={description}
+      url={canonicalURL}
+    />
   </head>
   <body class="bg-[#0B0F1A] text-[#E8ECF4] antialiased">
     <nav class="nav-glass fixed top-0 z-50 w-full">

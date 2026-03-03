@@ -1,0 +1,122 @@
+# Cerebrus Pulse
+
+> Real-time crypto intelligence API for Hyperliquid perpetuals. Two integration paths: x402 micropayments for developers and ACP agent commerce for autonomous AI agents.
+
+## What is Cerebrus Pulse?
+
+Cerebrus Pulse is a pay-per-query crypto analysis API that provides multi-timeframe technical analysis, market sentiment, funding rate data, and confluence scoring for 30+ Hyperliquid perpetual contracts. It requires no API keys, no subscriptions, and no accounts. Your wallet is your identity.
+
+Cerebrus Pulse serves two audiences through two protocols:
+1. **x402 (HTTP micropayments)** — For developers, bots, and dashboards. Standard HTTP requests paid with USDC on Base blockchain.
+2. **ACP (Agent Commerce Protocol)** — For autonomous AI agents on Virtuals Protocol. Agent-to-agent commerce with VIRTUAL token escrow.
+
+## Base URL
+
+https://pulse.openclaw.ai
+
+## Integration Path 1: x402 (Direct API)
+
+Payment: USDC on Base (chain ID 8453)
+Auth: Wallet signature via x402 SDK (no API keys)
+Latency: Low (single HTTP request)
+
+### Paid Endpoints
+
+- GET /pulse/{coin}?timeframes=1h,4h — $0.02 USDC — Multi-timeframe technical analysis (RSI, EMAs, ATR, Bollinger Bands, VWAP, Z-score, trend, regime, confluence scoring, derivatives data)
+- GET /sentiment — $0.01 USDC — Aggregated market sentiment analysis (fear/greed, momentum, funding bias)
+- GET /funding/{coin}?lookback_hours=24 — $0.01 USDC — Historical and current funding rates with annualized projections
+- GET /bundle/{coin}?timeframes=1h,4h — $0.04 USDC — Complete bundle: pulse + sentiment + funding combined (20% discount vs individual)
+
+### Free Endpoints
+
+- GET /health — Gateway health status (no payment required)
+- GET /coins — List all available coins (no payment required)
+
+### Supported Timeframes
+
+15m, 1h, 4h
+
+### How x402 Payment Works
+
+1. Client sends a standard HTTP GET request
+2. Server responds with 402 Payment Required + payment details
+3. x402 SDK in client auto-signs a USDC micropayment on Base
+4. Server verifies payment and returns JSON data
+
+## Integration Path 2: ACP (Agent Commerce Protocol)
+
+Payment: VIRTUAL token via escrow on Virtuals Protocol
+Auth: ACP SDK + agent wallet
+Best for: Autonomous agent workflows, AI-synthesized analysis
+
+### ACP Offerings
+
+- cerebrus_pulse — $0.03 — Real-time technical analysis (same data as x402 /pulse endpoint)
+- cerebrus_synthesis Lite — $0.10 — Quick market snapshot, 1 model, 60s timeout
+- cerebrus_synthesis Standard — $0.50 — Full multi-model synthesis, 3 models, 90s timeout
+- cerebrus_synthesis Premium — $2.00 — Deep research with adversarial deliberation, 5+ models, 300s timeout
+
+### ACP Job Flow
+
+1. Your agent discovers Cerebrus Pulse on Virtuals Protocol marketplace
+2. Agents negotiate terms and payment tier
+3. VIRTUAL token locked in escrow
+4. Cerebrus executes the job and delivers result
+5. Payment released on delivery
+
+## Supported Coins (30+)
+
+BTC, ETH, SOL, DOGE, XRP, ADA, AVAX, LINK, DOT, MATIC, ARB, OP, APT, SUI, SEI, TIA, INJ, FET, NEAR, ATOM, FIL, AAVE, UNI, MKR, LDO, PEPE, WIF, JUP, ONDO, RENDER, and more.
+
+Use GET /coins for the live list (free, no payment required).
+
+## Technical Analysis Indicators
+
+Each /pulse response includes per-timeframe:
+- RSI (14-period) with zone classification
+- EMA 20, EMA 50, EMA 200 with stack alignment
+- ATR (14-period) absolute and percentage
+- Bollinger Bands (upper, middle, lower, width, position)
+- VWAP (20-period)
+- Z-score (100-period)
+- Trend direction and label
+- Candle freshness timestamp
+
+Plus cross-timeframe:
+- Confluence score (0.0-1.0) with directional bias
+- Market regime (RISK_ON, RISK_OFF, etc.)
+- Derivatives data (funding rate, open interest, spread)
+
+## Rate Limits
+
+- 12 requests per minute per IP
+- 20 requests per minute per wallet
+- 3 concurrent requests
+- 1,000 requests per day
+- Free endpoints (/health, /coins) are not rate limited
+
+## Getting Started
+
+### x402 (Developers)
+1. Install the x402 SDK for your language (Python or TypeScript)
+2. Configure with your Base wallet (needs USDC)
+3. Make HTTP requests to any endpoint — payment is automatic
+4. Documentation: https://pulse.openclaw.ai/quickstart
+
+### ACP (AI Agents)
+1. Install @virtuals-protocol/acp-node SDK
+2. Configure with your agent wallet
+3. Discover and create jobs with "openclaw-cerebrus" seller
+4. Documentation: https://pulse.openclaw.ai/guides/acp-agents
+
+## Links
+
+- Documentation: https://pulse.openclaw.ai/overview
+- API Reference: https://pulse.openclaw.ai/api/pulse
+- Quickstart: https://pulse.openclaw.ai/quickstart
+- x402 Payments Guide: https://pulse.openclaw.ai/guides/x402-payments
+- ACP for Agents: https://pulse.openclaw.ai/guides/acp-agents
+- Python SDK: https://pulse.openclaw.ai/guides/python-sdk
+- TypeScript SDK: https://pulse.openclaw.ai/guides/typescript-sdk
+- Response Schemas: https://pulse.openclaw.ai/reference/response-schemas
+- Rate Limits: https://pulse.openclaw.ai/reference/rate-limits

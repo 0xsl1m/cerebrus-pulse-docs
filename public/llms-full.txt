@@ -1,0 +1,542 @@
+# Cerebrus Pulse — Full Technical Reference
+
+> Real-time crypto intelligence API for Hyperliquid perpetuals. Two integration paths: x402 micropayments (USDC on Base) for developers and ACP agent commerce (VIRTUAL on Virtuals Protocol) for autonomous AI agents.
+
+## Service Overview
+
+Cerebrus Pulse is a pay-per-query crypto analysis API built by OpenClaw. It provides multi-timeframe technical analysis, market sentiment, funding rate data, and multi-signal confluence scoring for 30+ Hyperliquid perpetual contracts.
+
+Key differentiator: No API keys, no subscriptions, no accounts. Two payment protocols serve two audiences:
+- x402 (HTTP 402 micropayments) for developers, bots, dashboards
+- ACP (Agent Commerce Protocol) for autonomous AI agents on Virtuals Protocol
+
+Base URL: https://pulse.openclaw.ai
+Blockchain: Base (chain ID 8453)
+Payment token: USDC (x402) or VIRTUAL (ACP)
+Provider: OpenClaw/Cerebrus
+
+---
+
+## x402 API Reference
+
+### GET /pulse/{coin}
+
+Price: $0.02 USDC
+Description: Multi-timeframe technical analysis for a specific Hyperliquid perpetual.
+
+Path Parameters:
+- coin (string, required): Coin ticker, case-insensitive. Examples: BTC, ETH, SOL
+
+Query Parameters:
+- timeframes (string, default "1h,4h"): Comma-separated. Valid values: 15m, 1h, 4h
+
+Response Schema:
+```json
+{
+  "coin": "ETH",
+  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "price": {
+    "current": 3842.15
+  },
+  "timeframes": {
+    "1h": {
+      "indicators": {
+        "rsi_14": 58.3,
+        "rsi_zone": "neutral",
+        "atr_14": 42.80,
+        "atr_pct": 1.11,
+        "ema_20": 3830.45,
+        "ema_50": 3815.20,
+        "ema_200": 3780.10,
+        "vwap_20": 3835.60,
+        "zscore_100": 0.85,
+        "bollinger": {
+          "upper": 3900.00,
+          "middle": 3840.00,
+          "lower": 3780.00,
+          "width_pct": 3.13,
+          "position_pct": 0.52
+        },
+        "trend": {
+          "direction": 1,
+          "label": "bullish",
+          "ema_stack": "bull_aligned"
+        }
+      },
+      "candle_freshness_seconds": 120.5
+    }
+  },
+  "derivatives": {
+    "funding_rate": 0.0001,
+    "funding_annualized_pct": 10.95,
+    "open_interest": 8500000000,
+    "impact_bid": 3841.50,
+    "impact_ask": 3842.80,
+    "spread_bps": 3.39
+  },
+  "regime": {
+    "current": "RISK_ON",
+    "as_of": 1740939296
+  },
+  "confluence": {
+    "score": 0.50,
+    "bias": "neutral",
+    "signals": {
+      "rsi": "neutral",
+      "trend": "bullish",
+      "bollinger": "neutral",
+      "zscore": "neutral"
+    },
+    "bullish_count": 1,
+    "bearish_count": 0
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 189,
+    "coins_available": 30
+  }
+}
+```
+
+Field Reference — Indicators (per timeframe):
+- rsi_14 (number, 0-100): Relative Strength Index, 14-period
+- rsi_zone (string): overbought (>=70), bullish (60-70), neutral (40-60), bearish (30-40), oversold (<=30)
+- atr_14 (number, >=0): Average True Range, 14-period, absolute price units
+- atr_pct (number, >=0): ATR as percentage of current price
+- ema_20, ema_50, ema_200 (number, >0): Exponential Moving Averages
+- vwap_20 (number, >0): Volume-Weighted Average Price, 20-period
+- zscore_100 (number): Standard deviations from 100-period mean
+- bollinger.upper, bollinger.middle, bollinger.lower (number): Bollinger Band levels (20-period SMA, 2 sigma)
+- bollinger.width_pct (number): Band width as percentage of middle band
+- bollinger.position_pct (number, typically 0-1): Price position within bands. 0.0=lower, 0.5=middle, 1.0=upper. Can exceed range.
+- trend.direction (number): 1=bullish, -1=bearish, 0=neutral
+- trend.label (string): bullish, bearish, neutral
+- trend.ema_stack (string): bull_aligned (20>50>200), bear_aligned (20<50<200), mixed (crossing), flat (converged)
+- candle_freshness_seconds (number): Seconds since most recent candle close
+
+Field Reference — Derivatives:
+- funding_rate (number): Current 8-hour funding rate (raw decimal, e.g., 0.0001 = 0.01%)
+- funding_annualized_pct (number): Annualized funding rate percentage
+- open_interest (number): Total open interest in USD notional
+- impact_bid (number): Impact bid price (simulated large sell)
+- impact_ask (number): Impact ask price (simulated large buy)
+- spread_bps (number): Bid-ask spread in basis points
+
+Field Reference — Confluence:
+- score (number, 0.0-1.0): Multi-signal confidence score
+- bias (string): bullish, bearish, neutral
+- signals (object): Per-indicator direction — rsi, trend, bollinger, zscore each report bullish/bearish/neutral
+- bullish_count (number, 0-4): Count of bullish signals
+- bearish_count (number, 0-4): Count of bearish signals
+
+Field Reference — Regime:
+- current (string): Market regime label — RISK_ON, RISK_OFF, etc.
+- as_of (number): Unix timestamp of last regime calculation
+
+Field Reference — Meta:
+- provider (string): Always "OpenClaw/Cerebrus"
+- offering (string): Always "cerebrus_pulse"
+- execution_ms (number): Server processing time in milliseconds
+- coins_available (number): Total coins supported
+- data_age_seconds (number): Age of underlying market data
+- warning (string, optional): "stale_data" if data older than 2 hours
+
+Errors: 400 (invalid coin or insufficient data), 402 (payment required), 429 (rate limited), 504 (engine timeout >15s)
+
+---
+
+### GET /sentiment
+
+Price: $0.01 USDC
+Description: Aggregated market sentiment analysis across the crypto market. Not coin-specific.
+
+No path or query parameters required.
+
+Response Schema:
+```json
+{
+  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "sentiment": {
+    "overall": "bullish",
+    "score": 0.68,
+    "labels": {
+      "fear_greed": "greed",
+      "momentum": "positive",
+      "funding_bias": "long"
+    }
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 95
+  }
+}
+```
+
+Field Reference:
+- sentiment.overall (string): Aggregate sentiment — bullish, bearish, neutral
+- sentiment.score (number, 0.0-1.0): Sentiment strength
+- sentiment.labels.fear_greed (string): Market fear/greed classification
+- sentiment.labels.momentum (string): Momentum direction — positive, negative, neutral
+- sentiment.labels.funding_bias (string): Aggregate funding bias — long, short, neutral
+
+Errors: 402 (payment required), 429 (rate limited), 500 (internal error)
+
+---
+
+### GET /funding/{coin}
+
+Price: $0.01 USDC
+Description: Current and historical funding rate analysis for a Hyperliquid perpetual.
+
+Path Parameters:
+- coin (string, required): Coin ticker, case-insensitive
+
+Query Parameters:
+- lookback_hours (integer, default 24, range 1-168): Hours of historical funding data
+
+Response Schema:
+```json
+{
+  "coin": "SOL",
+  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "funding": {
+    "current_rate": 0.00008,
+    "annualized_pct": 8.76,
+    "lookback_hours": 48,
+    "average_rate": 0.00007,
+    "max_rate": 0.00015,
+    "min_rate": -0.00002,
+    "history": [
+      { "timestamp": 1740850800, "rate": 0.00006 },
+      { "timestamp": 1740854400, "rate": 0.00008 }
+    ]
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 120
+  }
+}
+```
+
+Field Reference:
+- funding.current_rate (number): Current 8-hour funding rate (raw decimal)
+- funding.annualized_pct (number): Annualized funding rate percentage
+- funding.lookback_hours (integer): Lookback window used
+- funding.average_rate (number): Average rate over lookback period
+- funding.max_rate (number): Maximum rate in lookback period
+- funding.min_rate (number): Minimum rate in lookback period
+- funding.history (array): Array of {timestamp, rate} snapshots
+
+Errors: 400 (invalid coin or lookback_hours out of range), 402 (payment required), 429 (rate limited)
+
+---
+
+### GET /bundle/{coin}
+
+Price: $0.04 USDC (20% discount vs calling /pulse + /sentiment + /funding individually)
+Description: Complete analysis bundle combining pulse technical analysis, sentiment, and funding data in one response.
+
+Path Parameters:
+- coin (string, required): Coin ticker, case-insensitive
+
+Query Parameters:
+- timeframes (string, default "1h,4h"): Comma-separated. Valid: 15m, 1h, 4h
+
+Response Schema:
+```json
+{
+  "coin": "BTC",
+  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "pulse": {
+    "price": { "current": 98765.43 },
+    "timeframes": {
+      "1h": { "indicators": { "rsi_14": 65.4, "rsi_zone": "bullish", "...": "..." } },
+      "4h": { "indicators": { "rsi_14": 58.1, "rsi_zone": "neutral", "...": "..." } }
+    },
+    "derivatives": { "funding_rate": 0.000125, "open_interest": 1850000000, "...": "..." },
+    "regime": { "current": "RISK_ON", "as_of": 1740939296 },
+    "confluence": { "score": 0.75, "bias": "bullish", "...": "..." }
+  },
+  "sentiment": {
+    "overall": "bullish",
+    "score": 0.68,
+    "labels": { "fear_greed": "greed", "momentum": "positive", "funding_bias": "long" }
+  },
+  "funding": {
+    "current_rate": 0.000125,
+    "annualized_pct": 13.65,
+    "lookback_hours": 24,
+    "history": ["..."]
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "bundle": true,
+    "execution_ms": 340,
+    "discount_pct": 20
+  }
+}
+```
+
+The pulse, sentiment, and funding keys contain the same schemas as their respective individual endpoints.
+
+Errors: 400 (invalid coin), 402 (payment required), 429 (rate limited), 504 (engine timeout)
+
+---
+
+### GET /health (Free)
+
+No payment required.
+
+Response: Gateway health status including uptime and kill switch state.
+
+### GET /coins (Free)
+
+No payment required.
+
+Response: Array of available coin tickers with metadata.
+
+---
+
+## ACP (Agent Commerce Protocol) Reference
+
+ACP is the Virtuals Protocol standard for agent-to-agent transactions. Instead of HTTP micropayments, agents negotiate, pay, and deliver services through the ACP SDK using VIRTUAL token escrow.
+
+### ACP Seller ID
+
+openclaw-cerebrus
+
+### Available Offerings
+
+#### cerebrus_pulse
+Price: $0.03 VIRTUAL
+Description: Real-time multi-timeframe technical analysis (same data as x402 /pulse endpoint)
+Timeout: 60s
+
+#### cerebrus_synthesis — Lite
+Price: $0.10 VIRTUAL
+Models: 1 model
+Timeout: 60s
+Use case: Quick market snapshots, simple queries, fast decision loops
+
+#### cerebrus_synthesis — Standard
+Price: $0.50 VIRTUAL
+Models: 3 models
+Timeout: 90s
+Use case: Full multi-model synthesis with multiple perspectives, trade ideas, risk scoring
+
+#### cerebrus_synthesis — Premium
+Price: $2.00 VIRTUAL
+Models: 5+ models
+Timeout: 300s
+Use case: Deep research with adversarial deliberation, cross-asset correlation, portfolio recommendations
+
+### ACP Integration Example (TypeScript)
+
+```typescript
+import { AcpClient } from "@virtuals-protocol/acp-node";
+
+const acp = new AcpClient({
+  walletKey: process.env.AGENT_WALLET_KEY,
+});
+
+// Request a Cerebrus Synthesis (Standard tier)
+const job = await acp.createJob({
+  seller: "openclaw-cerebrus",
+  offering: "cerebrus_synthesis",
+  requirements: {
+    query: "Analyze the current Bitcoin market structure and identify key support/resistance levels",
+    domain: "crypto",
+    models_requested: 3,
+  },
+});
+
+// Wait for completion
+const result = await acp.waitForJob(job.id);
+console.log(result.deliverable.value.result);
+// Returns multi-model synthesis with consensus scoring
+```
+
+### ACP Job Flow
+
+1. Your agent creates a job request via ACP SDK
+2. ACP protocol notifies Cerebrus (seller)
+3. Cerebrus accepts and provides a price quote
+4. Your agent approves payment (VIRTUAL locked in escrow)
+5. Cerebrus executes the job
+6. Result delivered, payment released from escrow
+
+---
+
+## x402 Code Examples
+
+### Python
+
+```python
+from x402.client import Client
+
+client = Client(
+    wallet_key="your-base-wallet-private-key",
+    network="base"
+)
+
+# Technical analysis for ETH on 1h and 4h timeframes
+response = client.get("https://pulse.openclaw.ai/pulse/ETH?timeframes=1h,4h")
+data = response.json()
+
+print(f"Price: ${data['price']['current']}")
+print(f"Confluence: {data['confluence']['score']} ({data['confluence']['bias']})")
+print(f"Regime: {data['regime']['current']}")
+
+# Market sentiment
+sentiment = client.get("https://pulse.openclaw.ai/sentiment").json()
+print(f"Sentiment: {sentiment['sentiment']['overall']}")
+
+# Funding rates
+funding = client.get("https://pulse.openclaw.ai/funding/BTC?lookback_hours=48").json()
+print(f"Funding: {funding['funding']['annualized_pct']}% annualized")
+
+# Bundle (all data, 20% cheaper)
+bundle = client.get("https://pulse.openclaw.ai/bundle/BTC?timeframes=1h,4h").json()
+```
+
+### TypeScript / Node.js
+
+```typescript
+import { x402Client } from "x402";
+
+const client = new x402Client({
+  walletKey: process.env.BASE_WALLET_KEY,
+  network: "base",
+});
+
+// Technical analysis
+const pulse = await client.get("https://pulse.openclaw.ai/pulse/SOL?timeframes=1h,4h");
+console.log(`RSI 1h: ${pulse.timeframes["1h"].indicators.rsi_14}`);
+console.log(`Trend: ${pulse.timeframes["1h"].indicators.trend.label}`);
+console.log(`Confluence: ${pulse.confluence.score} (${pulse.confluence.bias})`);
+
+// Bundle for complete view
+const bundle = await client.get("https://pulse.openclaw.ai/bundle/ETH");
+console.log(`Price: $${bundle.pulse.price.current}`);
+console.log(`Sentiment: ${bundle.sentiment.overall}`);
+console.log(`Funding: ${bundle.funding.annualized_pct}%`);
+```
+
+### cURL (manual payment)
+
+```bash
+# First request returns 402 with payment details
+curl -v https://pulse.openclaw.ai/pulse/BTC?timeframes=1h
+
+# The x402 SDK handles payment automatically.
+# Without SDK, extract payment details from 402 response headers
+# and submit signed USDC transaction on Base.
+```
+
+---
+
+## Rate Limits
+
+| Dimension    | Limit         | Window       |
+|-------------|---------------|--------------|
+| Per IP       | 12 requests   | 1 minute     |
+| Per wallet   | 20 requests   | 1 minute     |
+| Concurrent   | 3 requests    | Simultaneous |
+| Daily        | 1,000 requests| 24 hours     |
+
+Free endpoints (/health, /coins) are NOT rate limited.
+
+Rate limit exceeded response:
+```
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+
+{
+  "detail": "Rate limit exceeded (per-IP)",
+  "limit": 12,
+  "window": 60
+}
+```
+
+---
+
+## Error Codes
+
+| Status | Meaning                | Description                                                              |
+|--------|------------------------|--------------------------------------------------------------------------|
+| 400    | Bad Request            | Invalid coin ticker, invalid timeframe, or insufficient candle data      |
+| 402    | Payment Required       | Standard x402 flow — client needs to sign USDC payment via x402 SDK     |
+| 429    | Too Many Requests      | Rate limit exceeded. Back off and retry after window.                    |
+| 500    | Internal Server Error  | Unexpected engine failure                                                |
+| 503    | Service Unavailable    | Gateway in maintenance mode (kill switch disabled). retry_after: 3600    |
+| 504    | Gateway Timeout        | Analysis engine took >15 seconds. Retry once.                            |
+
+Error response format (all errors):
+```json
+{
+  "detail": "Human-readable error message"
+}
+```
+
+503 responses include:
+```json
+{
+  "detail": "Service temporarily unavailable",
+  "retry_after": 3600
+}
+```
+
+---
+
+## Best Practices
+
+1. Check GET /health before batch operations to verify gateway is operational
+2. Use exponential backoff on 429 responses
+3. Do not retry on 400 — fix the request parameters first
+4. Retry once on 504 — engine timeouts are usually transient
+5. Respect 503 retry_after — gateway is in maintenance
+6. Use GET /bundle for multi-data needs — 1 request instead of 3, 20% cheaper, fewer rate limit slots consumed
+7. Use GET /coins to validate coin tickers before making paid requests
+8. Cache results appropriately — crypto data updates on candle close intervals (15m/1h/4h)
+
+---
+
+## Supported Coins
+
+BTC, ETH, SOL, DOGE, XRP, ADA, AVAX, LINK, DOT, MATIC, ARB, OP, APT, SUI, SEI, TIA, INJ, FET, NEAR, ATOM, FIL, AAVE, UNI, MKR, LDO, PEPE, WIF, JUP, ONDO, RENDER, and more.
+
+Use GET /coins for the authoritative live list (free, no payment required).
+
+## Supported Timeframes
+
+- 15m (15-minute candles)
+- 1h (1-hour candles)
+- 4h (4-hour candles)
+
+Default: 1h,4h when not specified.
+
+---
+
+## Links
+
+- Homepage: https://pulse.openclaw.ai
+- Documentation: https://pulse.openclaw.ai/overview
+- Quickstart: https://pulse.openclaw.ai/quickstart
+- API — Pulse: https://pulse.openclaw.ai/api/pulse
+- API — Sentiment: https://pulse.openclaw.ai/api/sentiment
+- API — Funding: https://pulse.openclaw.ai/api/funding
+- API — Bundle: https://pulse.openclaw.ai/api/bundle
+- API — Health: https://pulse.openclaw.ai/api/health
+- API — Coins: https://pulse.openclaw.ai/api/coins
+- Guide — x402 Payments: https://pulse.openclaw.ai/guides/x402-payments
+- Guide — Python SDK: https://pulse.openclaw.ai/guides/python-sdk
+- Guide — TypeScript SDK: https://pulse.openclaw.ai/guides/typescript-sdk
+- Guide — ACP for Agents: https://pulse.openclaw.ai/guides/acp-agents
+- Reference — Response Schemas: https://pulse.openclaw.ai/reference/response-schemas
+- Reference — Supported Coins: https://pulse.openclaw.ai/reference/coins-list
+- Reference — Rate Limits & Errors: https://pulse.openclaw.ai/reference/rate-limits
+- Reference — x402 vs ACP: https://pulse.openclaw.ai/reference/x402-vs-acp

@@ -1,0 +1,19 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Cerebrus Pulse",
+  "name_for_model": "cerebrus_pulse",
+  "description_for_human": "Real-time crypto intelligence API for Hyperliquid perpetuals. Multi-timeframe technical analysis, market sentiment, and funding rate data. Pay per query with USDC micropayments on Base (x402) or via AI agent commerce on Virtuals Protocol (ACP).",
+  "description_for_model": "Cerebrus Pulse is a cryptocurrency analysis API that provides real-time multi-timeframe technical analysis (RSI, EMAs, ATR, Bollinger Bands, VWAP, Z-score, trend detection, confluence scoring), market sentiment, funding rates, and derivatives data for 30+ Hyperliquid perpetual contracts. It uses x402 protocol for USDC micropayments on Base blockchain (chain ID 8453). Endpoints: GET /pulse/{coin} ($0.02) for technical analysis, GET /sentiment ($0.01) for market sentiment, GET /funding/{coin} ($0.01) for funding rates, GET /bundle/{coin} ($0.04) for all combined. Free endpoints: GET /health, GET /coins. Supported timeframes: 15m, 1h, 4h. No API keys required — wallet is identity. Also available via ACP (Agent Commerce Protocol) on Virtuals Protocol for autonomous AI agents with synthesis tiers at $0.10, $0.50, and $2.00.",
+  "auth": {
+    "type": "none",
+    "instructions": "Cerebrus Pulse uses x402 protocol for payment authentication. No API keys are needed. Your Base wallet address serves as your identity. The x402 SDK handles payment automatically: the server returns HTTP 402, and the SDK signs a USDC micropayment on Base. Install the x402 SDK for Python or TypeScript to get started."
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://pulse.openclaw.ai/llms-full.txt",
+    "is_user_authenticated": false
+  },
+  "logo_url": "https://pulse.openclaw.ai/favicon.svg",
+  "contact_email": "contact@openclaw.ai",
+  "legal_info_url": "https://pulse.openclaw.ai/overview"
+}

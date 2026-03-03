@@ -1,0 +1,197 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  url?: string;
+}
+
+const {
+  title = "Cerebrus Pulse — Real-time Crypto Intelligence API",
+  description = "Cerebrus Pulse is a pay-per-query crypto analysis API providing multi-timeframe technical analysis, market sentiment, and funding rate data for 30+ Hyperliquid perpetuals. Two integration paths: x402 micropayments (USDC on Base) for developers and ACP agent commerce (Virtuals Protocol) for autonomous AI agents. Prices from $0.01 per query. No API keys required.",
+  url = "https://pulse.openclaw.ai",
+} = Astro.props;
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "OpenClaw",
+  "url": "https://openclaw.ai",
+  "brand": {
+    "@type": "Brand",
+    "name": "Cerebrus Pulse"
+  },
+  "description": "OpenClaw builds AI-powered crypto intelligence tools. Cerebrus Pulse is its flagship real-time analysis API for Hyperliquid perpetuals."
+};
+
+const webApplicationSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Cerebrus Pulse",
+  "url": url,
+  "description": description,
+  "applicationCategory": "FinanceApplication",
+  "applicationSubCategory": "Cryptocurrency Analysis API",
+  "operatingSystem": "Any (REST API)",
+  "browserRequirements": "HTTP client with x402 SDK support",
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Pulse — Multi-timeframe Technical Analysis",
+      "description": "RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score, trend detection, confluence scoring, derivatives data, and market regime for any Hyperliquid perpetual.",
+      "price": "0.02",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.02",
+        "priceCurrency": "USD",
+        "unitText": "per query"
+      },
+      "url": url + "/api/pulse"
+    },
+    {
+      "@type": "Offer",
+      "name": "Sentiment — Market Sentiment Analysis",
+      "description": "Aggregated crypto market sentiment with fear/greed, momentum, and funding bias labels.",
+      "price": "0.01",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.01",
+        "priceCurrency": "USD",
+        "unitText": "per query"
+      },
+      "url": url + "/api/sentiment"
+    },
+    {
+      "@type": "Offer",
+      "name": "Funding — Funding Rate Analysis",
+      "description": "Current and historical funding rates with annualized projections for Hyperliquid perpetuals.",
+      "price": "0.01",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.01",
+        "priceCurrency": "USD",
+        "unitText": "per query"
+      },
+      "url": url + "/api/funding"
+    },
+    {
+      "@type": "Offer",
+      "name": "Bundle — Complete Analysis Bundle",
+      "description": "Pulse + Sentiment + Funding combined in one response. 20% discount versus calling endpoints individually.",
+      "price": "0.04",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.04",
+        "priceCurrency": "USD",
+        "unitText": "per query"
+      },
+      "url": url + "/api/bundle"
+    },
+    {
+      "@type": "Offer",
+      "name": "ACP Synthesis — Lite",
+      "description": "Quick AI-synthesized market snapshot via Agent Commerce Protocol on Virtuals Protocol. 1 model, 60s timeout.",
+      "price": "0.10",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.10",
+        "priceCurrency": "USD",
+        "unitText": "per job"
+      },
+      "url": url + "/guides/acp-agents"
+    },
+    {
+      "@type": "Offer",
+      "name": "ACP Synthesis — Standard",
+      "description": "Full multi-model AI synthesis with trade ideas and risk scoring via Agent Commerce Protocol. 3 models, 90s timeout.",
+      "price": "0.50",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.50",
+        "priceCurrency": "USD",
+        "unitText": "per job"
+      },
+      "url": url + "/guides/acp-agents"
+    },
+    {
+      "@type": "Offer",
+      "name": "ACP Synthesis — Premium",
+      "description": "Deep AI research with adversarial deliberation, cross-asset analysis, and portfolio recommendations. 5+ models, 300s timeout.",
+      "price": "2.00",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "2.00",
+        "priceCurrency": "USD",
+        "unitText": "per job"
+      },
+      "url": url + "/guides/acp-agents"
+    }
+  ],
+  "featureList": [
+    "Multi-timeframe technical analysis (15m, 1h, 4h)",
+    "RSI, EMA (20/50/200), ATR, Bollinger Bands, VWAP, Z-score indicators",
+    "Multi-signal confluence scoring (0.0-1.0)",
+    "Market regime detection (RISK_ON, RISK_OFF)",
+    "Derivatives data (funding rates, open interest, spread)",
+    "Market sentiment analysis",
+    "30+ Hyperliquid perpetuals supported",
+    "x402 micropayments on Base (USDC)",
+    "ACP agent commerce on Virtuals Protocol",
+    "No API keys or subscriptions required",
+    "Pay-per-query pricing from $0.01"
+  ],
+  "creator": {
+    "@type": "Organization",
+    "name": "OpenClaw"
+  }
+};
+
+const techArticleSchema = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Cerebrus Pulse API Documentation",
+  "description": "Complete API reference for Cerebrus Pulse: endpoints, response schemas, rate limits, code examples for x402 micropayments and ACP agent commerce integration.",
+  "url": url + "/overview",
+  "about": {
+    "@type": "WebApplication",
+    "name": "Cerebrus Pulse"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "OpenClaw"
+  },
+  "proficiencyLevel": "Beginner",
+  "dependencies": "x402 SDK (Python or TypeScript) for micropayments, or ACP SDK for Virtuals Protocol agent integration"
+};
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Cerebrus Pulse",
+  "description": "Real-time crypto intelligence API for Hyperliquid perpetuals. Multi-timeframe technical analysis, sentiment, and funding data via x402 micropayments or ACP agent commerce.",
+  "brand": {
+    "@type": "Brand",
+    "name": "OpenClaw"
+  },
+  "category": "Cryptocurrency Analysis API",
+  "url": url,
+  "offers": {
+    "@type": "AggregateOffer",
+    "lowPrice": "0.01",
+    "highPrice": "2.00",
+    "priceCurrency": "USD",
+    "offerCount": 7
+  }
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(organizationSchema)} />
+<script type="application/ld+json" set:html={JSON.stringify(webApplicationSchema)} />
+<script type="application/ld+json" set:html={JSON.stringify(techArticleSchema)} />
+<script type="application/ld+json" set:html={JSON.stringify(productSchema)} />
