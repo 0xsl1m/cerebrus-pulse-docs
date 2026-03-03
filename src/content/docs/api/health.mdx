@@ -1,0 +1,46 @@
+---
+title: GET /health
+description: Gateway health status — always free.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /health
+
+<Badge text="Free" variant="success" />
+
+Returns the current health status of the Pulse gateway. No payment required. Not rate limited.
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/health
+```
+
+No parameters.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | string | `ok` or `degraded` |
+| `engine` | string | `available` or `unavailable` |
+| `kill_switch` | string | `enabled` or `disabled` |
+| `version` | string | Gateway version |
+
+## Example
+
+```json
+{
+  "status": "ok",
+  "engine": "available",
+  "kill_switch": "enabled",
+  "version": "1.0.0"
+}
+```
+
+## Notes
+
+- If `engine` is `unavailable`, paid endpoints will return 500 errors. The gateway is running but the analysis engine is not.
+- If `kill_switch` is `disabled`, all paid endpoints will return 503 with `retry_after: 3600`. The gateway is in maintenance mode.
+- Use this endpoint for uptime monitoring and pre-flight checks before making paid requests.

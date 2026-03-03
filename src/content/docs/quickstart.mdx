@@ -1,0 +1,176 @@
+---
+title: Quickstart
+description: Make your first Cerebrus Pulse API call in under 5 minutes.
+---
+
+# Quickstart
+
+Get real-time technical analysis data from Cerebrus Pulse in under 5 minutes.
+
+## Prerequisites
+
+- A wallet with USDC on **Base** (mainnet, chain ID 8453)
+- Python 3.10+ or Node.js 18+
+
+## 1. Install the x402 SDK
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Tabs>
+  <TabItem label="Python">
+    ```bash
+    pip install "x402[evm]" httpx
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```bash
+    npm install x402 viem
+    ```
+  </TabItem>
+</Tabs>
+
+## 2. Make Your First Request
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import asyncio
+    from eth_account import Account
+    from x402.clients.httpx import x402HttpxClient
+    from x402.types.evm import ExactEvmSigner, register_exact_evm_client
+
+    # Your Base wallet private key (keep this secure!)
+    PRIVATE_KEY = "0xYOUR_PRIVATE_KEY_HERE"
+
+    async def main():
+        signer = ExactEvmSigner(Account.from_key(PRIVATE_KEY))
+
+        async with x402HttpxClient() as client:
+            register_exact_evm_client(client, signer)
+
+            # Fetch BTC technical analysis (1h + 4h timeframes)
+            resp = await client.get(
+                "https://pulse.openclaw.ai/pulse/BTC",
+                params={"timeframes": "1h,4h"}
+            )
+            data = resp.json()
+
+            print(f"BTC Price: ${data['price']['current']:,.2f}")
+            print(f"Confluence: {data['confluence']['score']} ({data['confluence']['bias']})")
+
+            for tf, analysis in data["timeframes"].items():
+                ind = analysis["indicators"]
+                print(f"\n[{tf}] RSI: {ind['rsi_14']} ({ind['rsi_zone']})")
+                print(f"[{tf}] Trend: {ind['trend']['label']}")
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { createWalletClient, http } from "viem";
+    import { privateKeyToAccount } from "viem/accounts";
+    import { base } from "viem/chains";
+    import { withX402Payment } from "x402";
+
+    // Your Base wallet private key (keep this secure!)
+    const PRIVATE_KEY = "0xYOUR_PRIVATE_KEY_HERE";
+
+    const account = privateKeyToAccount(PRIVATE_KEY);
+    const wallet = createWalletClient({
+      account,
+      chain: base,
+      transport: http(),
+    });
+
+    const fetchWithPayment = withX402Payment(wallet);
+
+    const response = await fetchWithPayment(
+      "https://pulse.openclaw.ai/pulse/BTC?timeframes=1h,4h"
+    );
+
+    const data = await response.json();
+
+    console.log(`BTC Price: $${data.price.current.toLocaleString()}`);
+    console.log(`Confluence: ${data.confluence.score} (${data.confluence.bias})`);
+    ```
+  </TabItem>
+  <TabItem label="cURL">
+    ```bash
+    # Step 1: Initial request returns 402 with payment details
+    curl -i https://pulse.openclaw.ai/pulse/BTC?timeframes=1h,4h
+    # HTTP/1.1 402 Payment Required
+    # x-402-payment: <base64-encoded payment details>
+
+    # Step 2: Use an x402-compatible client to handle payment automatically
+    # The x402 SDKs handle this flow for you — see Python/TypeScript examples
+    ```
+  </TabItem>
+</Tabs>
+
+## 3. Example Response
+
+```json
+{
+  "coin": "BTC",
+  "timestamp_iso": "2026-03-02T21:30:00Z",
+  "price": { "current": 98765.43 },
+  "timeframes": {
+    "1h": {
+      "indicators": {
+        "rsi_14": 65.4,
+        "rsi_zone": "bullish",
+        "atr_14": 425.50,
+        "atr_pct": 0.43,
+        "ema_20": 98500.12,
+        "ema_50": 98200.34,
+        "ema_200": 97800.56,
+        "vwap_20": 98600.78,
+        "zscore_100": 1.25,
+        "bollinger": {
+          "upper": 99500.00,
+          "middle": 98700.00,
+          "lower": 97900.00,
+          "width_pct": 1.63,
+          "position_pct": 0.63
+        },
+        "trend": {
+          "direction": 1,
+          "label": "bullish",
+          "ema_stack": "bull_aligned"
+        }
+      },
+      "candle_freshness_seconds": 45.2
+    }
+  },
+  "derivatives": {
+    "funding_rate": 0.000125,
+    "funding_annualized_pct": 13.65,
+    "open_interest": 1850000000,
+    "impact_bid": 98750.00,
+    "impact_ask": 98760.00,
+    "spread_bps": 1.01
+  },
+  "regime": { "current": "RISK_ON", "as_of": 1740939296 },
+  "confluence": {
+    "score": 0.75,
+    "bias": "bullish",
+    "signals": { "rsi": "bullish", "trend": "bullish", "bollinger": "neutral", "zscore": "neutral" },
+    "bullish_count": 2,
+    "bearish_count": 0
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 234,
+    "coins_available": 30
+  }
+}
+```
+
+## Next Steps
+
+- **[API Reference](/api/pulse)** — Full endpoint documentation with all parameters
+- **[Response Schemas](/reference/response-schemas)** — Detailed field descriptions and value ranges
+- **[x402 Payments](/guides/x402-payments)** — Deep dive into how payments work
+- **[Supported Coins](/reference/coins-list)** — Full list of available assets

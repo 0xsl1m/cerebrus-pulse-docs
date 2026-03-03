@@ -1,0 +1,98 @@
+---
+title: GET /bundle/{coin}
+description: Complete analysis bundle — pulse, sentiment, and funding combined.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /bundle/\{coin\}
+
+<Badge text="$0.04 USDC" variant="tip" /> <Badge text="Best Value" variant="success" />
+
+Returns pulse technical analysis, sentiment, and funding data in a single response. **20% cheaper** than calling all three endpoints individually ($0.04 vs $0.04 = $0.02 + $0.01 + $0.01).
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/bundle/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`). Case-insensitive. |
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `timeframes` | string | `1h,4h` | Comma-separated timeframes. Valid: `15m`, `1h`, `4h`. |
+
+## Response
+
+The response combines all three endpoint responses under top-level keys:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coin` | string | Coin ticker |
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `pulse` | object | Full pulse analysis (same as `/pulse/{coin}` response) |
+| `sentiment` | object | Sentiment data (same as `/sentiment` response) |
+| `funding` | object | Funding analysis (same as `/funding/{coin}` response) |
+| `meta` | object | Provider metadata with bundle info |
+
+## Example
+
+```bash
+GET /bundle/BTC?timeframes=1h,4h
+```
+
+```json
+{
+  "coin": "BTC",
+  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "pulse": {
+    "price": { "current": 98765.43 },
+    "timeframes": {
+      "1h": { "indicators": { "rsi_14": 65.4, "rsi_zone": "bullish", "..." : "..." } },
+      "4h": { "indicators": { "rsi_14": 58.1, "rsi_zone": "neutral", "..." : "..." } }
+    },
+    "derivatives": { "funding_rate": 0.000125, "open_interest": 1850000000, "..." : "..." },
+    "regime": { "current": "RISK_ON", "as_of": 1740939296 },
+    "confluence": { "score": 0.75, "bias": "bullish", "..." : "..." }
+  },
+  "sentiment": {
+    "overall": "bullish",
+    "score": 0.68,
+    "labels": { "fear_greed": "greed", "momentum": "positive", "funding_bias": "long" }
+  },
+  "funding": {
+    "current_rate": 0.000125,
+    "annualized_pct": 13.65,
+    "lookback_hours": 24,
+    "history": [ "..." ]
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "bundle": true,
+    "execution_ms": 340,
+    "discount_pct": 20
+  }
+}
+```
+
+## When to Use Bundle
+
+- **Use bundle** when you need a complete market view for a single coin — saves one payment round-trip and costs less.
+- **Use individual endpoints** when you only need one type of data, or when querying sentiment (which isn't coin-specific).
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | Invalid coin |
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 504 | Engine timeout |

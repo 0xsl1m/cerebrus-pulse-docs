@@ -1,0 +1,89 @@
+---
+title: Rate Limits & Errors
+description: Rate limiting policies and error code reference.
+---
+
+# Rate Limits & Errors
+
+## Rate Limits
+
+Cerebrus Pulse enforces rate limits across multiple dimensions to ensure fair access.
+
+| Dimension | Limit | Window |
+|-----------|-------|--------|
+| **Per IP** | 12 requests | 1 minute |
+| **Per wallet** | 20 requests | 1 minute |
+| **Concurrent** | 3 requests | Simultaneous |
+| **Daily** | 1,000 requests | 24 hours |
+
+### How Limits Are Tracked
+
+- **IP-based**: Tracked by your client's source IP address
+- **Wallet-based**: Tracked by the `x-x402-payer` header (your wallet address)
+- **Concurrent**: Maximum simultaneous requests being processed
+- **Daily**: Rolling 24-hour window
+
+### Rate Limit Response
+
+When a limit is exceeded, you receive:
+
+```
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+
+{
+  "detail": "Rate limit exceeded (per-IP)",
+  "limit": 12,
+  "window": 60
+}
+```
+
+### Free Endpoints
+
+`GET /health` and `GET /coins` are **not rate limited**.
+
+## Error Codes
+
+| Status | Meaning | When It Happens |
+|--------|---------|-----------------|
+| **400** | Bad Request | Invalid coin ticker, invalid timeframe, or insufficient candle data for the requested coin |
+| **402** | Payment Required | Standard x402 flow — your client needs to sign a USDC payment. The x402 SDK handles this automatically. |
+| **429** | Too Many Requests | Rate limit exceeded. See limits above. |
+| **500** | Internal Server Error | Unexpected engine failure. The analysis engine encountered an error. |
+| **503** | Service Unavailable | Gateway is in maintenance mode (kill switch disabled). Includes `retry_after: 3600`. |
+| **504** | Gateway Timeout | The analysis engine took longer than 15 seconds. Try again. |
+
+## Error Response Format
+
+All errors return JSON:
+
+```json
+{
+  "detail": "Human-readable error message"
+}
+```
+
+### 400 Examples
+
+```json
+{"detail": "Invalid coin: NOTACOIN"}
+{"detail": "Insufficient data for NEWCOIN on timeframe 4h"}
+```
+
+### 503 Example
+
+```json
+{
+  "detail": "Service temporarily unavailable",
+  "retry_after": 3600
+}
+```
+
+## Best Practices
+
+1. **Check `/health` first** — Before batch operations, verify the gateway is operational and the kill switch is enabled.
+2. **Use backoff on 429** — Wait the indicated window duration before retrying.
+3. **Don't retry on 400** — These are client errors. Fix the request before retrying.
+4. **Retry on 504** — Engine timeouts are usually transient. A single retry typically succeeds.
+5. **Respect 503** — The gateway is in maintenance. Wait for the `retry_after` period.
+6. **Use `/bundle` for multi-data** — Instead of calling `/pulse` + `/sentiment` + `/funding` separately (3 requests), use `/bundle` (1 request). Cheaper and uses fewer rate limit slots.

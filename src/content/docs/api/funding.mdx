@@ -1,0 +1,81 @@
+---
+title: GET /funding/{coin}
+description: Funding rate analysis with historical lookback.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /funding/\{coin\}
+
+<Badge text="$0.01 USDC" variant="tip" />
+
+Returns current and historical funding rate analysis for a Hyperliquid perpetual.
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/funding/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`). Case-insensitive. |
+
+### Query Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `lookback_hours` | integer | `24` | 1–168 | Hours of historical funding data to include. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coin` | string | Coin ticker |
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `funding` | object | Funding rate data |
+| `funding.current_rate` | number | Current funding rate (raw) |
+| `funding.annualized_pct` | number | Annualized rate (%) |
+| `funding.lookback_hours` | integer | Lookback window used |
+| `funding.history` | array | Historical funding snapshots |
+| `meta` | object | Provider metadata |
+
+## Example
+
+```bash
+GET /funding/SOL?lookback_hours=48
+```
+
+```json
+{
+  "coin": "SOL",
+  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "funding": {
+    "current_rate": 0.00008,
+    "annualized_pct": 8.76,
+    "lookback_hours": 48,
+    "average_rate": 0.00007,
+    "max_rate": 0.00015,
+    "min_rate": -0.00002,
+    "history": [
+      { "timestamp": 1740850800, "rate": 0.00006 },
+      { "timestamp": 1740854400, "rate": 0.00008 }
+    ]
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 120
+  }
+}
+```
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | Invalid coin or lookback_hours out of range |
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |

@@ -1,0 +1,182 @@
+---
+title: GET /pulse/{coin}
+description: Multi-timeframe technical analysis for a specific coin.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /pulse/\{coin\}
+
+<Badge text="$0.02 USDC" variant="tip" />
+
+Returns comprehensive multi-timeframe technical analysis for a Hyperliquid perpetual.
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/pulse/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`, `SOL`). Case-insensitive. |
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `timeframes` | string | `1h,4h` | Comma-separated timeframes. Valid: `15m`, `1h`, `4h`. |
+
+## Response
+
+### Top-Level Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coin` | string | Coin ticker |
+| `timestamp_iso` | string | ISO 8601 timestamp of analysis |
+| `price.current` | number | Current mid price (USD) |
+| `timeframes` | object | Per-timeframe indicator data |
+| `derivatives` | object | Funding, OI, spread data |
+| `regime` | object | Current market regime |
+| `confluence` | object | Multi-signal scoring |
+| `meta` | object | Provider metadata |
+
+### Per-Timeframe Indicators
+
+Each timeframe key (e.g., `"1h"`) contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `rsi_14` | number | RSI (14-period), range 0–100 |
+| `rsi_zone` | string | `overbought` (≥70), `bullish` (60–70), `neutral` (40–60), `bearish` (30–40), `oversold` (≤30) |
+| `atr_14` | number | Average True Range (14-period), absolute |
+| `atr_pct` | number | ATR as percentage of price |
+| `ema_20` | number | 20-period EMA |
+| `ema_50` | number | 50-period EMA |
+| `ema_200` | number | 200-period EMA |
+| `vwap_20` | number | Volume-weighted average price (20-period) |
+| `zscore_100` | number | Z-score (100-period mean deviation) |
+| `bollinger.upper` | number | Upper Bollinger Band (2σ) |
+| `bollinger.middle` | number | Middle Bollinger Band (20-period SMA) |
+| `bollinger.lower` | number | Lower Bollinger Band (2σ) |
+| `bollinger.width_pct` | number | Band width as percentage |
+| `bollinger.position_pct` | number | Price position within bands (0.0 = lower, 1.0 = upper) |
+| `trend.direction` | number | `1` = bullish, `-1` = bearish, `0` = neutral |
+| `trend.label` | string | `bullish`, `bearish`, or `neutral` |
+| `trend.ema_stack` | string | `bull_aligned`, `bear_aligned`, `mixed`, `flat` |
+| `candle_freshness_seconds` | number | Age of most recent candle data |
+
+### Derivatives
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `funding_rate` | number | Current funding rate (raw) |
+| `funding_annualized_pct` | number | Annualized funding rate (%) |
+| `open_interest` | number | Open interest (USD notional) |
+| `impact_bid` | number | Impact bid price |
+| `impact_ask` | number | Impact ask price |
+| `spread_bps` | number | Bid-ask spread in basis points |
+
+### Regime
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `current` | string | Regime label (e.g., `RISK_ON`, `RISK_OFF`) |
+| `as_of` | number | Unix timestamp of regime calculation |
+
+### Confluence
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `score` | number | Confidence score (0.0–1.0) |
+| `bias` | string | `bullish`, `bearish`, or `neutral` |
+| `signals` | object | Per-indicator signal direction |
+| `bullish_count` | number | Number of bullish signals |
+| `bearish_count` | number | Number of bearish signals |
+
+### Meta
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `provider` | string | Always `"OpenClaw/Cerebrus"` |
+| `offering` | string | Always `"cerebrus_pulse"` |
+| `execution_ms` | number | Server-side processing time (ms) |
+| `coins_available` | number | Total coins supported |
+| `data_age_seconds` | number | Age of underlying market data |
+| `warning` | string | Optional. `"stale_data"` if data is older than 2 hours. |
+
+## Example
+
+```bash
+GET /pulse/ETH?timeframes=1h
+```
+
+```json
+{
+  "coin": "ETH",
+  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "price": { "current": 3842.15 },
+  "timeframes": {
+    "1h": {
+      "indicators": {
+        "rsi_14": 58.3,
+        "rsi_zone": "neutral",
+        "atr_14": 42.80,
+        "atr_pct": 1.11,
+        "ema_20": 3830.45,
+        "ema_50": 3815.20,
+        "ema_200": 3780.10,
+        "vwap_20": 3835.60,
+        "zscore_100": 0.85,
+        "bollinger": {
+          "upper": 3900.00,
+          "middle": 3840.00,
+          "lower": 3780.00,
+          "width_pct": 3.13,
+          "position_pct": 0.52
+        },
+        "trend": {
+          "direction": 1,
+          "label": "bullish",
+          "ema_stack": "bull_aligned"
+        }
+      },
+      "candle_freshness_seconds": 120.5
+    }
+  },
+  "derivatives": {
+    "funding_rate": 0.0001,
+    "funding_annualized_pct": 10.95,
+    "open_interest": 8500000000,
+    "impact_bid": 3841.50,
+    "impact_ask": 3842.80,
+    "spread_bps": 3.39
+  },
+  "regime": { "current": "RISK_ON", "as_of": 1740939296 },
+  "confluence": {
+    "score": 0.50,
+    "bias": "neutral",
+    "signals": { "rsi": "neutral", "trend": "bullish", "bollinger": "neutral", "zscore": "neutral" },
+    "bullish_count": 1,
+    "bearish_count": 0
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 189,
+    "coins_available": 30
+  }
+}
+```
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | Invalid coin or insufficient candle data |
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 504 | Engine timeout (>15s) |

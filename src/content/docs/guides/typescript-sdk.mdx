@@ -1,0 +1,197 @@
+---
+title: TypeScript SDK
+description: Integrate Cerebrus Pulse with TypeScript/Node.js using the x402 SDK.
+---
+
+# TypeScript SDK Integration
+
+Complete guide to consuming Cerebrus Pulse from TypeScript/Node.js using the x402 SDK and viem.
+
+## Installation
+
+```bash
+npm install x402 viem
+```
+
+## Setup
+
+```typescript
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { base } from "viem/chains";
+import { withX402Payment } from "x402";
+
+// Load your private key securely (env var, config, etc.)
+const PRIVATE_KEY = process.env.BASE_WALLET_PRIVATE_KEY as `0x${string}`;
+
+const account = privateKeyToAccount(PRIVATE_KEY);
+const wallet = createWalletClient({
+  account,
+  chain: base,
+  transport: http(),
+});
+
+// Create an x402-enabled fetch function
+const fetchWithPayment = withX402Payment(wallet);
+
+const BASE_URL = "https://pulse.openclaw.ai";
+```
+
+## Making Requests
+
+```typescript
+// Pulse — multi-timeframe technical analysis
+async function getPulse(coin: string, timeframes = "1h,4h") {
+  const resp = await fetchWithPayment(
+    `${BASE_URL}/pulse/${coin}?timeframes=${timeframes}`
+  );
+  return resp.json();
+}
+
+// Sentiment — market sentiment labels
+async function getSentiment() {
+  const resp = await fetchWithPayment(`${BASE_URL}/sentiment`);
+  return resp.json();
+}
+
+// Funding — funding rate analysis
+async function getFunding(coin: string, lookbackHours = 24) {
+  const resp = await fetchWithPayment(
+    `${BASE_URL}/funding/${coin}?lookback_hours=${lookbackHours}`
+  );
+  return resp.json();
+}
+
+// Bundle — all three combined (20% discount)
+async function getBundle(coin: string, timeframes = "1h,4h") {
+  const resp = await fetchWithPayment(
+    `${BASE_URL}/bundle/${coin}?timeframes=${timeframes}`
+  );
+  return resp.json();
+}
+
+// Free endpoints — no payment needed, use regular fetch
+async function getHealth() {
+  const resp = await fetch(`${BASE_URL}/health`);
+  return resp.json();
+}
+
+async function getCoins() {
+  const resp = await fetch(`${BASE_URL}/coins`);
+  return resp.json();
+}
+```
+
+## Working with the Response
+
+```typescript
+interface PulseResponse {
+  coin: string;
+  price: { current: number };
+  timeframes: Record<string, {
+    indicators: {
+      rsi_14: number;
+      rsi_zone: string;
+      trend: { direction: number; label: string; ema_stack: string };
+      bollinger: { position_pct: number; width_pct: number };
+      zscore_100: number;
+      // ... more fields
+    };
+    candle_freshness_seconds: number;
+  }>;
+  confluence: {
+    score: number;
+    bias: "bullish" | "bearish" | "neutral";
+    bullish_count: number;
+    bearish_count: number;
+  };
+  regime: { current: string };
+  derivatives: {
+    funding_rate: number;
+    funding_annualized_pct: number;
+    open_interest: number;
+    spread_bps: number;
+  };
+  meta: { execution_ms: number; warning?: string };
+}
+
+async function analyzeMarket(coin: string) {
+  const data: PulseResponse = await getPulse(coin);
+
+  console.log(`${coin} @ $${data.price.current.toLocaleString()}`);
+  console.log(`Regime: ${data.regime.current}`);
+  console.log(`Confluence: ${(data.confluence.score * 100).toFixed(0)}% ${data.confluence.bias}`);
+
+  for (const [tf, analysis] of Object.entries(data.timeframes)) {
+    const { rsi_14, rsi_zone, trend } = analysis.indicators;
+    console.log(`  [${tf}] RSI: ${rsi_14.toFixed(1)} (${rsi_zone}) | Trend: ${trend.label}`);
+  }
+
+  if (data.meta.warning === "stale_data") {
+    console.warn("Warning: market data is stale (>2 hours old)");
+  }
+}
+```
+
+## Error Handling
+
+```typescript
+async function safePulse(coin: string) {
+  try {
+    const resp = await fetchWithPayment(`${BASE_URL}/pulse/${coin}`);
+
+    if (!resp.ok) {
+      switch (resp.status) {
+        case 400: console.error(`Invalid coin: ${coin}`); break;
+        case 429: console.error("Rate limited — wait and retry"); break;
+        case 503: console.error("Service unavailable — maintenance mode"); break;
+        case 504: console.error("Engine timeout — try again"); break;
+        default: console.error(`Error ${resp.status}`);
+      }
+      return null;
+    }
+
+    return resp.json();
+  } catch (err) {
+    console.error("Network error:", err);
+    return null;
+  }
+}
+```
+
+## Multi-Coin Dashboard
+
+```typescript
+async function dashboard() {
+  // Get available coins (free)
+  const { coins } = await getCoins();
+  console.log(`Scanning ${coins.length} coins...\n`);
+
+  // Fetch top 5 (paid — $0.02 each = $0.10 total)
+  const results = await Promise.all(
+    coins.slice(0, 5).map(async (coin: string) => {
+      const data = await safePulse(coin);
+      return data ? { coin, ...data.confluence } : null;
+    })
+  );
+
+  // Sort by confluence score
+  const sorted = results
+    .filter(Boolean)
+    .sort((a: any, b: any) => b.score - a.score);
+
+  console.log("Coin     Bias       Score");
+  console.log("─".repeat(30));
+  for (const r of sorted) {
+    console.log(`${r!.coin.padEnd(9)}${r!.bias.padEnd(11)}${(r!.score * 100).toFixed(0)}%`);
+  }
+}
+```
+
+## Tips
+
+- Free endpoints (`/health`, `/coins`) don't need `fetchWithPayment` — use regular `fetch`
+- Use `Promise.all` to batch multiple coin requests in parallel
+- Check `/health` before batch operations to avoid wasting payments
+- The `meta.warning` field indicates stale data (>2 hours old)
+- Bundle saves money when you need all three data types for the same coin

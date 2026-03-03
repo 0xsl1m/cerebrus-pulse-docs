@@ -1,0 +1,50 @@
+---
+title: GET /coins
+description: List all available coins — always free.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /coins
+
+<Badge text="Free" variant="success" />
+
+Returns the list of all coins currently available for analysis. No payment required. Not rate limited.
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/coins
+```
+
+No parameters.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coins` | string[] | Array of available coin tickers |
+| `count` | number | Total number of coins |
+| `timestamp_iso` | string | ISO 8601 timestamp |
+
+## Example
+
+```json
+{
+  "coins": [
+    "BTC", "ETH", "SOL", "DOGE", "XRP", "ADA", "AVAX", "LINK",
+    "DOT", "MATIC", "ARB", "OP", "APT", "SUI", "SEI", "TIA",
+    "INJ", "FET", "NEAR", "ATOM", "FIL", "AAVE", "UNI", "MKR",
+    "LDO", "PEPE", "WIF", "JUP", "ONDO", "RENDER"
+  ],
+  "count": 30,
+  "timestamp_iso": "2026-03-02T14:30:00Z"
+}
+```
+
+## Notes
+
+- The coin list is dynamic and may change as new perpetuals are added on Hyperliquid.
+- Always use this endpoint for discovery rather than hardcoding coin lists.
+- Coin tickers are case-insensitive in API requests (`btc`, `BTC`, and `Btc` all work).
+- Some Hyperliquid coins have non-standard tickers (e.g., `kPEPE` instead of `PEPE`). The API normalizes these automatically.

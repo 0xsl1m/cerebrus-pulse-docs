@@ -1,0 +1,107 @@
+---
+title: x402 Payments
+description: How x402 micropayments work with Cerebrus Pulse.
+---
+
+# x402 Payments
+
+Cerebrus Pulse uses the [x402 protocol](https://www.x402.org/) for payments — an open standard for HTTP-native micropayments built on the `402 Payment Required` status code.
+
+## How It Works
+
+```
+Client                          Pulse Gateway                    Base Network
+  |                                  |                                |
+  |  GET /pulse/BTC                  |                                |
+  |--------------------------------->|                                |
+  |                                  |                                |
+  |  402 Payment Required            |                                |
+  |  + payment details (x-402-*)     |                                |
+  |<---------------------------------|                                |
+  |                                  |                                |
+  |  Sign USDC payment              |                                |
+  |  (x402 SDK handles this)        |                                |
+  |--------------------------------------------> USDC transfer        |
+  |                                  |                                |
+  |  Retry request + payment proof   |                                |
+  |--------------------------------->|                                |
+  |                                  |  Verify payment via facilitator|
+  |                                  |------------------------------->|
+  |                                  |<-------------------------------|
+  |  200 OK + analysis data          |                                |
+  |<---------------------------------|                                |
+```
+
+The x402 SDK in your HTTP client handles steps 2–4 automatically. From your perspective, it's just a normal HTTP request that costs $0.01–$0.04.
+
+## Network Details
+
+| Property | Value |
+|----------|-------|
+| **Network** | Base mainnet (chain ID 8453) |
+| **Currency** | USDC |
+| **Scheme** | Exact EVM |
+| **Facilitator** | Coinbase CDP |
+
+## Payment Details by Endpoint
+
+| Endpoint | Price | Payment Type |
+|----------|-------|-------------|
+| `/pulse/{coin}` | $0.02 USDC | Per request |
+| `/sentiment` | $0.01 USDC | Per request |
+| `/funding/{coin}` | $0.01 USDC | Per request |
+| `/bundle/{coin}` | $0.04 USDC | Per request |
+| `/health` | Free | No payment |
+| `/coins` | Free | No payment |
+
+## Why x402?
+
+- **No API keys** — Your wallet address is your identity. No registration, no accounts.
+- **No subscriptions** — Pay only for what you use. One query = one micropayment.
+- **Instant settlement** — Payments settle on Base (fast, cheap L2).
+- **Open standard** — x402 is an open protocol. Any x402-compatible client works.
+- **Transparent pricing** — The 402 response includes exact payment details before you pay.
+
+## Wallet Requirements
+
+You need a wallet with:
+1. **USDC on Base** — For payments (as little as $1 gets you 50+ pulse queries)
+2. **A small amount of ETH on Base** — For gas fees (typically < $0.001 per transaction)
+
+### Getting USDC on Base
+
+- Bridge from Ethereum mainnet via the [Base Bridge](https://bridge.base.org)
+- Purchase directly on exchanges that support Base withdrawals (Coinbase, Binance)
+- Use a cross-chain bridge (Across, Stargate)
+
+## SDK Options
+
+### Python
+```bash
+pip install "x402[evm]" httpx
+```
+See the [Python SDK Guide](/guides/python-sdk) for full integration details.
+
+### TypeScript / Node.js
+```bash
+npm install x402 viem
+```
+See the [TypeScript SDK Guide](/guides/typescript-sdk) for full integration details.
+
+## Budget Controls
+
+The x402 SDKs support budget limits to prevent accidental overspending:
+
+```python
+# Python — the SDK supports per-request and global limits
+# Configure in your client setup
+```
+
+At Pulse prices ($0.01–$0.04 per query), $10 of USDC gives you 250–1000 API calls.
+
+## Security
+
+- Payments use EVM signatures — your private key never leaves your machine
+- The x402 facilitator (Coinbase CDP) verifies payments on-chain
+- Pulse never sees your private key — only the signed payment proof
+- All paid endpoints are rate-limited to prevent abuse

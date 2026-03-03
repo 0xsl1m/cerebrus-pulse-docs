@@ -1,0 +1,69 @@
+---
+title: Supported Coins
+description: Full list of coins available on Cerebrus Pulse.
+---
+
+# Supported Coins
+
+Cerebrus Pulse provides technical analysis for **30+ Hyperliquid perpetuals**.
+
+:::tip
+The coin list is dynamic. Use `GET /coins` (free) for the live, up-to-date list.
+:::
+
+## Current Coins
+
+| Ticker | Asset | Category |
+|--------|-------|----------|
+| BTC | Bitcoin | Major |
+| ETH | Ethereum | Major |
+| SOL | Solana | Major |
+| XRP | Ripple | Major |
+| DOGE | Dogecoin | Major |
+| ADA | Cardano | Major |
+| AVAX | Avalanche | L1 |
+| LINK | Chainlink | Infrastructure |
+| DOT | Polkadot | L1 |
+| MATIC | Polygon | L2 |
+| ARB | Arbitrum | L2 |
+| OP | Optimism | L2 |
+| APT | Aptos | L1 |
+| SUI | Sui | L1 |
+| SEI | Sei | L1 |
+| TIA | Celestia | Modular |
+| INJ | Injective | DeFi |
+| FET | Fetch.ai | AI |
+| NEAR | NEAR Protocol | L1 |
+| ATOM | Cosmos | L1 |
+| FIL | Filecoin | Storage |
+| AAVE | Aave | DeFi |
+| UNI | Uniswap | DeFi |
+| MKR | Maker | DeFi |
+| LDO | Lido | DeFi |
+| PEPE | Pepe | Meme |
+| WIF | dogwifhat | Meme |
+| JUP | Jupiter | DeFi |
+| ONDO | Ondo Finance | RWA |
+| RENDER | Render Network | AI/GPU |
+
+## Notes
+
+- **Case-insensitive**: `btc`, `BTC`, and `Btc` all work.
+- **Hyperliquid naming**: Some tickers differ from other exchanges. For example, Hyperliquid uses `kPEPE` internally — the API normalizes this automatically, so you can use `PEPE`.
+- **New coins**: As Hyperliquid adds new perpetuals and sufficient candle history accumulates, they become available on Pulse automatically.
+
+## Programmatic Discovery
+
+```bash
+# Free — no payment required
+curl https://pulse.openclaw.ai/coins
+```
+
+```json
+{
+  "coins": ["BTC", "ETH", "SOL", "..."],
+  "count": 30
+}
+```
+
+Always use `GET /coins` for programmatic workflows rather than hardcoding this list.

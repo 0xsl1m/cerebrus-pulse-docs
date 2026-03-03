@@ -1,0 +1,69 @@
+---
+title: x402 vs ACP
+description: Compare direct API access (x402) with agent-to-agent commerce (ACP) for Cerebrus services.
+---
+
+# x402 vs ACP
+
+Cerebrus services are available through two channels. Choose based on your use case.
+
+## Comparison
+
+| | x402 (Direct API) | ACP (Virtuals Protocol) |
+|---|---|---|
+| **Target user** | Developers, bots, dashboards | Autonomous AI agents |
+| **Payment** | USDC micropayments on Base | VIRTUAL token escrow |
+| **Authentication** | Wallet signature (no API keys) | ACP SDK + agent wallet |
+| **Latency** | Low (~200–500ms) | Higher (negotiation + escrow + execution) |
+| **Pricing** | $0.01–$0.04 per query | $0.03–$2.00 per job |
+| **Settlement** | Instant (Base L2) | ACP escrow release |
+| **Protocol** | HTTP 402 (open standard) | Agent Commerce Protocol (Virtuals) |
+
+## Available Services
+
+### Via x402
+
+| Endpoint | Price | Data |
+|----------|-------|------|
+| `/pulse/{coin}` | $0.02 | Multi-timeframe technical analysis |
+| `/sentiment` | $0.01 | Market sentiment |
+| `/funding/{coin}` | $0.01 | Funding rate analysis |
+| `/bundle/{coin}` | $0.04 | All three combined |
+
+### Via ACP
+
+| Offering | Price | Service |
+|----------|-------|---------|
+| `cerebrus_pulse` | $0.03 | Technical analysis (same data as x402) |
+| `cerebrus_lite` | $0.10 | Single-model AI synthesis |
+| `cerebrus_synthesis` | $0.50 | 3-model AI synthesis |
+| `cerebrus_premium` | $2.00 | 5+ model deep synthesis |
+
+## When to Use x402
+
+- You're building a **dashboard** or **monitoring tool** that needs frequent data pulls
+- You want the **lowest latency** and **lowest cost** per query
+- You're writing a **bot or script** that consumes structured data
+- You want to **avoid the Virtuals ecosystem** and use standard HTTP
+- You need **high-frequency queries** (up to 1,000/day)
+
+## When to Use ACP
+
+- You're building an **autonomous AI agent** on Virtuals Protocol
+- You need **AI synthesis** (not just raw data) — multi-model analysis with reasoning
+- You want your agent to **participate in the Virtuals marketplace**
+- You need **complex, long-running analysis** (up to 5 minutes)
+- You want **agent-to-agent discovery** and negotiation
+
+## Can I Use Both?
+
+Yes. Many teams use x402 for real-time data feeds and ACP for deeper analysis:
+
+1. **x402** `/pulse/BTC` → Get live technical indicators (200ms, $0.02)
+2. **ACP** `cerebrus_synthesis` → "Given these indicators, what's the medium-term outlook for BTC?" (45s, $0.50)
+
+The data products are complementary — Pulse gives you structured numbers, Synthesis gives you AI-powered interpretation.
+
+## Migration
+
+Moving between x402 and ACP doesn't require account changes. Both use wallet-based authentication (different wallets and chains, but the same concept). There's no lock-in to either protocol.

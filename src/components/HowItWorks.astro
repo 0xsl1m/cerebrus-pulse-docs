@@ -1,0 +1,54 @@
+---
+---
+
+<section class="landing-section landing-section-light" id="how-it-works">
+  <div class="mx-auto max-w-5xl">
+    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">How It Works</h2>
+    <p class="mb-16 text-center text-gray-400 text-lg">Three steps. No signups. No API keys.</p>
+
+    <div class="grid gap-8 md:grid-cols-3">
+      <!-- Step 1 -->
+      <div class="relative rounded-xl border border-gray-700 bg-gray-900/50 p-8">
+        <div class="step-number mb-6">1</div>
+        <h3 class="mb-3 text-xl font-bold">Request</h3>
+        <p class="mb-4 text-gray-400">
+          Make a standard HTTP GET request to any Pulse endpoint.
+        </p>
+        <code class="block rounded-lg bg-gray-900 p-3 text-sm text-accent-200 font-mono">
+          GET /pulse/ETH?timeframes=1h
+        </code>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="relative rounded-xl border border-gray-700 bg-gray-900/50 p-8">
+        <div class="step-number mb-6">2</div>
+        <h3 class="mb-3 text-xl font-bold">Pay</h3>
+        <p class="mb-4 text-gray-400">
+          The server returns <code class="text-accent-200">402 Payment Required</code>. The x402 SDK
+          automatically signs a USDC micropayment on Base.
+        </p>
+        <div class="flex items-center gap-2">
+          <span class="price-badge">$0.02 USDC</span>
+          <span class="text-gray-500 text-sm">on Base</span>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="relative rounded-xl border border-gray-700 bg-gray-900/50 p-8">
+        <div class="step-number mb-6">3</div>
+        <h3 class="mb-3 text-xl font-bold">Receive</h3>
+        <p class="mb-4 text-gray-400">
+          Get comprehensive technical analysis: RSI, EMAs, Bollinger Bands,
+          trend, regime, derivatives, and confluence scoring.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <span class="coin-chip text-xs">RSI</span>
+          <span class="coin-chip text-xs">EMAs</span>
+          <span class="coin-chip text-xs">Bollinger</span>
+          <span class="coin-chip text-xs">Regime</span>
+          <span class="coin-chip text-xs">Confluence</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

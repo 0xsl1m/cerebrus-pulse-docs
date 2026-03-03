@@ -1,0 +1,62 @@
+---
+title: GET /sentiment
+description: Market sentiment analysis across the crypto market.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /sentiment
+
+<Badge text="$0.01 USDC" variant="tip" />
+
+Returns aggregated market sentiment labels.
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/sentiment
+```
+
+No parameters required.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `sentiment` | object | Sentiment data and labels |
+| `meta` | object | Provider metadata |
+
+## Example
+
+```bash
+GET /sentiment
+```
+
+```json
+{
+  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "sentiment": {
+    "overall": "bullish",
+    "score": 0.68,
+    "labels": {
+      "fear_greed": "greed",
+      "momentum": "positive",
+      "funding_bias": "long"
+    }
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 95
+  }
+}
+```
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 500 | Internal processing error |

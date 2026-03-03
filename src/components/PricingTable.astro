@@ -1,0 +1,95 @@
+---
+const endpoints = [
+  {
+    method: 'GET',
+    path: '/pulse/{coin}',
+    price: '$0.02',
+    description: 'Multi-timeframe technical analysis',
+    details: 'RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score, trend detection, confluence scoring, derivatives data, market regime',
+    params: 'timeframes=1h,4h',
+  },
+  {
+    method: 'GET',
+    path: '/sentiment',
+    price: '$0.01',
+    description: 'Market sentiment analysis',
+    details: 'Aggregated sentiment labels across the crypto market',
+    params: 'none',
+  },
+  {
+    method: 'GET',
+    path: '/funding/{coin}',
+    price: '$0.01',
+    description: 'Funding rate analysis',
+    details: 'Historical and current funding rates with annualized projections',
+    params: 'lookback_hours=24',
+  },
+  {
+    method: 'GET',
+    path: '/bundle/{coin}',
+    price: '$0.04',
+    description: 'Complete analysis bundle',
+    details: 'Pulse + Sentiment + Funding combined in one response. 20% discount vs buying individually.',
+    params: 'timeframes=1h,4h',
+    highlight: true,
+  },
+];
+
+const freeEndpoints = [
+  { method: 'GET', path: '/health', description: 'Gateway health status' },
+  { method: 'GET', path: '/coins', description: 'List available coins' },
+];
+---
+
+<section class="landing-section landing-section-dark" id="pricing">
+  <div class="mx-auto max-w-5xl">
+    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">Pay Per Query</h2>
+    <p class="mb-4 text-center text-gray-400 text-lg">USDC micropayments on Base. No subscriptions.</p>
+    <p class="mb-12 text-center text-sm text-gray-500">
+      Payments are handled automatically by the x402 protocol. Your wallet is your API key.
+    </p>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      {endpoints.map((ep) => (
+        <div class={`price-card ${ep.highlight ? 'border-accent-600/50 ring-1 ring-accent-600/20' : ''}`}>
+          <div class="mb-3 flex items-center justify-between">
+            <code class="text-sm font-mono">
+              <span class="text-green-400">{ep.method}</span>{' '}
+              <span class="text-gray-200">{ep.path}</span>
+            </code>
+            <span class="price-badge">{ep.price} USDC</span>
+          </div>
+          <h3 class="mb-2 text-lg font-semibold">{ep.description}</h3>
+          <p class="mb-3 text-sm text-gray-400">{ep.details}</p>
+          {ep.params !== 'none' && (
+            <div class="text-xs text-gray-500">
+              Params: <code class="text-gray-400">{ep.params}</code>
+            </div>
+          )}
+          {ep.highlight && (
+            <div class="mt-3">
+              <span class="rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-400">
+                Best Value — 20% Discount
+              </span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-8 rounded-xl border border-gray-700/50 bg-gray-800/30 p-6">
+      <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Free Endpoints</h3>
+      <div class="grid gap-3 sm:grid-cols-2">
+        {freeEndpoints.map((ep) => (
+          <div class="flex items-center gap-3">
+            <code class="text-sm font-mono">
+              <span class="text-green-400">{ep.method}</span>{' '}
+              <span class="text-gray-300">{ep.path}</span>
+            </code>
+            <span class="text-sm text-gray-500">— {ep.description}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

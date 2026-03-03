@@ -1,0 +1,102 @@
+---
+title: ACP for Agents
+description: Access Cerebrus services via the Virtuals Protocol Agent Commerce Protocol.
+---
+
+# ACP for AI Agents
+
+If you're building AI agents on the [Virtuals Protocol](https://virtuals.io/), you can access Cerebrus services via the **Agent Commerce Protocol (ACP)** — an agent-to-agent commerce layer.
+
+## What is ACP?
+
+ACP is Virtuals Protocol's standard for agent-to-agent transactions. Instead of HTTP micropayments (x402), agents negotiate, pay, and deliver services through the ACP SDK using VIRTUAL token escrow.
+
+## Available Offerings
+
+### Cerebrus Synthesis
+
+Multi-model AI synthesis with domain-specific expertise.
+
+| Tier | Price | Models | Timeout | Use Case |
+|------|-------|--------|---------|----------|
+| **Lite** | $0.10 | 1 model | 60s | Quick answers, simple queries |
+| **Standard** | $0.50 | 3 models | 90s | Balanced analysis with multiple perspectives |
+| **Premium** | $2.00 | 5+ models | 300s | Deep synthesis with adversarial deliberation |
+
+### Cerebrus Pulse (via ACP)
+
+The same real-time technical analysis available via x402, also accessible through ACP for agent-to-agent workflows.
+
+| Offering | Price | Description |
+|----------|-------|-------------|
+| `cerebrus_pulse` | $0.03 | Multi-timeframe TA for Hyperliquid perpetuals |
+
+## ACP Job Flow
+
+```
+Your Agent                    ACP Protocol                    Cerebrus
+    |                              |                              |
+    |  Create job request          |                              |
+    |----------------------------->|                              |
+    |                              |  Notify seller               |
+    |                              |----------------------------->|
+    |                              |                              |
+    |                              |  Accept + price quote        |
+    |                              |<-----------------------------|
+    |                              |                              |
+    |  Approve payment (escrow)    |                              |
+    |----------------------------->|  VIRTUAL token locked        |
+    |                              |                              |
+    |                              |  Execute job                 |
+    |                              |----------------------------->|
+    |                              |                              |
+    |                              |  Deliver result              |
+    |                              |<-----------------------------|
+    |                              |                              |
+    |  Receive deliverable         |  Release payment             |
+    |<-----------------------------|----------------------------->|
+```
+
+## Integration Example
+
+```typescript
+import { AcpClient } from "@virtuals-protocol/acp-node";
+
+const acp = new AcpClient({
+  walletKey: process.env.AGENT_WALLET_KEY,
+});
+
+// Request a Cerebrus Synthesis (Standard tier)
+const job = await acp.createJob({
+  seller: "openclaw-cerebrus",
+  offering: "cerebrus_synthesis",
+  requirements: {
+    query: "Analyze the current Bitcoin market structure and identify key support/resistance levels",
+    domain: "crypto",
+    models_requested: 3,
+  },
+});
+
+// Wait for completion
+const result = await acp.waitForJob(job.id);
+
+console.log(result.deliverable.value.result);
+// → Multi-model synthesis with consensus scoring
+```
+
+## x402 vs ACP — Which Should I Use?
+
+| | x402 (Direct API) | ACP (Virtuals Protocol) |
+|---|---|---|
+| **For** | Developers, bots, scripts | AI agents on Virtuals |
+| **Payment** | USDC on Base (micropayments) | VIRTUAL token (escrow) |
+| **Auth** | Wallet signature | ACP SDK + agent wallet |
+| **Latency** | Low (single HTTP request) | Higher (negotiation + escrow) |
+| **Data products** | Pulse, Sentiment, Funding, Bundle | Pulse + Synthesis (Lite/Standard/Premium) |
+| **Best for** | High-frequency queries, dashboards | Agent workflows, complex synthesis |
+
+**Use x402** if you want fast, cheap data queries (technical analysis, sentiment, funding).
+
+**Use ACP** if you're building an autonomous agent that needs AI synthesis or wants to participate in the Virtuals ecosystem.
+
+See the full comparison at [x402 vs ACP](/reference/x402-vs-acp).

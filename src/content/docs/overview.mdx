@@ -1,0 +1,53 @@
+---
+title: Overview
+description: Cerebrus Pulse — real-time multi-timeframe technical analysis for Hyperliquid perpetuals, paid via x402 micropayments.
+---
+
+# Cerebrus Pulse
+
+**Real-time multi-timeframe technical analysis for 30+ Hyperliquid perpetuals, paid via x402 micropayments on Base.**
+
+Cerebrus Pulse is an API that delivers institutional-grade technical indicators, derivatives data, market regime detection, and multi-signal confluence scoring — all accessible with a single HTTP request and a USDC micropayment.
+
+## Key Features
+
+- **7 indicator families** — RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score, trend detection
+- **Multi-signal confluence** — Automated scoring (0.0–1.0) combining all indicators into a directional bias
+- **Derivatives data** — Funding rates, open interest, impact bid/ask, spread (bps)
+- **Market regime** — Current regime classification (RISK_ON, RISK_OFF, etc.)
+- **3 timeframes** — 15-minute, 1-hour, 4-hour analysis
+- **30+ coins** — Major Hyperliquid perpetuals (BTC, ETH, SOL, and more)
+
+## Payment Model
+
+Pulse uses the [x402 protocol](https://www.x402.org/) for payments:
+
+1. You make a standard HTTP request
+2. The server responds with `402 Payment Required` and payment details
+3. The x402 SDK in your client automatically signs a USDC micropayment on Base
+4. The server verifies payment and returns the data
+
+**No API keys. No subscriptions. No accounts.** Your wallet is your identity.
+
+## Endpoints
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `GET /pulse/{coin}` | $0.02 USDC | Multi-timeframe technical analysis |
+| `GET /sentiment` | $0.01 USDC | Market sentiment labels |
+| `GET /funding/{coin}` | $0.01 USDC | Funding rate analysis |
+| `GET /bundle/{coin}` | $0.04 USDC | All three combined (20% discount) |
+| `GET /health` | Free | Gateway health status |
+| `GET /coins` | Free | List available coins |
+
+## Quick Links
+
+- **[Quickstart](/quickstart)** — Make your first API call in 5 minutes
+- **[API Reference](/api/pulse)** — Full endpoint documentation
+- **[x402 Payments Guide](/guides/x402-payments)** — Understand the payment flow
+- **[Python SDK](/guides/python-sdk)** — Integrate with Python
+- **[TypeScript SDK](/guides/typescript-sdk)** — Integrate with TypeScript/Node.js
+
+## For AI Agents
+
+If you're building AI agents on the Virtuals Protocol, Cerebrus also offers synthesis services via ACP (Agent Commerce Protocol). See the [ACP for Agents](/guides/acp-agents) guide.

@@ -1,0 +1,164 @@
+---
+title: Python SDK
+description: Integrate Cerebrus Pulse with Python using the x402 SDK.
+---
+
+# Python SDK Integration
+
+Complete guide to consuming Cerebrus Pulse from Python using the x402 SDK.
+
+## Installation
+
+```bash
+pip install "x402[evm]" httpx eth-account
+```
+
+## Setup
+
+```python
+from eth_account import Account
+from x402.clients.httpx import x402HttpxClient
+from x402.types.evm import ExactEvmSigner, register_exact_evm_client
+
+# Load your private key securely (env var, keyfile, etc.)
+import os
+PRIVATE_KEY = os.environ["BASE_WALLET_PRIVATE_KEY"]
+
+# Create the EVM signer
+signer = ExactEvmSigner(Account.from_key(PRIVATE_KEY))
+```
+
+## Async Usage (Recommended)
+
+```python
+import asyncio
+
+BASE_URL = "https://pulse.openclaw.ai"
+
+async def get_pulse(coin: str, timeframes: str = "1h,4h") -> dict:
+    async with x402HttpxClient() as client:
+        register_exact_evm_client(client, signer)
+
+        resp = await client.get(
+            f"{BASE_URL}/pulse/{coin}",
+            params={"timeframes": timeframes}
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+async def get_sentiment() -> dict:
+    async with x402HttpxClient() as client:
+        register_exact_evm_client(client, signer)
+        resp = await client.get(f"{BASE_URL}/sentiment")
+        resp.raise_for_status()
+        return resp.json()
+
+async def get_funding(coin: str, lookback_hours: int = 24) -> dict:
+    async with x402HttpxClient() as client:
+        register_exact_evm_client(client, signer)
+        resp = await client.get(
+            f"{BASE_URL}/funding/{coin}",
+            params={"lookback_hours": lookback_hours}
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+async def get_bundle(coin: str, timeframes: str = "1h,4h") -> dict:
+    async with x402HttpxClient() as client:
+        register_exact_evm_client(client, signer)
+        resp = await client.get(
+            f"{BASE_URL}/bundle/{coin}",
+            params={"timeframes": timeframes}
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+# Usage
+async def main():
+    data = await get_pulse("BTC")
+    print(f"BTC: {data['confluence']['bias']} (score: {data['confluence']['score']})")
+
+asyncio.run(main())
+```
+
+## Working with the Response
+
+```python
+async def analyze_market(coin: str):
+    data = await get_pulse(coin, timeframes="1h,4h")
+
+    price = data["price"]["current"]
+    confluence = data["confluence"]
+    regime = data["regime"]["current"]
+
+    print(f"\n{'='*50}")
+    print(f"{coin} @ ${price:,.2f}  |  Regime: {regime}")
+    print(f"Confluence: {confluence['score']:.0%} {confluence['bias']}")
+    print(f"{'='*50}")
+
+    for tf, analysis in data["timeframes"].items():
+        ind = analysis["indicators"]
+        print(f"\n  [{tf}]")
+        print(f"    RSI:    {ind['rsi_14']:.1f} ({ind['rsi_zone']})")
+        print(f"    Trend:  {ind['trend']['label']} ({ind['trend']['ema_stack']})")
+        print(f"    BB Pos: {ind['bollinger']['position_pct']:.0%}")
+        print(f"    Z-Score: {ind['zscore_100']:.2f}")
+
+    deriv = data["derivatives"]
+    print(f"\n  Funding: {deriv['funding_annualized_pct']:.1f}% annualized")
+    print(f"  OI: ${deriv['open_interest']:,.0f}")
+    print(f"  Spread: {deriv['spread_bps']:.1f} bps")
+```
+
+## Error Handling
+
+```python
+import httpx
+
+async def safe_pulse(coin: str) -> dict | None:
+    try:
+        async with x402HttpxClient() as client:
+            register_exact_evm_client(client, signer)
+            resp = await client.get(f"{BASE_URL}/pulse/{coin}")
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 400:
+            print(f"Invalid coin: {coin}")
+        elif e.response.status_code == 429:
+            print("Rate limited — wait and retry")
+        elif e.response.status_code == 503:
+            print("Service unavailable — gateway in maintenance")
+        elif e.response.status_code == 504:
+            print("Engine timeout — try again")
+        else:
+            print(f"Error {e.response.status_code}: {e.response.text}")
+        return None
+```
+
+## Multi-Coin Scanning
+
+```python
+async def scan_all_coins():
+    # First, get the coin list (free)
+    async with x402HttpxClient() as client:
+        register_exact_evm_client(client, signer)
+        resp = await client.get(f"{BASE_URL}/coins")
+        coins = resp.json()["coins"]
+
+    print(f"Scanning {len(coins)} coins...")
+
+    # Then fetch pulse for each (paid)
+    for coin in coins[:5]:  # Limit to 5 for this example
+        data = await safe_pulse(coin)
+        if data:
+            c = data["confluence"]
+            print(f"  {coin}: {c['bias']} ({c['score']:.0%})")
+```
+
+## Tips
+
+- **Reuse the client** within a session to avoid reconnection overhead
+- **Use `/bundle`** instead of calling `/pulse` + `/sentiment` + `/funding` separately — it's cheaper
+- **Check `/health`** before batch operations to avoid wasting payments on a degraded gateway
+- **Handle stale data** — check `meta.warning` for `"stale_data"` which means the underlying market data is >2 hours old

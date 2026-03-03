@@ -1,0 +1,35 @@
+---
+const coins = [
+  'BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'AVAX', 'LINK', 'DOT', 'MATIC',
+  'ARB', 'OP', 'APT', 'SUI', 'SEI', 'TIA', 'INJ', 'FET', 'NEAR', 'ATOM',
+  'FIL', 'AAVE', 'UNI', 'MKR', 'LDO', 'PEPE', 'WIF', 'JUP', 'ONDO', 'RENDER',
+];
+
+const timeframes = ['15m', '1h', '4h'];
+---
+
+<section class="landing-section landing-section-light" id="coins">
+  <div class="mx-auto max-w-5xl">
+    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">30+ Hyperliquid Perpetuals</h2>
+    <p class="mb-6 text-center text-gray-400 text-lg">Real-time data across three timeframes</p>
+
+    <div class="mb-10 flex items-center justify-center gap-3">
+      {timeframes.map((tf) => (
+        <span class="rounded-lg border border-accent-600/30 bg-accent-600/10 px-4 py-1.5 text-sm font-mono font-semibold text-accent-200">
+          {tf}
+        </span>
+      ))}
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-2.5">
+      {coins.map((coin) => (
+        <span class="coin-chip">{coin}</span>
+      ))}
+      <span class="coin-chip text-gray-500">+ more</span>
+    </div>
+
+    <p class="mt-8 text-center text-sm text-gray-500">
+      Use <code class="text-gray-400">GET /coins</code> for the live list. It's free.
+    </p>
+  </div>
+</section>

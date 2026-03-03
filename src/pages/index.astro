@@ -1,0 +1,44 @@
+---
+import Landing from '../layouts/Landing.astro';
+import Hero from '../components/Hero.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import PricingTable from '../components/PricingTable.astro';
+import CoinGrid from '../components/CoinGrid.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Landing
+  title="Cerebrus Pulse — Real-time Crypto Intelligence"
+  description="Multi-timeframe technical analysis for 30+ Hyperliquid perpetuals. Pay per query with x402 micropayments on Base. No API keys. No subscriptions."
+>
+  <Hero />
+  <HowItWorks />
+  <PricingTable />
+  <CoinGrid />
+
+  <!-- CTA Banner -->
+  <section class="landing-section landing-section-dark">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="mb-4 text-3xl font-bold md:text-4xl">Start Building</h2>
+      <p class="mb-8 text-lg text-gray-400">
+        Install the x402 SDK, fund a Base wallet with USDC, and make your first query in under 5 minutes.
+      </p>
+      <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <a
+          href="/quickstart"
+          class="rounded-xl bg-accent-600 px-8 py-3.5 text-lg font-semibold text-white shadow-lg shadow-accent-600/25 hover:bg-accent-600/80 transition-all"
+        >
+          Read the Quickstart
+        </a>
+        <a
+          href="/guides/x402-payments"
+          class="rounded-xl border border-gray-600 px-8 py-3.5 text-lg font-semibold text-gray-200 hover:border-gray-400 hover:text-white transition-all"
+        >
+          Learn About x402
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Landing>

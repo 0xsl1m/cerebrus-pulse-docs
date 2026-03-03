@@ -1,0 +1,115 @@
+---
+title: Response Schemas
+description: Complete response schemas and field definitions for all Cerebrus Pulse endpoints.
+---
+
+# Response Schemas
+
+Detailed field definitions and value ranges for all Pulse API responses.
+
+## Pulse Response Schema
+
+Returned by `GET /pulse/{coin}` and within the `pulse` key of `GET /bundle/{coin}`.
+
+### Indicators
+
+| Field | Type | Range | Description |
+|-------|------|-------|-------------|
+| `rsi_14` | number | 0–100 | Relative Strength Index (14-period) |
+| `rsi_zone` | string | enum | RSI classification (see below) |
+| `atr_14` | number | ≥0 | Average True Range, absolute price units |
+| `atr_pct` | number | ≥0 | ATR as percentage of current price |
+| `ema_20` | number | >0 | 20-period Exponential Moving Average |
+| `ema_50` | number | >0 | 50-period EMA |
+| `ema_200` | number | >0 | 200-period EMA |
+| `vwap_20` | number | >0 | Volume-Weighted Average Price (20-period) |
+| `zscore_100` | number | any | Standard deviations from 100-period mean |
+
+### RSI Zones
+
+| Zone | RSI Range | Meaning |
+|------|-----------|---------|
+| `overbought` | ≥ 70 | Potential reversal downward |
+| `bullish` | 60–70 | Upward momentum |
+| `neutral` | 40–60 | No clear directional bias |
+| `bearish` | 30–40 | Downward momentum |
+| `oversold` | ≤ 30 | Potential reversal upward |
+
+### Bollinger Bands
+
+| Field | Type | Range | Description |
+|-------|------|-------|-------------|
+| `upper` | number | >0 | Upper band (SMA + 2σ) |
+| `middle` | number | >0 | Middle band (20-period SMA) |
+| `lower` | number | >0 | Lower band (SMA - 2σ) |
+| `width_pct` | number | ≥0 | Band width as % of middle band |
+| `position_pct` | number | 0–1+ | Price position within bands. 0.0 = at lower band, 0.5 = middle, 1.0 = upper band. Can exceed 0–1 range when price is outside bands. |
+
+### Trend
+
+| Field | Type | Values | Description |
+|-------|------|--------|-------------|
+| `direction` | number | -1, 0, 1 | -1 = bearish, 0 = neutral, 1 = bullish |
+| `label` | string | `bullish`, `bearish`, `neutral` | Human-readable direction |
+| `ema_stack` | string | see below | EMA alignment classification |
+
+**EMA Stack Values:**
+
+| Value | Meaning |
+|-------|---------|
+| `bull_aligned` | EMA 20 > EMA 50 > EMA 200 — strong bullish structure |
+| `bear_aligned` | EMA 20 < EMA 50 < EMA 200 — strong bearish structure |
+| `mixed` | EMAs are crossing — transitional period |
+| `flat` | EMAs are converged — low volatility, directionless |
+
+### Derivatives
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `funding_rate` | number | Current 8-hour funding rate (raw decimal, e.g., 0.0001 = 0.01%) |
+| `funding_annualized_pct` | number | Annualized funding rate percentage |
+| `open_interest` | number | Total open interest in USD notional |
+| `impact_bid` | number | Impact bid price (large sell order) |
+| `impact_ask` | number | Impact ask price (large buy order) |
+| `spread_bps` | number | Bid-ask spread in basis points |
+
+### Confluence
+
+| Field | Type | Range | Description |
+|-------|------|-------|-------------|
+| `score` | number | 0.0–1.0 | Multi-signal confidence. Higher = stronger signal. |
+| `bias` | string | enum | `bullish`, `bearish`, or `neutral` |
+| `signals` | object | — | Per-indicator signal directions |
+| `bullish_count` | number | 0–4 | Number of indicators signaling bullish |
+| `bearish_count` | number | 0–4 | Number of indicators signaling bearish |
+
+**Signal sources:** `rsi`, `trend`, `bollinger`, `zscore` — each can be `bullish`, `bearish`, or `neutral`.
+
+### Regime
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `current` | string | Market regime label (e.g., `RISK_ON`, `RISK_OFF`) |
+| `as_of` | number | Unix timestamp when regime was last calculated |
+
+### Meta
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `provider` | string | Always `"OpenClaw/Cerebrus"` |
+| `offering` | string | Always `"cerebrus_pulse"` |
+| `execution_ms` | number | Server processing time in milliseconds |
+| `coins_available` | number | Total coins supported |
+| `data_age_seconds` | number | Age of the underlying market data |
+| `warning` | string? | Optional. `"stale_data"` if market data is older than 2 hours. |
+
+## Candle Freshness
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `candle_freshness_seconds` | number | Seconds since the most recent candle closed. Lower = more recent data. |
+
+Freshness varies by timeframe:
+- **15m**: Typically 0–900 seconds
+- **1h**: Typically 0–3600 seconds
+- **4h**: Typically 0–14400 seconds
