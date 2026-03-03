@@ -3,21 +3,21 @@
 
 <section class="landing-hero pt-24">
   <!-- Ambient orbs for depth -->
-  <div class="orb orb-purple"></div>
-  <div class="orb orb-cyan"></div>
-  <div class="orb orb-pink"></div>
+  <div class="orb orb-blue"></div>
+  <div class="orb orb-amber"></div>
+  <div class="orb orb-blue-secondary"></div>
 
   <div class="relative z-10 mx-auto max-w-5xl px-6 py-24 text-center">
     <!-- Dual protocol badges -->
     <div class="mb-8 flex items-center justify-center gap-3 animate-slide-up">
-      <span class="hero-badge">
+      <span class="hero-badge-x402">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
         </svg>
         x402 on Base
       </span>
-      <span class="text-gray-600 text-sm font-mono">+</span>
-      <span class="hero-badge" style="background: rgba(255, 0, 110, 0.12); border-color: rgba(255, 0, 110, 0.2);">
+      <span class="text-[#475569] text-sm font-mono">+</span>
+      <span class="hero-badge-acp">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
           <path d="M13 7H7v6h6V7z"/>
           <path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clip-rule="evenodd"/>
@@ -32,12 +32,12 @@
     </h1>
 
     <!-- Tagline -->
-    <p class="mx-auto mb-4 max-w-2xl text-xl text-gray-300 md:text-2xl animate-slide-up-delay-1">
-      Two protocols. One intelligence layer. <span class="text-cyan-400">Pay per query.</span>
+    <p class="mx-auto mb-4 max-w-2xl text-xl text-[#CBD5E1] md:text-2xl animate-slide-up-delay-1">
+      Two protocols. One intelligence layer. <span class="text-[#60A5FA] font-semibold">Pay per query.</span>
     </p>
-    <p class="mx-auto mb-10 max-w-xl text-base text-gray-400 animate-slide-up-delay-2">
+    <p class="mx-auto mb-10 max-w-xl text-base text-[#94A3B8] animate-slide-up-delay-2">
       Multi-timeframe technical analysis for 30+ Hyperliquid perpetuals.
-      x402 micropayments for developers. ACP agent commerce for autonomous AI.
+      <span class="text-[#60A5FA]">x402 micropayments</span> for developers. <span class="text-[#FBBF24]">ACP agent commerce</span> for autonomous AI.
     </p>
 
     <!-- CTA buttons -->
@@ -53,24 +53,24 @@
     <!-- Code example -->
     <div class="mt-16 mx-auto max-w-2xl animate-slide-up-delay-3">
       <div class="code-block-wrapper text-left">
-        <div class="flex items-center gap-2 border-b border-[rgba(139,63,217,0.15)] px-4 py-2.5">
-          <div class="h-3 w-3 rounded-full bg-[#FF006E]/60"></div>
-          <div class="h-3 w-3 rounded-full bg-[#FFD600]/60"></div>
-          <div class="h-3 w-3 rounded-full bg-[#00D4FF]/60"></div>
-          <span class="ml-2 text-xs text-gray-500 font-mono">terminal</span>
+        <div class="flex items-center gap-2 border-b border-[#1E293B] px-4 py-2.5">
+          <div class="h-3 w-3 rounded-full bg-[#EF4444]/60"></div>
+          <div class="h-3 w-3 rounded-full bg-[#F59E0B]/60"></div>
+          <div class="h-3 w-3 rounded-full bg-[#22C55E]/60"></div>
+          <span class="ml-2 text-xs text-[#64748B] font-mono">terminal</span>
         </div>
-        <pre class="p-4 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-gray-500">$</span> curl https://pulse.openclaw.ai/pulse/BTC?timeframes=1h,4h
-<span class="text-gray-500"># 402 Payment Required  &#8594;  x402 SDK auto-pays $0.02 USDC</span>
+        <pre class="p-4 text-sm leading-relaxed overflow-x-auto"><code class="text-[#CBD5E1]"><span class="text-[#64748B]">$</span> curl https://pulse.openclaw.ai/pulse/BTC?timeframes=1h,4h
+<span class="text-[#64748B]"># 402 Payment Required  &#8594;  x402 SDK auto-pays $0.02 USDC</span>
 
-<span class="text-[#B388FF]">&#123;</span>
-  <span class="text-[#00D4FF]">"coin"</span>: <span class="text-[#FFD600]">"BTC"</span>,
-  <span class="text-[#00D4FF]">"price"</span>: &#123; <span class="text-[#00D4FF]">"current"</span>: <span class="text-[#B388FF]">98765.43</span> &#125;,
-  <span class="text-[#00D4FF]">"confluence"</span>: &#123;
-    <span class="text-[#00D4FF]">"score"</span>: <span class="text-[#B388FF]">0.75</span>,
-    <span class="text-[#00D4FF]">"bias"</span>: <span class="text-[#FFD600]">"bullish"</span>
-  <span class="text-[#B388FF]">&#125;</span>
+<span class="text-[#60A5FA]">&#123;</span>
+  <span class="text-[#93C5FD]">"coin"</span>: <span class="text-[#FBBF24]">"BTC"</span>,
+  <span class="text-[#93C5FD]">"price"</span>: &#123; <span class="text-[#93C5FD]">"current"</span>: <span class="text-[#60A5FA]">98765.43</span> &#125;,
+  <span class="text-[#93C5FD]">"confluence"</span>: &#123;
+    <span class="text-[#93C5FD]">"score"</span>: <span class="text-[#60A5FA]">0.75</span>,
+    <span class="text-[#93C5FD]">"bias"</span>: <span class="text-[#FBBF24]">"bullish"</span>
+  <span class="text-[#60A5FA]">&#125;</span>
   ...
-<span class="text-[#B388FF]">&#125;</span></code></pre>
+<span class="text-[#60A5FA]">&#125;</span></code></pre>
       </div>
     </div>
   </div>

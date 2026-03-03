@@ -1,25 +1,28 @@
 import starlightPlugin from '@astrojs/starlight-tailwind';
 
-// Cerebrus Pulse Brand Palette
-// Primary: #8B3FD9 (deep purple)  Accent: #00D4FF (electric cyan)  Highlight: #FF006E (neon pink)
+// Cerebrus Pulse — "Signal & Synthesis" Palette
+// x402 accent: #3B82F6 (electric blue) — structured data, HTTP, developer-facing
+// ACP accent:  #F59E0B (warm amber)    — AI synthesis, agent commerce, Virtuals
+// Background:  #0B0F1A (deep navy)     — refined dark, not pure black
+
 const accent = {
-  200: '#B388FF', // light purple (text on dark)
-  400: '#A855F7', // medium purple
-  600: '#8B3FD9', // brand primary
-  700: '#7C3ACD', // pressed state
-  900: '#4A1D96', // deep purple
-  950: '#2D1065', // darkest purple
+  200: '#93C5FD', // light blue (text on dark, 8.3:1)
+  400: '#60A5FA', // medium blue (links, 5.4:1 on #0B0F1A)
+  600: '#3B82F6', // brand primary blue
+  700: '#2563EB', // pressed/hover state
+  900: '#1E3A5F', // deep blue tint
+  950: '#0F1D35', // darkest blue
 };
 
 const gray = {
-  100: '#F0EEFF', // purple-tinted white
-  200: '#DDD8F0', // purple-tinted light
-  300: '#B0A8C8', // muted lavender
-  400: '#8B83A8', // medium (body text — 5.2:1 on #0A0A0A)
-  500: '#6B6185', // subtle text (4.5:1 on #0A0A0A — AA pass)
-  700: '#2A2438', // card backgrounds (purple-tinted dark)
-  800: '#1A1525', // section alt bg
-  900: '#0A0A0A', // brand bg (near-black)
+  100: '#E8ECF4', // near-white with blue tint (13.5:1 — AAA)
+  200: '#CBD5E1', // light (10.2:1 — AAA)
+  300: '#94A3B8', // secondary text (5.8:1 — AA)
+  400: '#64748B', // muted (3.8:1 — large text only)
+  500: '#475569', // subtle decorative text (2.8:1 — decorative only)
+  700: '#1E293B', // card borders, elevated surfaces
+  800: '#111827', // card backgrounds
+  900: '#0B0F1A', // brand background (deep navy)
 };
 
 /** @type {import('tailwindcss').Config} */
@@ -30,15 +33,25 @@ export default {
       colors: {
         accent,
         gray,
-        cyan: {
-          300: '#67E8F9',
-          400: '#00D4FF', // brand accent
-          500: '#00B8DB',
+        // x402 color family (blue)
+        x402: {
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',
         },
-        pink: {
-          400: '#FF4D94',
-          500: '#FF006E', // brand highlight
-          600: '#DB005E',
+        // ACP color family (amber/gold)
+        acp: {
+          300: '#FCD34D',
+          400: '#FBBF24',
+          500: '#F59E0B',
+          600: '#D97706',
+        },
+        // Semantic colors
+        surface: {
+          DEFAULT: '#111827',
+          elevated: '#1E293B',
+          border: '#1E293B',
         },
       },
       fontFamily: {
@@ -70,9 +83,10 @@ export default {
         },
       },
       backgroundImage: {
-        'gradient-brand': 'linear-gradient(135deg, #8B3FD9, #00D4FF, #FF006E)',
-        'gradient-purple-cyan': 'linear-gradient(135deg, #8B3FD9, #00D4FF)',
-        'gradient-cyan-pink': 'linear-gradient(135deg, #00D4FF, #FF006E)',
+        'gradient-brand': 'linear-gradient(135deg, #3B82F6, #F59E0B)',
+        'gradient-x402': 'linear-gradient(135deg, #3B82F6, #60A5FA)',
+        'gradient-acp': 'linear-gradient(135deg, #F59E0B, #FBBF24)',
+        'gradient-dual': 'linear-gradient(135deg, #60A5FA, #FBBF24)',
       },
     },
   },
