@@ -1,5 +1,5 @@
 ---
-const endpoints = [
+const x402Endpoints = [
   {
     method: 'GET',
     path: '/pulse/{coin}',
@@ -35,6 +35,28 @@ const endpoints = [
   },
 ];
 
+const acpTiers = [
+  {
+    tier: 'Lite',
+    price: '$0.10',
+    description: 'Quick market snapshot',
+    details: 'Summary of current conditions with a directional bias. Ideal for fast decision loops.',
+  },
+  {
+    tier: 'Standard',
+    price: '$0.50',
+    description: 'Full synthesis report',
+    details: 'Multi-timeframe analysis with narrative context, trade ideas, and risk scoring.',
+    highlight: true,
+  },
+  {
+    tier: 'Premium',
+    price: '$2.00',
+    description: 'Deep research analysis',
+    details: 'Comprehensive cross-asset analysis with correlation mapping, regime context, and portfolio-level recommendations.',
+  },
+];
+
 const freeEndpoints = [
   { method: 'GET', path: '/health', description: 'Gateway health status' },
   { method: 'GET', path: '/coins', description: 'List available coins' },
@@ -47,13 +69,18 @@ const freeEndpoints = [
     <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">
       <span class="gradient-text-subtle">Pay Per Query</span>
     </h2>
-    <p class="mb-4 text-center text-gray-400 text-lg">USDC micropayments on Base. No subscriptions.</p>
+    <p class="mb-4 text-center text-gray-400 text-lg">Two protocols. Same intelligence. Choose your path.</p>
     <p class="mb-12 text-center text-sm text-gray-500">
-      Payments are handled automatically by the x402 protocol. Your wallet is your API key.
+      x402 for structured data via HTTP. ACP for AI-synthesized insights via Virtuals Protocol.
     </p>
 
+    <!-- x402 Pricing -->
+    <div class="flex items-center gap-3 mb-6">
+      <span class="hero-badge !text-xs">x402</span>
+      <h3 class="text-base font-semibold text-gray-400">USDC micropayments on Base</h3>
+    </div>
     <div class="grid gap-5 md:grid-cols-2">
-      {endpoints.map((ep) => (
+      {x402Endpoints.map((ep) => (
         <div class={`price-card ${ep.highlight ? 'price-card-highlight' : ''}`}>
           <div class="mb-3 flex items-center justify-between">
             <code class="text-sm font-mono">
@@ -84,6 +111,35 @@ const freeEndpoints = [
       ))}
     </div>
 
+    <div class="section-divider my-10"></div>
+
+    <!-- ACP Pricing -->
+    <div class="flex items-center gap-3 mb-6">
+      <span class="hero-badge !text-xs" style="background: rgba(255, 0, 110, 0.12); border-color: rgba(255, 0, 110, 0.2);">ACP</span>
+      <h3 class="text-base font-semibold text-gray-400">AI synthesis via Virtuals Protocol</h3>
+    </div>
+    <div class="grid gap-5 md:grid-cols-3">
+      {acpTiers.map((tier) => (
+        <div class={`price-card ${tier.highlight ? 'price-card-highlight' : ''}`}>
+          <div class="mb-3 flex items-center justify-between">
+            <span class="text-sm font-mono font-semibold text-pink-400">{tier.tier}</span>
+            <span class={tier.highlight ? 'price-badge-pink' : 'price-badge'}>{tier.price}</span>
+          </div>
+          <h3 class="mb-2 text-lg font-semibold text-white">{tier.description}</h3>
+          <p class="text-sm text-gray-400">{tier.details}</p>
+          {tier.highlight && (
+            <div class="mt-3">
+              <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                    style="background: rgba(255, 0, 110, 0.1); color: #FF4D94; border: 1px solid rgba(255, 0, 110, 0.2);">
+                Most Popular
+              </span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+
+    <!-- Free Endpoints -->
     <div class="mt-8 rounded-xl p-6" style="background: rgba(14, 11, 20, 0.5); border: 1px solid rgba(139, 63, 217, 0.1);">
       <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">Free Endpoints</h3>
       <div class="grid gap-3 sm:grid-cols-2">

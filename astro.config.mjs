@@ -7,7 +7,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Cerebrus Pulse',
-      description: 'Real-time crypto intelligence via x402 micropayments',
+      description: 'Real-time crypto intelligence via x402 micropayments and ACP agent commerce',
       logo: {
         src: './src/assets/pulse-logo.svg',
         replacesTitle: false,

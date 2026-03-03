@@ -4,51 +4,97 @@
 <section class="landing-section landing-section-light" id="how-it-works">
   <div class="mx-auto max-w-5xl">
     <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl">
-      <span class="gradient-text-subtle">How It Works</span>
+      <span class="gradient-text-subtle">Two Paths to Intelligence</span>
     </h2>
-    <p class="mb-16 text-center text-gray-400 text-lg">Three steps. No signups. No API keys.</p>
+    <p class="mb-16 text-center text-gray-400 text-lg">Choose x402 for direct queries or ACP for agent-to-agent commerce.</p>
 
-    <div class="grid gap-8 md:grid-cols-3">
-      <!-- Step 1 -->
-      <div class="step-card group">
-        <div class="step-number mb-6">1</div>
-        <h3 class="mb-3 text-xl font-bold text-white">Request</h3>
-        <p class="mb-4 text-gray-400">
-          Make a standard HTTP GET request to any Pulse endpoint.
-        </p>
-        <code class="block rounded-lg bg-[#0A0A0A] p-3 text-sm text-cyan-400 font-mono border border-[rgba(139,63,217,0.1)]">
-          GET /pulse/ETH?timeframes=1h
-        </code>
+    <!-- x402 Path -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-8">
+        <span class="hero-badge !text-xs">x402</span>
+        <h3 class="text-lg font-semibold text-gray-300">For developers, bots, and dashboards</h3>
       </div>
-
-      <!-- Step 2 -->
-      <div class="step-card group">
-        <div class="step-number mb-6">2</div>
-        <h3 class="mb-3 text-xl font-bold text-white">Pay</h3>
-        <p class="mb-4 text-gray-400">
-          The server returns <code class="text-[#B388FF]">402 Payment Required</code>. The x402 SDK
-          automatically signs a USDC micropayment on Base.
-        </p>
-        <div class="flex items-center gap-2">
-          <span class="price-badge">$0.02 USDC</span>
-          <span class="text-gray-500 text-sm">on Base</span>
+      <div class="grid gap-8 md:grid-cols-3">
+        <div class="step-card group">
+          <div class="step-number mb-6">1</div>
+          <h3 class="mb-3 text-xl font-bold text-white">Request</h3>
+          <p class="mb-4 text-gray-400">
+            Make a standard HTTP GET to any Pulse endpoint.
+          </p>
+          <code class="block rounded-lg bg-[#0A0A0A] p-3 text-sm text-cyan-400 font-mono border border-[rgba(139,63,217,0.1)]">
+            GET /pulse/ETH?timeframes=1h
+          </code>
+        </div>
+        <div class="step-card group">
+          <div class="step-number mb-6">2</div>
+          <h3 class="mb-3 text-xl font-bold text-white">Pay</h3>
+          <p class="mb-4 text-gray-400">
+            Server returns <code class="text-[#B388FF]">402</code>. The x402 SDK
+            auto-signs a USDC micropayment on Base.
+          </p>
+          <div class="flex items-center gap-2">
+            <span class="price-badge">$0.02 USDC</span>
+            <span class="text-gray-500 text-sm">on Base</span>
+          </div>
+        </div>
+        <div class="step-card group">
+          <div class="step-number mb-6">3</div>
+          <h3 class="mb-3 text-xl font-bold text-white">Receive</h3>
+          <p class="mb-4 text-gray-400">
+            Get structured JSON: RSI, EMAs, Bollinger Bands,
+            trend, regime, and confluence scoring.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="coin-chip text-xs">RSI</span>
+            <span class="coin-chip text-xs">EMAs</span>
+            <span class="coin-chip text-xs">Bollinger</span>
+            <span class="coin-chip text-xs">Regime</span>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Step 3 -->
-      <div class="step-card group">
-        <div class="step-number mb-6">3</div>
-        <h3 class="mb-3 text-xl font-bold text-white">Receive</h3>
-        <p class="mb-4 text-gray-400">
-          Get comprehensive technical analysis: RSI, EMAs, Bollinger Bands,
-          trend, regime, derivatives, and confluence scoring.
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <span class="coin-chip text-xs">RSI</span>
-          <span class="coin-chip text-xs">EMAs</span>
-          <span class="coin-chip text-xs">Bollinger</span>
-          <span class="coin-chip text-xs">Regime</span>
-          <span class="coin-chip text-xs">Confluence</span>
+    <div class="section-divider my-12"></div>
+
+    <!-- ACP Path -->
+    <div>
+      <div class="flex items-center gap-3 mb-8">
+        <span class="hero-badge !text-xs" style="background: rgba(255, 0, 110, 0.12); border-color: rgba(255, 0, 110, 0.2);">ACP</span>
+        <h3 class="text-lg font-semibold text-gray-300">For autonomous AI agents on Virtuals Protocol</h3>
+      </div>
+      <div class="grid gap-8 md:grid-cols-3">
+        <div class="step-card group">
+          <div class="step-number mb-6" style="background: linear-gradient(135deg, #FF006E, #B388FF);">1</div>
+          <h3 class="mb-3 text-xl font-bold text-white">Discover</h3>
+          <p class="mb-4 text-gray-400">
+            Your agent finds Cerebrus Pulse on the Virtuals Protocol marketplace via ACP service discovery.
+          </p>
+          <code class="block rounded-lg bg-[#0A0A0A] p-3 text-sm text-pink-400 font-mono border border-[rgba(255,0,110,0.1)]">
+            acp.discover("crypto-analysis")
+          </code>
+        </div>
+        <div class="step-card group">
+          <div class="step-number mb-6" style="background: linear-gradient(135deg, #FF006E, #B388FF);">2</div>
+          <h3 class="mb-3 text-xl font-bold text-white">Negotiate</h3>
+          <p class="mb-4 text-gray-400">
+            Agents negotiate terms and payment. Choose from Lite, Standard, or Premium synthesis tiers.
+          </p>
+          <div class="flex items-center gap-2">
+            <span class="price-badge-pink">$0.10 - $2.00</span>
+            <span class="text-gray-500 text-sm">VIRTUAL</span>
+          </div>
+        </div>
+        <div class="step-card group">
+          <div class="step-number mb-6" style="background: linear-gradient(135deg, #FF006E, #B388FF);">3</div>
+          <h3 class="mb-3 text-xl font-bold text-white">Synthesize</h3>
+          <p class="mb-4 text-gray-400">
+            Receive AI-synthesized market narratives with trade recommendations, not just raw indicators.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="coin-chip text-xs" style="border-color: rgba(255,0,110,0.2);">Narrative</span>
+            <span class="coin-chip text-xs" style="border-color: rgba(255,0,110,0.2);">Trade Ideas</span>
+            <span class="coin-chip text-xs" style="border-color: rgba(255,0,110,0.2);">Risk Score</span>
+          </div>
         </div>
       </div>
     </div>

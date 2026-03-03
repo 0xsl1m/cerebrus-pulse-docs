@@ -1,6 +1,6 @@
 import starlightPlugin from '@astrojs/starlight-tailwind';
 
-// N3XUSBVSS Brand Palette — Cerebrus Pulse
+// Cerebrus Pulse Brand Palette
 // Primary: #8B3FD9 (deep purple)  Accent: #00D4FF (electric cyan)  Highlight: #FF006E (neon pink)
 const accent = {
   200: '#B388FF', // light purple (text on dark)
