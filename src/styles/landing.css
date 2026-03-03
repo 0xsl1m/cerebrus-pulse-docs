@@ -139,16 +139,19 @@ html, body {
 
 /* ---- Landing Hero ---- */
 .landing-hero {
-  @apply relative overflow-hidden text-white;
+  @apply relative text-white;
   background: #0B0F1A;
-  min-height: auto;
-  display: flex;
-  align-items: center;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 @media (min-width: 640px) {
   .landing-hero {
     min-height: 90vh;
+    display: flex;
+    align-items: center;
   }
 }
 
@@ -176,6 +179,12 @@ html, body {
   pointer-events: none;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+}
+
+/* ---- Hero content: constrain everything to viewport ---- */
+.landing-hero > * {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ---- Section Styles ---- */
