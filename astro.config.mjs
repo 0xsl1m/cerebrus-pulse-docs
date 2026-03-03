@@ -13,9 +13,7 @@ export default defineConfig({
         replacesTitle: false,
       },
       customCss: ['./src/styles/landing.css'],
-      social: [
-        { icon: 'x.com', label: 'X / Twitter', href: 'https://x.com/opencloaw' },
-      ],
+      social: [],
       sidebar: [
         {
           label: 'Getting Started',
