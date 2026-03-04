@@ -1,0 +1,78 @@
+---
+title: GET /oi/{coin}
+description: Open interest analysis with delta tracking and divergence detection.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /oi/\{coin\}
+
+<Badge text="$0.01 USDC" variant="tip" />
+
+Returns open interest analysis for a Hyperliquid perpetual — current OI, delta over multiple timeframes, percentile rank, trend direction, and price-OI divergence signals.
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/oi/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`). Case-insensitive. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coin` | string | Coin ticker |
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `oi` | object | Open interest data |
+| `oi.current` | number | Current open interest (contracts) |
+| `oi.delta_1h` | number | OI change over 1 hour (%) |
+| `oi.delta_4h` | number | OI change over 4 hours (%) |
+| `oi.delta_24h` | number | OI change over 24 hours (%) |
+| `oi.percentile` | number | OI percentile rank (0–100) |
+| `oi.trend` | string | `RISING`, `FALLING`, or `FLAT` |
+| `oi.price_oi_divergence` | string | `BULLISH_DIV`, `BEARISH_DIV`, or `NONE` |
+| `price` | number | Current mark price |
+| `meta` | object | Provider metadata |
+
+## Example
+
+```bash
+GET /oi/BTC
+```
+
+```json
+{
+  "coin": "BTC",
+  "timestamp_iso": "2026-03-04T10:00:00Z",
+  "oi": {
+    "current": 24505.52,
+    "delta_1h": 0.32,
+    "delta_4h": 1.15,
+    "delta_24h": 3.78,
+    "percentile": 88.4,
+    "trend": "RISING",
+    "price_oi_divergence": "NONE"
+  },
+  "price": 72519.5,
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 85
+  }
+}
+```
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | Invalid coin ticker |
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Data freshness guarantee exceeded |

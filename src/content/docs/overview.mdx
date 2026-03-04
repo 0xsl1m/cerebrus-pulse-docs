@@ -33,10 +33,14 @@ Pulse uses the [x402 protocol](https://www.x402.org/) for payments:
 
 | Endpoint | Price | Description |
 |----------|-------|-------------|
+| `GET /screener` | $0.04 USDC | Scan 30+ coins: signals, trends, vol regime, confluence |
 | `GET /pulse/{coin}` | $0.02 USDC | Multi-timeframe technical analysis |
 | `GET /sentiment` | $0.01 USDC | Market sentiment labels |
 | `GET /funding/{coin}` | $0.01 USDC | Funding rate analysis |
-| `GET /bundle/{coin}` | $0.04 USDC | All three combined (20% discount) |
+| `GET /oi/{coin}` | $0.01 USDC | Open interest: delta, percentile, trend, divergence |
+| `GET /spread/{coin}` | $0.008 USDC | Spread: slippage estimates, liquidity score |
+| `GET /correlation` | $0.03 USDC | BTC-alt correlation matrix with regime classification |
+| `GET /bundle/{coin}` | $0.04 USDC | Pulse + Sentiment + Funding + Spread (17% discount) |
 | `GET /health` | Free | Gateway health status |
 | `GET /coins` | Free | List available coins |
 

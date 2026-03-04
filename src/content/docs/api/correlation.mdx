@@ -1,0 +1,88 @@
+---
+title: GET /correlation
+description: BTC-alt correlation matrix with regime classification.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /correlation
+
+<Badge text="$0.03 USDC" variant="tip" />
+
+Returns a BTC-alt correlation matrix across the top 15 Hyperliquid perpetuals, with 30-day rolling correlation, regime classification, and sector averages. Essential for portfolio agents managing multi-asset exposure.
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/correlation
+```
+
+No parameters required.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `coins_analyzed` | integer | Number of coins in the matrix |
+| `avg_correlation` | number | Average BTC-alt correlation across all coins |
+| `regime` | string | `CORRELATED`, `DECORRELATED`, or `MIXED` |
+| `correlations` | object | Per-coin correlation with BTC |
+| `correlations.{coin}` | number | 30-day rolling correlation coefficient (-1.0 to 1.0) |
+| `sector_averages` | object | Average correlation by sector |
+| `meta` | object | Provider metadata |
+
+## Example
+
+```bash
+GET /correlation
+```
+
+```json
+{
+  "timestamp_iso": "2026-03-04T10:00:00Z",
+  "coins_analyzed": 15,
+  "avg_correlation": 0.76,
+  "regime": "CORRELATED",
+  "correlations": {
+    "ETH": 0.89,
+    "SOL": 0.82,
+    "DOGE": 0.71,
+    "AVAX": 0.78,
+    "LINK": 0.74,
+    "ARB": 0.68,
+    "OP": 0.65,
+    "SUI": 0.72,
+    "WIF": 0.58,
+    "PEPE": 0.53,
+    "INJ": 0.61,
+    "SEI": 0.59,
+    "TIA": 0.55,
+    "JUP": 0.62,
+    "ONDO": 0.57
+  },
+  "sector_averages": {
+    "L1": 0.82,
+    "L2": 0.67,
+    "DeFi": 0.65,
+    "Meme": 0.56
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 340
+  }
+}
+```
+
+:::tip[Portfolio use case]
+When `regime` is `DECORRELATED`, diversification benefits are highest. When `CORRELATED`, consider reducing position count to avoid correlated drawdowns.
+:::
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Data freshness guarantee exceeded |

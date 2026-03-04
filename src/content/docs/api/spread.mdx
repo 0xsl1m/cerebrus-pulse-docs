@@ -1,0 +1,78 @@
+---
+title: GET /spread/{coin}
+description: Spread analysis with slippage estimates and liquidity scoring.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /spread/\{coin\}
+
+<Badge text="$0.008 USDC" variant="tip" />
+
+Returns bid-ask spread, estimated slippage at various notional sizes, and a liquidity score. Critical for execution-focused agents that need to account for market impact before placing orders.
+
+## Request
+
+```
+GET https://pulse.openclaw.ai/spread/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`). Case-insensitive. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coin` | string | Coin ticker |
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `spread` | object | Spread and liquidity data |
+| `spread.bid_ask_bps` | number | Bid-ask spread in basis points |
+| `spread.slippage_10k_bps` | number | Estimated slippage at $10k notional (bps) |
+| `spread.slippage_50k_bps` | number | Estimated slippage at $50k notional (bps) |
+| `spread.slippage_100k_bps` | number | Estimated slippage at $100k notional (bps) |
+| `spread.slippage_500k_bps` | number | Estimated slippage at $500k notional (bps) |
+| `spread.liquidity_score` | integer | Liquidity score (1–10, 10 = most liquid) |
+| `meta` | object | Provider metadata |
+
+## Example
+
+```bash
+GET /spread/BTC
+```
+
+```json
+{
+  "coin": "BTC",
+  "timestamp_iso": "2026-03-04T10:00:00Z",
+  "spread": {
+    "bid_ask_bps": 0.14,
+    "slippage_10k_bps": 0.007,
+    "slippage_50k_bps": 0.016,
+    "slippage_100k_bps": 0.022,
+    "slippage_500k_bps": 0.049,
+    "liquidity_score": 10
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 65
+  }
+}
+```
+
+:::note
+Slippage estimates use the formula `(spread_bps / 2) * (notional / 1M)^0.5`, calibrated against Hyperliquid's order book depth. Actual slippage may vary based on real-time conditions.
+:::
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | Invalid coin ticker |
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Data freshness guarantee exceeded |

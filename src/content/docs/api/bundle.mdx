@@ -9,7 +9,7 @@ import { Badge } from '@astrojs/starlight/components';
 
 <Badge text="$0.04 USDC" variant="tip" /> <Badge text="Best Value" variant="success" />
 
-Returns pulse technical analysis, sentiment, and funding data in a single response. **20% cheaper** than calling all three endpoints individually ($0.04 vs $0.04 = $0.02 + $0.01 + $0.01).
+Returns pulse technical analysis, sentiment, funding, and spread data in a single response. **17% cheaper** than calling all four endpoints individually ($0.04 vs $0.048 = $0.02 + $0.01 + $0.01 + $0.008).
 
 ## Request
 
@@ -31,7 +31,7 @@ GET https://pulse.openclaw.ai/bundle/{coin}
 
 ## Response
 
-The response combines all three endpoint responses under top-level keys:
+The response combines all four endpoint responses under top-level keys:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -40,6 +40,7 @@ The response combines all three endpoint responses under top-level keys:
 | `pulse` | object | Full pulse analysis (same as `/pulse/{coin}` response) |
 | `sentiment` | object | Sentiment data (same as `/sentiment` response) |
 | `funding` | object | Funding analysis (same as `/funding/{coin}` response) |
+| `spread` | object | Spread & liquidity data (same as `/spread/{coin}` response) |
 | `meta` | object | Provider metadata with bundle info |
 
 ## Example

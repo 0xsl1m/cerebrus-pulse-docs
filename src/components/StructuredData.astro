@@ -7,7 +7,7 @@ interface Props {
 
 const {
   title = "Cerebrus Pulse — Real-time Crypto Intelligence API",
-  description = "Cerebrus Pulse is a pay-per-query crypto analysis API providing multi-timeframe technical analysis, market sentiment, and funding rate data for 30+ Hyperliquid perpetuals. Two integration paths: x402 micropayments (USDC on Base) for developers and ACP agent commerce (Virtuals Protocol) for autonomous AI agents. Prices from $0.01 per query. No API keys required.",
+  description = "Cerebrus Pulse is a pay-per-query crypto intelligence API for 30+ Hyperliquid perpetuals. 9 x402 endpoints: market screener, technical analysis, sentiment, funding, open interest, spread/liquidity, correlation matrix, and bundles. Plus ACP AI synthesis via Virtuals Protocol. From $0.008/query. No API keys required.",
   url = "https://pulse.openclaw.ai",
 } = Astro.props;
 
@@ -78,8 +78,64 @@ const webApplicationSchema = {
     },
     {
       "@type": "Offer",
+      "name": "Screener — Market Screener",
+      "description": "Scan 30+ coins at once for signal strength, RSI zone, trend direction, volatility regime, funding bias, confluence, and OI trend.",
+      "price": "0.04",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.04",
+        "priceCurrency": "USD",
+        "unitText": "per query"
+      },
+      "url": url + "/api/screener"
+    },
+    {
+      "@type": "Offer",
+      "name": "Open Interest — OI Analysis",
+      "description": "Current OI, delta over 1h/4h/24h, percentile rank, trend direction, and price-OI divergence signals.",
+      "price": "0.01",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.01",
+        "priceCurrency": "USD",
+        "unitText": "per query"
+      },
+      "url": url + "/api/oi"
+    },
+    {
+      "@type": "Offer",
+      "name": "Spread — Liquidity Analysis",
+      "description": "Bid-ask spread, slippage estimates at various notional sizes, and liquidity scoring for Hyperliquid perpetuals.",
+      "price": "0.008",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.008",
+        "priceCurrency": "USD",
+        "unitText": "per query"
+      },
+      "url": url + "/api/spread"
+    },
+    {
+      "@type": "Offer",
+      "name": "Correlation — BTC-Alt Correlation Matrix",
+      "description": "BTC-alt correlation matrix across top 15 coins with 30-day rolling correlation, regime classification, and sector clustering.",
+      "price": "0.03",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.03",
+        "priceCurrency": "USD",
+        "unitText": "per query"
+      },
+      "url": url + "/api/correlation"
+    },
+    {
+      "@type": "Offer",
       "name": "Bundle — Complete Analysis Bundle",
-      "description": "Pulse + Sentiment + Funding combined in one response. 20% discount versus calling endpoints individually.",
+      "description": "Pulse + Sentiment + Funding + Spread combined in one response. 17% discount versus calling endpoints individually.",
       "price": "0.04",
       "priceCurrency": "USD",
       "priceSpecification": {
@@ -134,17 +190,21 @@ const webApplicationSchema = {
     }
   ],
   "featureList": [
+    "Market screener: scan 30+ coins at once",
     "Multi-timeframe technical analysis (15m, 1h, 4h)",
     "RSI, EMA (20/50/200), ATR, Bollinger Bands, VWAP, Z-score indicators",
     "Multi-signal confluence scoring (0.0-1.0)",
     "Market regime detection (RISK_ON, RISK_OFF)",
+    "Open interest analysis with divergence detection",
+    "Spread and liquidity scoring with slippage estimates",
+    "BTC-alt correlation matrix with regime classification",
     "Derivatives data (funding rates, open interest, spread)",
     "Market sentiment analysis",
     "30+ Hyperliquid perpetuals supported",
     "x402 micropayments on Base (USDC)",
     "ACP agent commerce on Virtuals Protocol",
     "No API keys or subscriptions required",
-    "Pay-per-query pricing from $0.01"
+    "Pay-per-query pricing from $0.008"
   ],
   "creator": {
     "@type": "Organization",
@@ -183,10 +243,10 @@ const productSchema = {
   "url": url,
   "offers": {
     "@type": "AggregateOffer",
-    "lowPrice": "0.01",
+    "lowPrice": "0.008",
     "highPrice": "2.00",
     "priceCurrency": "USD",
-    "offerCount": 7
+    "offerCount": 11
   }
 };
 ---
