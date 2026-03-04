@@ -38,6 +38,7 @@
   --sl-font-system: 'Outfit', system-ui, -apple-system, sans-serif;
   --sl-font-system-mono: 'JetBrains Mono', 'Fira Code', monospace;
   --font-display: 'Sora', 'Outfit', system-ui, sans-serif;
+  --font-hero: 'Orbitron', 'Sora', system-ui, sans-serif;
 
   /* Additional Starlight text overrides for readability */
   --sl-color-text: #CBD5E1;
@@ -170,18 +171,46 @@ html, body {
   pointer-events: none;
 }
 
-/* Subtle grid overlay */
+/* Enhanced grid overlay — Tron infinite floor with scanlines */
 .landing-hero::after {
   content: '';
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
+    /* CRT scanlines — 2px lines, very low opacity */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(96, 165, 250, 0.04) 2px,
+      rgba(96, 165, 250, 0.04) 4px
+    ),
+    /* Grid lines — increased opacity for Tron feel */
+    linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+  background-size: 4px 4px, 60px 60px, 60px 60px;
   pointer-events: none;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  /* Perspective transform: Tron infinite floor fading into distance */
+  transform: perspective(600px) rotateX(25deg);
+  transform-origin: center bottom;
+  mask-image: linear-gradient(to top, black 10%, transparent 60%);
+  -webkit-mask-image: linear-gradient(to top, black 10%, transparent 60%);
+  z-index: 1;
+}
+
+/* ---- CRT Scanline overlay — full hero, subtle horizontal lines ---- */
+.hero-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(96, 165, 250, 0.03) 2px,
+    rgba(96, 165, 250, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* ---- Hero content: constrain everything to viewport ---- */
@@ -302,12 +331,57 @@ html, body {
   transform: translateY(-2px);
 }
 
-/* ---- Code Block ---- */
+/* ---- Code Block — HUD Treatment ---- */
 .code-block-wrapper {
   @apply rounded-xl overflow-hidden;
   background: #0D1117;
   border: 1px solid #1E293B;
   box-shadow: 0 4px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* HUD corner brackets */
+.code-block-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 16px;
+  height: 16px;
+  border-top: 2px solid rgba(96, 165, 250, 0.5);
+  border-left: 2px solid rgba(96, 165, 250, 0.5);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.code-block-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-bottom: 2px solid rgba(96, 165, 250, 0.5);
+  border-right: 2px solid rgba(96, 165, 250, 0.5);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Green blinking cursor for code blocks */
+.code-block-wrapper.code-visible pre {
+  border-left: 2px solid transparent;
+  animation: code-cursor-green 1.2s ease-in-out infinite;
+}
+
+/* Faint scanline overlay inside code blocks */
+.code-block-wrapper pre {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(34, 197, 94, 0.02) 2px,
+    rgba(34, 197, 94, 0.02) 4px
+  );
 }
 
 /* ---- Step Numbers ---- */
@@ -344,6 +418,78 @@ html, body {
   box-shadow: 0 0 30px rgba(245, 158, 11, 0.06);
 }
 
+/* ============================================================
+   ANIMATED NEON BORDER TRACE — conic-gradient rotating border
+   ============================================================ */
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Neon border trace on highlighted price card */
+.price-card-highlight {
+  --neon-color-1: #3B82F6;
+  --neon-color-2: #F59E0B;
+}
+
+.price-card-highlight::before {
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent 30%,
+    var(--neon-color-1) 45%,
+    var(--neon-color-2) 55%,
+    transparent 70%
+  );
+  opacity: 0.3;
+  transition: opacity 0.4s ease;
+}
+
+.price-card-highlight:hover::before {
+  opacity: 0.9;
+  animation: border-rotate 3s linear infinite;
+}
+
+/* Neon border trace on step cards */
+.step-card {
+  --neon-color: #3B82F6;
+}
+
+.step-card-acp {
+  --neon-color: #F59E0B;
+}
+
+.step-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 0.75rem;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent 40%,
+    var(--neon-color) 50%,
+    transparent 60%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+.step-card:hover::before {
+  opacity: 0.7;
+  animation: border-rotate 3s linear infinite;
+}
+
+@keyframes border-rotate {
+  to { --border-angle: 360deg; }
+}
+
 /* ---- CTA Buttons ---- */
 .btn-primary {
   @apply relative rounded-xl text-lg font-semibold text-white transition-all duration-300 overflow-hidden;
@@ -353,8 +499,27 @@ html, body {
 }
 
 .btn-primary:hover {
-  box-shadow: 0 4px 30px rgba(37, 99, 235, 0.5);
+  box-shadow:
+    0 0 15px rgba(59, 130, 246, 0.6),
+    0 0 30px rgba(59, 130, 246, 0.3),
+    0 4px 30px rgba(37, 99, 235, 0.5);
   transform: translateY(-1px);
+  animation: btn-neon-pulse-blue 2s ease-in-out infinite;
+}
+
+@keyframes btn-neon-pulse-blue {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(59, 130, 246, 0.6),
+      0 0 30px rgba(59, 130, 246, 0.3),
+      0 4px 30px rgba(37, 99, 235, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(59, 130, 246, 0.8),
+      0 0 40px rgba(59, 130, 246, 0.4),
+      0 4px 30px rgba(37, 99, 235, 0.6);
+  }
 }
 
 .btn-primary::after {
@@ -383,7 +548,23 @@ html, body {
 .btn-secondary:hover {
   border-color: rgba(245, 158, 11, 0.7);
   color: #FBBF24;
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+  box-shadow:
+    0 0 15px rgba(245, 158, 11, 0.4),
+    0 0 30px rgba(245, 158, 11, 0.2);
+  animation: btn-neon-pulse-amber 2s ease-in-out infinite;
+}
+
+@keyframes btn-neon-pulse-amber {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(245, 158, 11, 0.4),
+      0 0 30px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(245, 158, 11, 0.6),
+      0 0 40px rgba(245, 158, 11, 0.3);
+  }
 }
 
 /* ---- Hero Badges ---- */
@@ -626,10 +807,30 @@ button:focus-visible {
   border-bottom: 1px solid rgba(30, 41, 59, 0.6);
 }
 
-/* ---- Section Divider Gradient ---- */
+/* ---- Section Divider Gradient — Neon Pulse ---- */
 .section-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), rgba(245, 158, 11, 0.3), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), rgba(245, 158, 11, 0.5), transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sweeping neon glow that travels left-to-right */
+.section-divider::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -30%;
+  width: 30%;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, #60A5FA, #FBBF24, transparent);
+  filter: blur(3px);
+  animation: divider-sweep 4s ease-in-out infinite;
+}
+
+@keyframes divider-sweep {
+  0% { left: -30%; }
+  100% { left: 100%; }
 }
 
 /* ---- Scrollbar Styling (Webkit) ---- */
@@ -1349,14 +1550,13 @@ button:focus-visible {
 /* ---- Section divider animated glow ---- */
 .section-divider {
   transform-origin: center;
-  position: relative;
 }
 
 .section-divider::after {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), rgba(245, 158, 11, 0.5), transparent);
+  inset: -1px 0;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), rgba(245, 158, 11, 0.6), transparent);
   filter: blur(4px);
   opacity: 0;
   animation: divider-glow 4s ease-in-out infinite;
@@ -1364,7 +1564,7 @@ button:focus-visible {
 
 @keyframes divider-glow {
   0%, 100% { opacity: 0; }
-  50% { opacity: 0.3; }
+  50% { opacity: 0.5; }
 }
 
 /* ---- Section depth transition — gradient fade between sections ---- */
@@ -1390,15 +1590,10 @@ button:focus-visible {
     0 0 0 1px rgba(59, 130, 246, 0.1);
 }
 
-/* ---- Code visible animation: typing cursor effect ---- */
-.code-block-wrapper.code-visible pre {
-  border-left: 2px solid transparent;
-  animation: code-cursor 1.2s ease-in-out 3;
-}
-
-@keyframes code-cursor {
+/* ---- Code visible animation: green HUD cursor blink ---- */
+@keyframes code-cursor-green {
   0%, 100% { border-left-color: transparent; }
-  50% { border-left-color: rgba(59, 130, 246, 0.6); }
+  50% { border-left-color: rgba(34, 197, 94, 0.7); }
 }
 
 /* ---- Step number pulse on parent card hover ---- */
@@ -1469,11 +1664,127 @@ h1, h2, h3, h4, h5, h6,
   filter: brightness(1.05);
 }
 
-/* ---- Hero headline: Sora at max impact ---- */
+/* ---- Neon text glow: hero h1 — multi-layer blue+amber neon ---- */
+.landing-hero h1 .gradient-text {
+  filter: brightness(1.15) drop-shadow(0 0 8px rgba(96, 165, 250, 0.6))
+          drop-shadow(0 0 20px rgba(59, 130, 246, 0.4))
+          drop-shadow(0 0 40px rgba(245, 158, 11, 0.2));
+}
+
+/* ---- Neon text glow: section headings — subtler single layer ---- */
+.landing-section h2 .gradient-text,
+.landing-section-alt h2 .gradient-text {
+  filter: brightness(1.1) drop-shadow(0 0 6px rgba(96, 165, 250, 0.3))
+          drop-shadow(0 0 15px rgba(59, 130, 246, 0.15));
+}
+
+/* ---- Metric values: neon glow matching color ---- */
+.metric-value {
+  text-shadow:
+    0 0 10px currentColor,
+    0 0 30px currentColor;
+  opacity: 0.95;
+}
+
+/* ---- Nav brand "Pulse": neon glow flicker ---- */
+.nav-glass a.group .gradient-text {
+  animation: nav-neon-flicker 4s ease-in-out infinite;
+}
+
+@keyframes nav-neon-flicker {
+  0%, 100% {
+    filter: brightness(1.1) drop-shadow(0 0 4px rgba(96, 165, 250, 0.5))
+            drop-shadow(0 0 12px rgba(59, 130, 246, 0.3));
+  }
+  5% {
+    filter: brightness(0.8) drop-shadow(0 0 2px rgba(96, 165, 250, 0.2));
+  }
+  6% {
+    filter: brightness(1.2) drop-shadow(0 0 6px rgba(96, 165, 250, 0.7))
+            drop-shadow(0 0 15px rgba(245, 158, 11, 0.3));
+  }
+  50% {
+    filter: brightness(1.15) drop-shadow(0 0 5px rgba(96, 165, 250, 0.6))
+            drop-shadow(0 0 14px rgba(59, 130, 246, 0.35));
+  }
+  52% {
+    filter: brightness(0.9) drop-shadow(0 0 2px rgba(96, 165, 250, 0.3));
+  }
+  54% {
+    filter: brightness(1.15) drop-shadow(0 0 5px rgba(96, 165, 250, 0.6))
+            drop-shadow(0 0 14px rgba(59, 130, 246, 0.35));
+  }
+}
+
+/* ---- Hero headline: Orbitron for Tron-style impact ---- */
 .landing-hero h1 {
-  font-family: var(--font-display);
-  letter-spacing: -0.035em;
-  font-weight: 800;
+  font-family: var(--font-hero);
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   GLITCH EFFECT — Hero headline, runs once on page load
+   ============================================================ */
+.hero-glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.hero-glitch::before,
+.hero-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(135deg, #60A5FA 0%, #FBBF24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0;
+}
+
+.hero-glitch::before {
+  animation: glitch-before 2.5s ease-out 0.5s 1 both;
+  color: #60A5FA;
+}
+
+.hero-glitch::after {
+  animation: glitch-after 2.5s ease-out 0.5s 1 both;
+  color: #FBBF24;
+}
+
+@keyframes glitch-before {
+  0% { opacity: 0; transform: translate(0); clip-path: inset(0 0 100% 0); }
+  5% { opacity: 0.8; transform: translate(-3px, -2px); clip-path: inset(20% 0 60% 0); }
+  7% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  10% { opacity: 0.6; transform: translate(2px, 1px); clip-path: inset(40% 0 30% 0); }
+  12% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  20% { opacity: 0.7; transform: translate(-2px, -1px); clip-path: inset(60% 0 10% 0); }
+  22% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  35% { opacity: 0.5; transform: translate(1px, 2px); clip-path: inset(10% 0 70% 0); }
+  37% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  50% { opacity: 0.3; transform: translate(-1px, 0); clip-path: inset(50% 0 30% 0); }
+  52% { opacity: 0; }
+  100% { opacity: 0; transform: translate(0); clip-path: inset(0 0 100% 0); }
+}
+
+@keyframes glitch-after {
+  0% { opacity: 0; transform: translate(0); clip-path: inset(0 0 100% 0); }
+  4% { opacity: 0.7; transform: translate(3px, 2px); clip-path: inset(50% 0 20% 0); }
+  6% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  11% { opacity: 0.5; transform: translate(-2px, -2px); clip-path: inset(10% 0 50% 0); }
+  13% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  18% { opacity: 0.6; transform: translate(2px, 1px); clip-path: inset(70% 0 5% 0); }
+  20% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  33% { opacity: 0.4; transform: translate(-1px, -1px); clip-path: inset(30% 0 40% 0); }
+  35% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  48% { opacity: 0.2; transform: translate(1px, 0); clip-path: inset(45% 0 35% 0); }
+  50% { opacity: 0; }
+  100% { opacity: 0; transform: translate(0); clip-path: inset(0 0 100% 0); }
 }
 
 /* ---- Section headings: Sora, tight tracking ---- */
@@ -1497,6 +1808,13 @@ h1, h2, h3, h4, h5, h6,
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.02em;
+}
+
+.nav-glass a.group .gradient-text {
+  font-family: var(--font-hero);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 /* ---- Badges: Sora semibold, uppercase micro ---- */
@@ -1701,5 +2019,44 @@ footer ul li a {
   }
   .metric-card:hover .metric-value {
     text-shadow: none !important;
+  }
+  /* Cyberpunk effects: disable under reduced motion */
+  .hero-glitch::before,
+  .hero-glitch::after {
+    display: none !important;
+  }
+  .hero-scanlines {
+    display: none !important;
+  }
+  .nav-glass a.group .gradient-text {
+    animation: none !important;
+    filter: none !important;
+  }
+  .landing-hero h1 .gradient-text {
+    filter: brightness(1.05) !important;
+  }
+  .metric-value {
+    text-shadow: none !important;
+  }
+  .step-card::before {
+    display: none !important;
+  }
+  .price-card-highlight:hover::before {
+    animation: none !important;
+  }
+  .btn-primary:hover {
+    animation: none !important;
+  }
+  .btn-secondary:hover {
+    animation: none !important;
+  }
+  .section-divider::before {
+    display: none !important;
+  }
+  .section-divider::after {
+    animation: none !important;
+  }
+  .code-block-wrapper pre {
+    background-image: none !important;
   }
 }

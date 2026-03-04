@@ -57,6 +57,7 @@ export default {
       fontFamily: {
         sans: ['Outfit', 'system-ui', '-apple-system', 'sans-serif'],
         display: ['Sora', 'Outfit', 'system-ui', 'sans-serif'],
+        hero: ['Orbitron', 'Sora', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       animation: {
