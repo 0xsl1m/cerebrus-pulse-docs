@@ -85,102 +85,265 @@ const ogImage = canonicalURL + '/images/og-image.jpg';
       <slot />
     </main>
 
+    <!-- GSAP + ScrollTrigger CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+
     <script>
-      // Cerebrus Pulse — Parallax & Scroll-Reveal Engine
-      // Vanilla JS, no dependencies. ~90 lines.
+      // Cerebrus Pulse — GSAP-Powered Parallax & Scroll-Reveal Engine
       (function () {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // ── Reveal Animations (IntersectionObserver) ──────────────
-        const revealEls = document.querySelectorAll('[data-reveal]');
-
-        if (!prefersReducedMotion && revealEls.length) {
-          // Group stagger siblings: assign incremental transition-delay
-          // within each parent grid/flex container
-          const staggerParents = new Set();
-          revealEls.forEach((el) => {
-            if (el.dataset.reveal === 'stagger' && el.parentElement) {
-              staggerParents.add(el.parentElement);
-            }
-          });
-          staggerParents.forEach((parent) => {
-            const children = parent.querySelectorAll(':scope > [data-reveal="stagger"]');
-            children.forEach((child, i) => {
-              child.style.transitionDelay = `${i * 120}ms`;
-            });
-          });
-
-          const revealObserver = new IntersectionObserver(
-            (entries) => {
-              entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                  entry.target.classList.add('revealed');
-                  revealObserver.unobserve(entry.target);
-                }
-              });
-            },
-            { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
-          );
-
-          revealEls.forEach((el) => revealObserver.observe(el));
-        } else {
-          // Reduced motion: reveal everything immediately
-          revealEls.forEach((el) => el.classList.add('revealed'));
+        if (prefersReducedMotion) {
+          // Reduced motion: reveal everything immediately, no animations
+          document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('revealed'));
+          return;
         }
 
-        // ── Parallax Depth (scroll-driven) ───────────────────────
-        if (prefersReducedMotion) return;
+        // ── Register GSAP Plugins ─────────────────────────────
+        gsap.registerPlugin(ScrollTrigger);
 
-        const parallaxEls = document.querySelectorAll('[data-parallax]');
-        if (!parallaxEls.length) return;
+        // ── Global GSAP defaults ──────────────────────────────
+        gsap.defaults({
+          ease: 'power3.out',
+          duration: 0.9,
+        });
 
-        // Speed multipliers for each layer type
-        const speeds = {
-          brain: 0.3,        // brain moves slower (depth illusion)
-          'hero-text': -0.15, // text moves slightly faster (negative = opposite)
-          slow: 0.2,
-          slower: 0.35,
-          medium: 0.15,
-        };
-
-        let ticking = false;
+        // ── PARALLAX: Hero layers via GSAP ScrollTrigger ──────
         const heroSection = document.querySelector('.landing-hero');
-        const heroHeight = heroSection ? heroSection.offsetHeight : 800;
-
-        function onScroll() {
-          if (ticking) return;
-          ticking = true;
-          requestAnimationFrame(() => {
-            const scrollY = window.scrollY;
-
-            parallaxEls.forEach((el) => {
-              const type = el.dataset.parallax;
-              const speed = speeds[type] || 0.2;
-              const yOffset = scrollY * speed;
-
-              if (type === 'brain') {
-                // Brain: translate slower + scale down as user scrolls away
-                const progress = Math.min(scrollY / heroHeight, 1);
-                const scale = 1 - progress * 0.12; // scale to 0.88 at hero exit
-                el.style.transform = `translateY(${yOffset}px) scale(${scale})`;
-              } else if (type === 'hero-text') {
-                // Hero text: slight upward push + fade out
-                const progress = Math.min(scrollY / (heroHeight * 0.6), 1);
-                const opacity = 1 - progress;
-                el.style.transform = `translateY(${yOffset}px)`;
-                el.style.opacity = opacity;
-              } else {
-                // Ambient orbs / CTA glow: simple vertical offset
-                el.style.transform = `translateY(${yOffset}px)`;
-              }
+        if (heroSection) {
+          // Brain parallax: slow drift + scale-down on scroll
+          const brain = document.querySelector('[data-parallax="brain"]');
+          if (brain) {
+            gsap.to(brain, {
+              y: 200,
+              scale: 0.88,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: heroSection,
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 0.8,
+              },
             });
+          }
 
-            ticking = false;
+          // Hero text: push up + fade out
+          const heroText = document.querySelector('[data-parallax="hero-text"]');
+          if (heroText) {
+            gsap.to(heroText, {
+              y: -80,
+              opacity: 0,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: heroSection,
+                start: 'top top',
+                end: '60% top',
+                scrub: 0.5,
+              },
+            });
+          }
+
+          // Ambient orbs: slow parallax drift
+          document.querySelectorAll('[data-parallax="slow"], [data-parallax="slower"], [data-parallax="medium"]').forEach((orb) => {
+            const speed = { slow: 120, slower: 200, medium: 80 }[orb.dataset.parallax] || 120;
+            gsap.to(orb, {
+              y: speed,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: heroSection,
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 1,
+              },
+            });
           });
         }
 
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll(); // initial position
+        // ── SCROLL REVEALS: GSAP-powered with ScrollTrigger ──
+        // slide-up reveals
+        document.querySelectorAll('[data-reveal="slide-up"]').forEach((el) => {
+          gsap.fromTo(el,
+            { y: 50, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 1,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: el,
+                start: 'top 88%',
+                end: 'top 60%',
+                toggleActions: 'play none none none',
+              },
+              onComplete: () => el.classList.add('revealed'),
+            }
+          );
+        });
+
+        // stagger reveals: animate children within each parent grid
+        const staggerParents = new Set();
+        document.querySelectorAll('[data-reveal="stagger"]').forEach((el) => {
+          if (el.parentElement) staggerParents.add(el.parentElement);
+        });
+        staggerParents.forEach((parent) => {
+          const children = parent.querySelectorAll(':scope > [data-reveal="stagger"]');
+          if (!children.length) return;
+
+          gsap.fromTo(children,
+            { y: 40, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.8,
+              stagger: 0.15,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: parent,
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+              },
+              onComplete: function() {
+                children.forEach(c => c.classList.add('revealed'));
+              },
+            }
+          );
+        });
+
+        // wave reveals (coin chips)
+        const waveParents = new Set();
+        document.querySelectorAll('[data-reveal="wave"]').forEach((el) => {
+          if (el.parentElement) waveParents.add(el.parentElement);
+        });
+        waveParents.forEach((parent) => {
+          const children = parent.querySelectorAll(':scope > [data-reveal="wave"]');
+          if (!children.length) return;
+
+          gsap.fromTo(children,
+            { y: 20, scale: 0.9, opacity: 0 },
+            {
+              y: 0,
+              scale: 1,
+              opacity: 1,
+              duration: 0.5,
+              stagger: 0.04,
+              ease: 'back.out(1.7)',
+              scrollTrigger: {
+                trigger: parent,
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+              },
+              onComplete: function() {
+                children.forEach(c => c.classList.add('revealed'));
+              },
+            }
+          );
+        });
+
+        // grow reveals (duality lines)
+        document.querySelectorAll('[data-reveal="grow"]').forEach((el) => {
+          gsap.fromTo(el,
+            { scaleX: 0 },
+            {
+              scaleX: 1,
+              duration: 1.2,
+              ease: 'power2.inOut',
+              scrollTrigger: {
+                trigger: el,
+                start: 'top 88%',
+                toggleActions: 'play none none none',
+              },
+              onComplete: () => el.classList.add('revealed'),
+            }
+          );
+        });
+
+        // ── SECTION HEADING PARALLAX — subtle depth on section titles ──
+        document.querySelectorAll('.landing-section h2, .landing-section-alt h2').forEach((h2) => {
+          gsap.fromTo(h2,
+            { y: 30 },
+            {
+              y: -15,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: h2,
+                start: 'top 95%',
+                end: 'top 20%',
+                scrub: 0.6,
+              },
+            }
+          );
+        });
+
+        // ── METRIC CARDS — counter animation ──────────────────
+        document.querySelectorAll('.metric-card').forEach((card) => {
+          gsap.fromTo(card,
+            { y: 30, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.7,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: card,
+                start: 'top 90%',
+                toggleActions: 'play none none none',
+              },
+            }
+          );
+        });
+
+        // ── SECTION DIVIDERS — animated glow sweep ────────────
+        document.querySelectorAll('.section-divider').forEach((divider) => {
+          gsap.fromTo(divider,
+            { opacity: 0, scaleX: 0 },
+            {
+              opacity: 1,
+              scaleX: 1,
+              duration: 1.4,
+              ease: 'power2.inOut',
+              scrollTrigger: {
+                trigger: divider,
+                start: 'top 92%',
+                toggleActions: 'play none none none',
+              },
+            }
+          );
+        });
+
+        // ── NAV: hide/show on scroll direction ────────────────
+        const nav = document.querySelector('.nav-glass');
+        if (nav) {
+          let lastScrollY = 0;
+          ScrollTrigger.create({
+            start: 'top -80',
+            end: 99999,
+            onUpdate: (self) => {
+              const scrollY = window.scrollY;
+              if (scrollY > 80) {
+                if (self.direction === 1) {
+                  gsap.to(nav, { y: -100, duration: 0.3, ease: 'power2.in' });
+                } else {
+                  gsap.to(nav, { y: 0, duration: 0.3, ease: 'power2.out' });
+                }
+              } else {
+                gsap.to(nav, { y: 0, duration: 0.3 });
+              }
+              lastScrollY = scrollY;
+            },
+          });
+        }
+
+        // ── CODE BLOCK — typing cursor blink effect ───────────
+        const codeBlocks = document.querySelectorAll('.code-block-wrapper');
+        codeBlocks.forEach((block) => {
+          ScrollTrigger.create({
+            trigger: block,
+            start: 'top 80%',
+            onEnter: () => block.classList.add('code-visible'),
+          });
+        });
+
       })();
     </script>
   </body>

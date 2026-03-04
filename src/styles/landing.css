@@ -372,6 +372,8 @@ html, body {
   color: #E8ECF4;
   border: 1px solid rgba(245, 158, 11, 0.35);
   background: transparent;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-secondary:hover {
@@ -1158,6 +1160,321 @@ button:focus-visible {
   transform: scaleX(1);
 }
 
+/* ============================================================
+   HERO PARTICLE CANVAS — ambient WebGL depth layer
+   ============================================================ */
+.hero-particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   PREMIUM MICRO-INTERACTIONS — buttons, cards, nav
+   ============================================================ */
+
+/* ---- Magnetic button hover ripple ---- */
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.15);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.btn-primary:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* ---- Secondary button gradient fill on hover ---- */
+.btn-secondary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.btn-secondary:hover::before {
+  opacity: 1;
+}
+
+/* ---- Card tilt/shine effect ---- */
+.price-card,
+.step-card,
+.metric-card,
+.integration-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.price-card::after,
+.step-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(59, 130, 246, 0.03) 45%,
+    rgba(245, 158, 11, 0.03) 55%,
+    transparent 70%
+  );
+  transform: translateX(-100%) translateY(-100%) rotate(0deg);
+  transition: transform 0.8s ease;
+  pointer-events: none;
+}
+
+.price-card:hover::after,
+.step-card:hover::after {
+  transform: translateX(10%) translateY(10%) rotate(0deg);
+}
+
+/* ---- Integration card arrow indicator ---- */
+.integration-card::after {
+  content: '\2192';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) translateX(5px);
+  opacity: 0;
+  color: #60A5FA;
+  font-size: 1.2rem;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.integration-card:hover::after {
+  opacity: 0.6;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ---- Coin chip bounce on hover ---- */
+.coin-chip {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coin-chip:hover {
+  transform: translateY(-4px) scale(1.05);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+}
+
+/* ---- Demo coin button press effect ---- */
+.demo-coin-btn {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.demo-coin-btn:active {
+  transform: scale(0.95);
+}
+
+/* ---- Tech pill glow on hover ---- */
+.tech-pill {
+  transition: all 0.3s ease;
+}
+
+.tech-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.1);
+}
+
+/* ---- Nav link underline slide-in ---- */
+.nav-glass a:not(.btn-primary) {
+  position: relative;
+}
+
+.nav-glass a:not(.btn-primary)::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #3B82F6, #F59E0B);
+  transition: width 0.3s ease;
+}
+
+.nav-glass a:not(.btn-primary):hover::after {
+  width: 100%;
+}
+
+/* ---- Ecosystem badge hover glow ---- */
+.ecosystem-badge {
+  transition: all 0.3s ease;
+}
+
+.ecosystem-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08);
+}
+
+/* ============================================================
+   ENHANCED SECTION TRANSITIONS & VISUAL DEPTH
+   ============================================================ */
+
+/* ---- Section divider animated glow ---- */
+.section-divider {
+  transform-origin: center;
+  position: relative;
+}
+
+.section-divider::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), rgba(245, 158, 11, 0.5), transparent);
+  filter: blur(4px);
+  opacity: 0;
+  animation: divider-glow 4s ease-in-out infinite;
+}
+
+@keyframes divider-glow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+/* ---- Section depth transition — gradient fade between sections ---- */
+.landing-section-dark + .section-divider + .landing-section-alt,
+.landing-section-alt + .section-divider + .landing-section-dark {
+  position: relative;
+}
+
+.landing-section::before {
+  z-index: 0;
+}
+
+/* ---- Floating code block effect ---- */
+.code-block-wrapper {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s ease;
+}
+
+.code-block-wrapper:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+/* ---- Code visible animation: typing cursor effect ---- */
+.code-block-wrapper.code-visible pre {
+  border-left: 2px solid transparent;
+  animation: code-cursor 1.2s ease-in-out 3;
+}
+
+@keyframes code-cursor {
+  0%, 100% { border-left-color: transparent; }
+  50% { border-left-color: rgba(59, 130, 246, 0.6); }
+}
+
+/* ---- Step number pulse on parent card hover ---- */
+.step-card:hover .step-number {
+  transform: scale(1.1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.step-number {
+  transition: transform 0.3s ease;
+}
+
+/* ---- Price badge shimmer on card hover ---- */
+.price-card:hover .price-badge,
+.price-card:hover .price-badge-acp {
+  animation: badge-pop 0.4s ease both;
+}
+
+@keyframes badge-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Hero badge subtle float ---- */
+.hero-badge-x402,
+.hero-badge-acp {
+  transition: transform 0.3s ease;
+}
+
+.hero-badge-x402:hover {
+  transform: translateY(-2px);
+}
+
+.hero-badge-acp:hover {
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   TYPOGRAPHY & SPACING REFINEMENTS
+   ============================================================ */
+
+/* Improve gradient text rendering */
+.gradient-text {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: brightness(1.05);
+}
+
+/* Enhanced heading letter spacing for large headlines */
+.landing-hero h1 {
+  letter-spacing: -0.025em;
+}
+
+/* Section heading tracking */
+.landing-section h2,
+.landing-section-alt h2 {
+  letter-spacing: -0.02em;
+}
+
+/* Improved body text line-height within step/price cards */
+.step-card p,
+.price-card p {
+  line-height: 1.65;
+}
+
+/* Footer links — tighter tracking */
+footer ul li a {
+  letter-spacing: 0.01em;
+}
+
+/* ---- CTA Final Section — breathing glows ---- */
+.cta-final .cta-glow-blue {
+  animation: cta-breathe 6s ease-in-out infinite;
+}
+
+.cta-final .cta-glow-amber {
+  animation: cta-breathe 6s ease-in-out infinite 3s;
+}
+
+@keyframes cta-breathe {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* ---- Metric value counter flash on reveal ---- */
+.metric-card .metric-value {
+  transition: text-shadow 0.6s ease;
+}
+
+.metric-card:hover .metric-value {
+  text-shadow: 0 0 20px currentColor;
+}
+
 /* ---- Reduced motion: respect user preference ---- */
 @media (prefers-reduced-motion: reduce) {
   .brain-svg {
@@ -1196,6 +1513,10 @@ button:focus-visible {
   .spark-particles {
     display: none;
   }
+  /* Hide particle canvas */
+  .hero-particle-canvas {
+    display: none;
+  }
   /* Disable parallax scroll effects */
   [data-parallax] {
     will-change: auto !important;
@@ -1206,5 +1527,41 @@ button:focus-visible {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
+  }
+  /* Disable micro-interaction transforms */
+  .btn-primary::before,
+  .btn-secondary::before,
+  .price-card::after,
+  .step-card::after {
+    display: none !important;
+  }
+  .code-block-wrapper:hover {
+    transform: none !important;
+  }
+  .coin-chip:hover,
+  .tech-pill:hover,
+  .ecosystem-badge:hover {
+    transform: none !important;
+  }
+  .section-divider::after {
+    animation: none !important;
+  }
+  .step-card:hover .step-number {
+    transform: none !important;
+  }
+  .price-card:hover .price-badge,
+  .price-card:hover .price-badge-acp {
+    animation: none !important;
+  }
+  .code-block-wrapper.code-visible pre {
+    animation: none !important;
+    border-left: none !important;
+  }
+  .cta-final .cta-glow-blue,
+  .cta-final .cta-glow-amber {
+    animation: none !important;
+  }
+  .metric-card:hover .metric-value {
+    text-shadow: none !important;
   }
 }
