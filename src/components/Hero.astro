@@ -149,156 +149,162 @@
         <!-- LEFT HEMISPHERE OUTLINE (Blue / x402)       -->
         <!-- ============================================ -->
         <g class="hemisphere-left">
-          <!-- Outer brain contour - left hemisphere -->
+          <!-- Outer brain contour - left hemisphere (anatomical with gyri bumps) -->
           <path
             class="brain-outline brain-outline-blue"
             d="M400 120
-               C370 100, 310 70, 250 80
-               C190 90, 140 140, 120 200
-               C100 260, 95 320, 110 380
-               C120 420, 105 460, 115 500
-               C125 530, 145 555, 170 570
-               C200 590, 240 600, 280 595
-               C320 585, 360 560, 385 530
-               C395 510, 400 490, 400 460
+               C390 108, 370 95, 350 88
+               C338 83, 322 78, 305 75
+               C285 72, 262 76, 245 82
+               C225 90, 205 98, 188 112
+               C172 126, 155 145, 142 165
+               C135 175, 128 188, 122 202
+               C118 218, 112 232, 108 250
+               C105 265, 102 278, 100 295
+               C98 315, 98 332, 100 350
+               C102 362, 106 372, 112 385
+               C116 395, 112 408, 108 420
+               C105 435, 104 448, 108 462
+               C112 478, 118 492, 128 505
+               C138 520, 148 532, 162 545
+               C172 555, 185 565, 200 572
+               C218 580, 238 586, 260 590
+               C278 593, 298 594, 318 590
+               C338 585, 355 576, 370 562
+               C380 552, 388 540, 392 528
+               C396 515, 398 502, 400 488
                L400 120Z"
             stroke="#3B82F6"
             stroke-width="2"
             fill="none"
             opacity="0.8"
           />
-          <!-- Frontal lobe fold -->
-          <path
-            class="brain-fold brain-fold-blue"
-            d="M380 140 C340 135, 290 120, 245 135 C210 148, 185 175, 170 200"
-            stroke="#3B82F6"
-            stroke-width="1"
-            fill="none"
-            opacity="0.3"
-          />
-          <!-- Parietal lobe fold -->
-          <path
-            class="brain-fold brain-fold-blue"
-            d="M390 180 C360 195, 310 200, 275 195 C240 190, 200 210, 160 250"
-            stroke="#3B82F6"
-            stroke-width="1"
-            fill="none"
-            opacity="0.3"
-          />
-          <!-- Temporal lobe fold -->
-          <path
-            class="brain-fold brain-fold-blue"
-            d="M395 300 C360 310, 300 315, 250 305 C200 295, 155 320, 130 360"
-            stroke="#3B82F6"
-            stroke-width="1"
-            fill="none"
-            opacity="0.25"
-          />
-          <!-- Occipital fold -->
-          <path
-            class="brain-fold brain-fold-blue"
-            d="M395 400 C370 415, 330 430, 290 440 C250 450, 210 465, 185 500"
-            stroke="#3B82F6"
-            stroke-width="1"
-            fill="none"
-            opacity="0.25"
-          />
-          <!-- Central sulcus -->
-          <path
-            class="brain-fold brain-fold-blue"
-            d="M360 130 C340 180, 310 240, 290 300 C270 360, 260 420, 270 470"
-            stroke="#3B82F6"
-            stroke-width="0.8"
-            fill="none"
-            opacity="0.2"
-          />
-          <!-- Lateral sulcus -->
-          <path
-            class="brain-fold brain-fold-blue"
-            d="M380 250 C340 270, 280 290, 230 310 C190 325, 155 355, 135 400"
-            stroke="#3B82F6"
-            stroke-width="0.8"
-            fill="none"
-            opacity="0.2"
-          />
+          <!-- Frontal lobe gyri (upper-front folds) -->
+          <path class="brain-fold brain-fold-blue"
+            d="M385 135 C365 128, 328 115, 295 118 C262 122, 232 138, 208 158 C192 172, 178 188, 168 208"
+            stroke="#3B82F6" stroke-width="1" fill="none" opacity="0.35"/>
+          <path class="brain-fold brain-fold-blue"
+            d="M375 158 C348 155, 308 148, 272 155 C242 162, 215 178, 192 200"
+            stroke="#3B82F6" stroke-width="0.8" fill="none" opacity="0.28"/>
+          <!-- Precentral gyrus -->
+          <path class="brain-fold brain-fold-blue"
+            d="M392 175 C372 182, 342 192, 318 198 C295 205, 268 218, 248 238 C232 255, 218 275, 205 298"
+            stroke="#3B82F6" stroke-width="1" fill="none" opacity="0.3"/>
+          <!-- Central sulcus (Rolandic fissure) — primary landmark -->
+          <path class="brain-fold brain-fold-blue"
+            d="M365 128 C355 162, 338 198, 318 238 C298 278, 278 322, 265 368 C255 408, 252 442, 258 475"
+            stroke="#3B82F6" stroke-width="1.2" fill="none" opacity="0.35"/>
+          <!-- Lateral sulcus (Sylvian fissure) — deep, prominent -->
+          <path class="brain-fold brain-fold-blue"
+            d="M388 268 C362 282, 328 298, 288 312 C252 325, 218 342, 185 365 C158 385, 138 408, 125 435"
+            stroke="#3B82F6" stroke-width="1.2" fill="none" opacity="0.35"/>
+          <!-- Parietal lobe folds -->
+          <path class="brain-fold brain-fold-blue"
+            d="M395 225 C375 235, 345 248, 315 252 C288 255, 258 248, 235 258"
+            stroke="#3B82F6" stroke-width="0.8" fill="none" opacity="0.25"/>
+          <path class="brain-fold brain-fold-blue"
+            d="M398 295 C378 302, 348 312, 322 315 C298 318, 272 312, 248 318"
+            stroke="#3B82F6" stroke-width="0.8" fill="none" opacity="0.22"/>
+          <!-- Temporal lobe folds (below Sylvian fissure) -->
+          <path class="brain-fold brain-fold-blue"
+            d="M385 338 C358 348, 322 358, 288 362 C255 365, 222 358, 192 368 C165 378, 145 395, 132 418"
+            stroke="#3B82F6" stroke-width="0.9" fill="none" opacity="0.28"/>
+          <path class="brain-fold brain-fold-blue"
+            d="M392 385 C368 395, 338 408, 308 415 C278 422, 248 425, 218 435 C192 445, 168 462, 152 482"
+            stroke="#3B82F6" stroke-width="0.8" fill="none" opacity="0.22"/>
+          <!-- Occipital lobe folds (rear) -->
+          <path class="brain-fold brain-fold-blue"
+            d="M398 432 C378 442, 348 455, 318 465 C292 472, 265 478, 242 488 C222 498, 205 512, 195 528"
+            stroke="#3B82F6" stroke-width="0.8" fill="none" opacity="0.22"/>
+          <!-- Superior frontal sulcus -->
+          <path class="brain-fold brain-fold-blue"
+            d="M342 108 C322 128, 298 155, 278 185 C262 212, 248 242, 238 268"
+            stroke="#3B82F6" stroke-width="0.6" fill="none" opacity="0.18"/>
+          <!-- Inferior frontal sulcus -->
+          <path class="brain-fold brain-fold-blue"
+            d="M308 105 C288 132, 265 165, 248 198 C235 228, 225 258, 215 292"
+            stroke="#3B82F6" stroke-width="0.6" fill="none" opacity="0.15"/>
         </g>
 
         <!-- ============================================ -->
         <!-- RIGHT HEMISPHERE OUTLINE (Amber / ACP)      -->
         <!-- ============================================ -->
         <g class="hemisphere-right">
-          <!-- Outer brain contour - right hemisphere -->
+          <!-- Outer brain contour - right hemisphere (anatomical with gyri bumps) -->
           <path
             class="brain-outline brain-outline-amber"
             d="M400 120
-               C430 100, 490 70, 550 80
-               C610 90, 660 140, 680 200
-               C700 260, 705 320, 690 380
-               C680 420, 695 460, 685 500
-               C675 530, 655 555, 630 570
-               C600 590, 560 600, 520 595
-               C480 585, 440 560, 415 530
-               C405 510, 400 490, 400 460
+               C410 108, 430 95, 450 88
+               C462 83, 478 78, 495 75
+               C515 72, 538 76, 555 82
+               C575 90, 595 98, 612 112
+               C628 126, 645 145, 658 165
+               C665 175, 672 188, 678 202
+               C682 218, 688 232, 692 250
+               C695 265, 698 278, 700 295
+               C702 315, 702 332, 700 350
+               C698 362, 694 372, 688 385
+               C684 395, 688 408, 692 420
+               C695 435, 696 448, 692 462
+               C688 478, 682 492, 672 505
+               C662 520, 652 532, 638 545
+               C628 555, 615 565, 600 572
+               C582 580, 562 586, 540 590
+               C522 593, 502 594, 482 590
+               C462 585, 445 576, 430 562
+               C420 552, 412 540, 408 528
+               C404 515, 402 502, 400 488
                L400 120Z"
             stroke="#F59E0B"
             stroke-width="2"
             fill="none"
             opacity="0.8"
           />
-          <!-- Frontal lobe fold -->
-          <path
-            class="brain-fold brain-fold-amber"
-            d="M420 140 C460 135, 510 120, 555 135 C590 148, 615 175, 630 200"
-            stroke="#F59E0B"
-            stroke-width="1"
-            fill="none"
-            opacity="0.3"
-          />
-          <!-- Parietal lobe fold -->
-          <path
-            class="brain-fold brain-fold-amber"
-            d="M410 180 C440 195, 490 200, 525 195 C560 190, 600 210, 640 250"
-            stroke="#F59E0B"
-            stroke-width="1"
-            fill="none"
-            opacity="0.3"
-          />
-          <!-- Temporal lobe fold -->
-          <path
-            class="brain-fold brain-fold-amber"
-            d="M405 300 C440 310, 500 315, 550 305 C600 295, 645 320, 670 360"
-            stroke="#F59E0B"
-            stroke-width="1"
-            fill="none"
-            opacity="0.25"
-          />
-          <!-- Occipital fold -->
-          <path
-            class="brain-fold brain-fold-amber"
-            d="M405 400 C430 415, 470 430, 510 440 C550 450, 590 465, 615 500"
-            stroke="#F59E0B"
-            stroke-width="1"
-            fill="none"
-            opacity="0.25"
-          />
-          <!-- Central sulcus -->
-          <path
-            class="brain-fold brain-fold-amber"
-            d="M440 130 C460 180, 490 240, 510 300 C530 360, 540 420, 530 470"
-            stroke="#F59E0B"
-            stroke-width="0.8"
-            fill="none"
-            opacity="0.2"
-          />
-          <!-- Lateral sulcus -->
-          <path
-            class="brain-fold brain-fold-amber"
-            d="M420 250 C460 270, 520 290, 570 310 C610 325, 645 355, 665 400"
-            stroke="#F59E0B"
-            stroke-width="0.8"
-            fill="none"
-            opacity="0.2"
-          />
+          <!-- Frontal lobe gyri (upper-front folds) -->
+          <path class="brain-fold brain-fold-amber"
+            d="M415 135 C435 128, 472 115, 505 118 C538 122, 568 138, 592 158 C608 172, 622 188, 632 208"
+            stroke="#F59E0B" stroke-width="1" fill="none" opacity="0.35"/>
+          <path class="brain-fold brain-fold-amber"
+            d="M425 158 C452 155, 492 148, 528 155 C558 162, 585 178, 608 200"
+            stroke="#F59E0B" stroke-width="0.8" fill="none" opacity="0.28"/>
+          <!-- Precentral gyrus -->
+          <path class="brain-fold brain-fold-amber"
+            d="M408 175 C428 182, 458 192, 482 198 C505 205, 532 218, 552 238 C568 255, 582 275, 595 298"
+            stroke="#F59E0B" stroke-width="1" fill="none" opacity="0.3"/>
+          <!-- Central sulcus (Rolandic fissure) — primary landmark -->
+          <path class="brain-fold brain-fold-amber"
+            d="M435 128 C445 162, 462 198, 482 238 C502 278, 522 322, 535 368 C545 408, 548 442, 542 475"
+            stroke="#F59E0B" stroke-width="1.2" fill="none" opacity="0.35"/>
+          <!-- Lateral sulcus (Sylvian fissure) — deep, prominent -->
+          <path class="brain-fold brain-fold-amber"
+            d="M412 268 C438 282, 472 298, 512 312 C548 325, 582 342, 615 365 C642 385, 662 408, 675 435"
+            stroke="#F59E0B" stroke-width="1.2" fill="none" opacity="0.35"/>
+          <!-- Parietal lobe folds -->
+          <path class="brain-fold brain-fold-amber"
+            d="M405 225 C425 235, 455 248, 485 252 C512 255, 542 248, 565 258"
+            stroke="#F59E0B" stroke-width="0.8" fill="none" opacity="0.25"/>
+          <path class="brain-fold brain-fold-amber"
+            d="M402 295 C422 302, 452 312, 478 315 C502 318, 528 312, 552 318"
+            stroke="#F59E0B" stroke-width="0.8" fill="none" opacity="0.22"/>
+          <!-- Temporal lobe folds (below Sylvian fissure) -->
+          <path class="brain-fold brain-fold-amber"
+            d="M415 338 C442 348, 478 358, 512 362 C545 365, 578 358, 608 368 C635 378, 655 395, 668 418"
+            stroke="#F59E0B" stroke-width="0.9" fill="none" opacity="0.28"/>
+          <path class="brain-fold brain-fold-amber"
+            d="M408 385 C432 395, 462 408, 492 415 C522 422, 552 425, 582 435 C608 445, 632 462, 648 482"
+            stroke="#F59E0B" stroke-width="0.8" fill="none" opacity="0.22"/>
+          <!-- Occipital lobe folds (rear) -->
+          <path class="brain-fold brain-fold-amber"
+            d="M402 432 C422 442, 452 455, 482 465 C508 472, 535 478, 558 488 C578 498, 595 512, 605 528"
+            stroke="#F59E0B" stroke-width="0.8" fill="none" opacity="0.22"/>
+          <!-- Superior frontal sulcus -->
+          <path class="brain-fold brain-fold-amber"
+            d="M458 108 C478 128, 502 155, 522 185 C538 212, 552 242, 562 268"
+            stroke="#F59E0B" stroke-width="0.6" fill="none" opacity="0.18"/>
+          <!-- Inferior frontal sulcus -->
+          <path class="brain-fold brain-fold-amber"
+            d="M492 105 C512 132, 535 165, 552 198 C565 228, 575 258, 585 292"
+            stroke="#F59E0B" stroke-width="0.6" fill="none" opacity="0.15"/>
         </g>
 
         <!-- ============================================ -->
