@@ -1213,11 +1213,15 @@ button:focus-visible {
 
 /* ---- Card tilt/shine effect ---- */
 .price-card,
-.step-card,
 .metric-card,
 .integration-card {
   position: relative;
   overflow: hidden;
+}
+
+/* step-card: no overflow:hidden — code blocks inside need to scroll */
+.step-card {
+  position: relative;
 }
 
 .price-card::after,
