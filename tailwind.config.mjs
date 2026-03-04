@@ -55,7 +55,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Outfit', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Sora', 'Outfit', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       animation: {

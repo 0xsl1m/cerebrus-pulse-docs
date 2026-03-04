@@ -35,8 +35,9 @@
   --sl-color-bg-sidebar: #0D1117;
   --sl-color-hairline-light: #1E293B;
   --sl-color-hairline: #162032;
-  --sl-font-system: Inter, system-ui, -apple-system, sans-serif;
+  --sl-font-system: 'Outfit', system-ui, -apple-system, sans-serif;
   --sl-font-system-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-display: 'Sora', 'Outfit', system-ui, sans-serif;
 
   /* Additional Starlight text overrides for readability */
   --sl-color-text: #CBD5E1;
@@ -54,9 +55,10 @@
 /* Docs body text */
 .sl-markdown-content {
   color: #CBD5E1;
+  font-family: 'Outfit', system-ui, sans-serif;
 }
 
-/* Docs headings — bright and clear */
+/* Docs headings — Sora display font, bright and clear */
 .sl-markdown-content h1,
 .sl-markdown-content h2,
 .sl-markdown-content h3,
@@ -64,6 +66,7 @@
 .sl-markdown-content h5,
 .sl-markdown-content h6 {
   color: #E8ECF4;
+  font-family: var(--font-display);
 }
 
 /* Docs links — blue, underlined, clearly clickable */
@@ -1423,8 +1426,28 @@ button:focus-visible {
 }
 
 /* ============================================================
-   TYPOGRAPHY & SPACING REFINEMENTS
+   TYPOGRAPHY — Sora (display) + Outfit (body) + JetBrains Mono
    ============================================================ */
+
+/* ---- Base body font ---- */
+body {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Display font: Sora for all headings and hero elements ---- */
+h1, h2, h3, h4, h5, h6,
+.gradient-text,
+.hero-badge-x402,
+.hero-badge-acp,
+.btn-primary,
+.btn-secondary,
+.metric-value,
+.step-number {
+  font-family: var(--font-display);
+}
 
 /* Improve gradient text rendering */
 .gradient-text {
@@ -1434,26 +1457,125 @@ button:focus-visible {
   filter: brightness(1.05);
 }
 
-/* Enhanced heading letter spacing for large headlines */
+/* ---- Hero headline: Sora at max impact ---- */
 .landing-hero h1 {
-  letter-spacing: -0.025em;
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+  font-weight: 800;
 }
 
-/* Section heading tracking */
+/* ---- Section headings: Sora, tight tracking ---- */
 .landing-section h2,
 .landing-section-alt h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+/* ---- Card headings: Sora semibold ---- */
+.step-card h3,
+.price-card h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ---- Nav brand text ---- */
+.nav-glass a.group span {
+  font-family: var(--font-display);
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
-/* Improved body text line-height within step/price cards */
-.step-card p,
-.price-card p {
-  line-height: 1.65;
+/* ---- Badges: Sora semibold, uppercase micro ---- */
+.hero-badge-x402,
+.hero-badge-acp {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-/* Footer links — tighter tracking */
+/* ---- Price badges: Sora for data emphasis ---- */
+.price-badge,
+.price-badge-acp {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+/* ---- Buttons: Sora medium-weight ---- */
+.btn-primary,
+.btn-secondary {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Metric values: Sora bold for data ---- */
+.metric-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Metric labels: Sora medium ---- */
+.metric-label {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+/* ---- Section labels/eyebrows: Sora uppercase ---- */
+.landing-section h3.text-sm,
+h4.text-sm {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+/* ---- Body text refinements ---- */
+.step-card p,
+.price-card p {
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+/* ---- Code/mono: ensure JetBrains Mono throughout ---- */
+code, pre, .font-mono,
+.code-block-wrapper,
+.tf-pill,
+.coin-chip,
+.demo-coin-btn {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ---- Footer: Outfit body, Sora headings ---- */
+footer h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
 footer ul li a {
   letter-spacing: 0.01em;
+  font-weight: 400;
+}
+
+/* ---- Tech pills: mono for that data aesthetic ---- */
+.tech-pill {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Ecosystem badges: Sora ---- */
+.ecosystem-badge {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+/* ---- Integration cards: Sora for titles ---- */
+.integration-card .text-sm.font-semibold {
+  font-family: var(--font-display);
 }
 
 /* ---- CTA Final Section — breathing glows ---- */
