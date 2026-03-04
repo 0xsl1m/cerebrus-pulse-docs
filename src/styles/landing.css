@@ -331,6 +331,7 @@ html, body {
   @apply relative rounded-xl p-8 transition-all duration-300;
   background: rgba(17, 24, 39, 0.5);
   border: 1px solid rgba(30, 41, 59, 0.6);
+  min-width: 0; /* allow grid children to shrink below content size */
 }
 
 .step-card:hover {
@@ -1222,9 +1223,20 @@ button:focus-visible {
   overflow: hidden;
 }
 
-/* step-card: no overflow:hidden — code blocks inside need to scroll */
+/* step-card: clip the ::after shine but let code blocks scroll via inner wrapper */
 .step-card {
   position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Code blocks inside step cards: constrain to card width and scroll */
+.step-card code.block {
+  max-width: 100%;
+  overflow-x: auto;
+  word-break: break-all;
+  display: block;
+  box-sizing: border-box;
 }
 
 .price-card::after,
