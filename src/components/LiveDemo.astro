@@ -1,0 +1,116 @@
+---
+// Interactive API demo — shows a live response from /coins (free) and a sample /pulse response
+const sampleCoins = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'AVAX', 'LINK'];
+
+const sampleResponse = `{
+  <span class="text-[#93C5FD]">"coin"</span>: <span class="text-[#FBBF24]">"BTC"</span>,
+  <span class="text-[#93C5FD]">"price"</span>: { <span class="text-[#93C5FD]">"current"</span>: <span class="text-[#60A5FA]">98765.43</span> },
+  <span class="text-[#93C5FD]">"timeframes"</span>: {
+    <span class="text-[#93C5FD]">"1h"</span>: {
+      <span class="text-[#93C5FD]">"indicators"</span>: {
+        <span class="text-[#93C5FD]">"rsi_14"</span>: <span class="text-[#60A5FA]">62.4</span>,
+        <span class="text-[#93C5FD]">"rsi_zone"</span>: <span class="text-[#FBBF24]">"bullish"</span>,
+        <span class="text-[#93C5FD]">"atr_pct"</span>: <span class="text-[#60A5FA]">0.82</span>,
+        <span class="text-[#93C5FD]">"ema_20"</span>: <span class="text-[#60A5FA]">98420.15</span>,
+        <span class="text-[#93C5FD]">"ema_50"</span>: <span class="text-[#60A5FA]">97890.30</span>,
+        <span class="text-[#93C5FD]">"ema_200"</span>: <span class="text-[#60A5FA]">95120.80</span>,
+        <span class="text-[#93C5FD]">"bollinger"</span>: {
+          <span class="text-[#93C5FD]">"position_pct"</span>: <span class="text-[#60A5FA]">0.68</span>,
+          <span class="text-[#93C5FD]">"width_pct"</span>: <span class="text-[#60A5FA]">2.45</span>
+        },
+        <span class="text-[#93C5FD]">"trend"</span>: {
+          <span class="text-[#93C5FD]">"label"</span>: <span class="text-[#FBBF24]">"bullish"</span>,
+          <span class="text-[#93C5FD]">"ema_stack"</span>: <span class="text-[#FBBF24]">"bull_aligned"</span>
+        }
+      }
+    }
+  },
+  <span class="text-[#93C5FD]">"confluence"</span>: {
+    <span class="text-[#93C5FD]">"score"</span>: <span class="text-[#60A5FA]">0.75</span>,
+    <span class="text-[#93C5FD]">"bias"</span>: <span class="text-[#FBBF24]">"bullish"</span>
+  },
+  <span class="text-[#93C5FD]">"regime"</span>: { <span class="text-[#93C5FD]">"current"</span>: <span class="text-[#FBBF24]">"RISK_ON"</span> },
+  <span class="text-[#93C5FD]">"meta"</span>: { <span class="text-[#93C5FD]">"execution_ms"</span>: <span class="text-[#60A5FA]">189</span> }
+}`;
+---
+
+<div class="section-divider"></div>
+<section class="landing-section landing-section-alt" id="demo">
+  <div class="mx-auto max-w-5xl">
+    <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
+      <span class="gradient-text">Try It Live</span>
+    </h2>
+    <p class="mb-8 sm:mb-12 text-center text-[#94A3B8] text-base sm:text-lg" data-reveal="slide-up">
+      See what a Pulse response looks like. No wallet needed to preview.
+    </p>
+
+    <div class="mx-auto max-w-3xl" data-reveal="slide-up">
+      <!-- Coin selector -->
+      <div class="mb-4 flex flex-wrap items-center gap-2">
+        <span class="text-xs text-[#64748B] font-mono mr-1">SELECT COIN:</span>
+        {sampleCoins.map((coin, i) => (
+          <button
+            class={`demo-coin-btn ${i === 0 ? 'demo-coin-active' : ''}`}
+            data-coin={coin}
+          >
+            {coin}
+          </button>
+        ))}
+      </div>
+
+      <!-- Request display -->
+      <div class="code-block-wrapper">
+        <div class="flex items-center justify-between border-b border-[#1E293B] px-4 py-2.5">
+          <div class="flex items-center gap-2">
+            <div class="h-3 w-3 rounded-full" style="background: rgba(239, 68, 68, 0.6);"></div>
+            <div class="h-3 w-3 rounded-full" style="background: rgba(245, 158, 11, 0.6);"></div>
+            <div class="h-3 w-3 rounded-full" style="background: rgba(34, 197, 94, 0.6);"></div>
+            <span class="ml-2 text-xs text-[#64748B] font-mono">response preview</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="price-badge" style="font-size: 0.75rem; padding: 0.125rem 0.5rem;">$0.02 USDC</span>
+          </div>
+        </div>
+
+        <!-- Request line -->
+        <div class="border-b px-4 py-2 text-xs font-mono" style="border-color: rgba(30, 41, 59, 0.5);">
+          <span class="text-[#22C55E]">GET</span>
+          <span class="text-[#94A3B8]"> https://pulse.openclaw.ai/pulse/</span><span class="text-[#FBBF24] demo-coin-display">BTC</span><span class="text-[#94A3B8]">?timeframes=1h</span>
+        </div>
+
+        <!-- Response body -->
+        <pre class="p-4 text-xs sm:text-sm leading-relaxed overflow-x-auto overflow-y-auto" style="max-height: 400px;" id="demo-response"><code class="text-[#CBD5E1]" set:html={sampleResponse} /></pre>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-[#64748B]">
+          Response includes <span class="text-[#60A5FA]">12+ indicators</span>, <span class="text-[#FBBF24]">confluence scoring</span>, and <span class="text-[#22C55E]">regime detection</span> per timeframe.
+        </p>
+        <a href="/api/pulse" class="btn-primary whitespace-nowrap" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+          Full Schema
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Simple coin selector interaction
+  (function() {
+    const buttons = document.querySelectorAll('.demo-coin-btn');
+    const displays = document.querySelectorAll('.demo-coin-display');
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active state
+        buttons.forEach(b => b.classList.remove('demo-coin-active'));
+        btn.classList.add('demo-coin-active');
+
+        // Update coin display in request line
+        const coin = btn.dataset.coin;
+        displays.forEach(d => d.textContent = coin);
+      });
+    });
+  })();
+</script>

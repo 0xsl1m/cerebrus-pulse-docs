@@ -1,0 +1,503 @@
+openapi: 3.1.0
+info:
+  title: Cerebrus Pulse
+  version: 1.0.0
+  description: |
+    Real-time crypto intelligence API for 30+ Hyperliquid perpetuals.
+    Multi-timeframe technical analysis, market sentiment, funding rates, and confluence scoring.
+
+    **Payment:** x402 micropayments (USDC on Base). No API keys or subscriptions — your wallet is your identity.
+
+    **How x402 works:**
+    1. Send a standard HTTP GET request
+    2. Server responds with `402 Payment Required` + payment details
+    3. x402 SDK auto-signs a USDC micropayment on Base (chain ID 8453)
+    4. Server verifies payment and returns JSON data
+
+    **Also available via ACP** (Agent Commerce Protocol) on Virtuals Protocol for autonomous AI agents.
+  contact:
+    name: OpenClaw
+    email: contact@openclaw.ai
+    url: https://pulse.openclaw.ai
+  license:
+    name: Proprietary
+    url: https://pulse.openclaw.ai/overview
+
+servers:
+  - url: https://pulse.openclaw.ai
+    description: Production
+
+tags:
+  - name: Analysis
+    description: Paid technical analysis endpoints (x402 payment required)
+  - name: Free
+    description: Free endpoints (no payment required)
+
+paths:
+  /pulse/{coin}:
+    get:
+      operationId: getPulse
+      summary: Multi-timeframe technical analysis
+      description: |
+        Returns comprehensive multi-timeframe technical analysis for a Hyperliquid perpetual.
+        Includes RSI, EMAs, ATR, Bollinger Bands, VWAP, Z-score, trend detection,
+        confluence scoring, derivatives data, and market regime.
+        **Cost: $0.02 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Coin ticker (case-insensitive). Examples: BTC, ETH, SOL
+          schema:
+            type: string
+            example: BTC
+        - name: timeframes
+          in: query
+          required: false
+          description: Comma-separated timeframes. Valid values: 15m, 1h, 4h
+          schema:
+            type: string
+            default: "1h,4h"
+            example: "1h,4h"
+      responses:
+        "200":
+          description: Technical analysis data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PulseResponse"
+        "400":
+          description: Invalid coin or insufficient candle data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: Payment required — x402 SDK handles this automatically
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitError"
+        "504":
+          description: Engine timeout (>15s). Retry once.
+
+  /sentiment:
+    get:
+      operationId: getSentiment
+      summary: Market sentiment analysis
+      description: |
+        Returns aggregated crypto market sentiment with fear/greed, momentum, and funding bias labels.
+        Not coin-specific.
+        **Cost: $0.01 USDC per query.**
+      tags: [Analysis]
+      responses:
+        "200":
+          description: Sentiment data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SentimentResponse"
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+
+  /funding/{coin}:
+    get:
+      operationId: getFunding
+      summary: Funding rate analysis
+      description: |
+        Returns current and historical funding rates with annualized projections for a Hyperliquid perpetual.
+        **Cost: $0.01 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Coin ticker (case-insensitive)
+          schema:
+            type: string
+            example: SOL
+        - name: lookback_hours
+          in: query
+          required: false
+          description: Hours of historical funding data (1-168)
+          schema:
+            type: integer
+            default: 24
+            minimum: 1
+            maximum: 168
+      responses:
+        "200":
+          description: Funding rate data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundingResponse"
+        "400":
+          description: Invalid coin or lookback_hours out of range
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+
+  /bundle/{coin}:
+    get:
+      operationId: getBundle
+      summary: Complete analysis bundle
+      description: |
+        Returns pulse + sentiment + funding combined in one response.
+        20% discount versus calling endpoints individually.
+        **Cost: $0.04 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Coin ticker (case-insensitive)
+          schema:
+            type: string
+            example: BTC
+        - name: timeframes
+          in: query
+          required: false
+          description: Comma-separated timeframes. Valid values: 15m, 1h, 4h
+          schema:
+            type: string
+            default: "1h,4h"
+      responses:
+        "200":
+          description: Complete analysis bundle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BundleResponse"
+        "400":
+          description: Invalid coin
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+        "504":
+          description: Engine timeout
+
+  /health:
+    get:
+      operationId: getHealth
+      summary: Gateway health status
+      description: Returns gateway health status including uptime and kill switch state. **Free — no payment required.**
+      tags: [Free]
+      responses:
+        "200":
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  uptime_seconds:
+                    type: number
+                  kill_switch:
+                    type: boolean
+
+  /coins:
+    get:
+      operationId: listCoins
+      summary: List available coins
+      description: Returns array of available coin tickers with metadata. **Free — no payment required.**
+      tags: [Free]
+      responses:
+        "200":
+          description: Available coins
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  coins:
+                    type: array
+                    items:
+                      type: string
+                    example: ["BTC", "ETH", "SOL", "DOGE", "XRP"]
+                  count:
+                    type: integer
+                    example: 30
+
+components:
+  schemas:
+    PulseResponse:
+      type: object
+      properties:
+        coin:
+          type: string
+          example: ETH
+        timestamp_iso:
+          type: string
+          format: date-time
+        price:
+          type: object
+          properties:
+            current:
+              type: number
+              example: 3842.15
+        timeframes:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/TimeframeData"
+        derivatives:
+          $ref: "#/components/schemas/Derivatives"
+        regime:
+          $ref: "#/components/schemas/Regime"
+        confluence:
+          $ref: "#/components/schemas/Confluence"
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    TimeframeData:
+      type: object
+      properties:
+        indicators:
+          type: object
+          properties:
+            rsi_14:
+              type: number
+              description: RSI 14-period (0-100)
+            rsi_zone:
+              type: string
+              enum: [overbought, bullish, neutral, bearish, oversold]
+            atr_14:
+              type: number
+              description: Average True Range 14-period (absolute)
+            atr_pct:
+              type: number
+              description: ATR as percentage of price
+            ema_20:
+              type: number
+            ema_50:
+              type: number
+            ema_200:
+              type: number
+            vwap_20:
+              type: number
+              description: Volume-weighted average price 20-period
+            zscore_100:
+              type: number
+              description: Z-score vs 100-period mean
+            bollinger:
+              type: object
+              properties:
+                upper:
+                  type: number
+                middle:
+                  type: number
+                lower:
+                  type: number
+                width_pct:
+                  type: number
+                position_pct:
+                  type: number
+                  description: "0.0 = lower band, 1.0 = upper band"
+            trend:
+              type: object
+              properties:
+                direction:
+                  type: integer
+                  enum: [-1, 0, 1]
+                  description: "1=bullish, -1=bearish, 0=neutral"
+                label:
+                  type: string
+                  enum: [bullish, weak_bullish, neutral, weak_bearish, bearish]
+                ema_stack:
+                  type: string
+                  enum: [bull_aligned, bear_aligned, mixed, flat]
+        candle_freshness_seconds:
+          type: number
+
+    Derivatives:
+      type: object
+      properties:
+        funding_rate:
+          type: number
+          description: Current 8-hour funding rate (raw decimal)
+        funding_annualized_pct:
+          type: number
+          description: Annualized funding rate percentage
+        open_interest:
+          type: number
+          description: Total open interest (USD notional)
+        impact_bid:
+          type: number
+        impact_ask:
+          type: number
+        spread_bps:
+          type: number
+          description: Bid-ask spread in basis points
+
+    Regime:
+      type: object
+      properties:
+        current:
+          type: string
+          description: "Market regime: RISK_ON, RISK_OFF, etc."
+        as_of:
+          type: integer
+          description: Unix timestamp of regime calculation
+
+    Confluence:
+      type: object
+      properties:
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Multi-signal confidence score
+        bias:
+          type: string
+          enum: [bullish, neutral, bearish]
+        signals:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [bullish, neutral, bearish]
+          description: Per-indicator direction (rsi, trend, bollinger, zscore)
+        bullish_count:
+          type: integer
+        bearish_count:
+          type: integer
+
+    Meta:
+      type: object
+      properties:
+        provider:
+          type: string
+          example: OpenClaw/Cerebrus
+        offering:
+          type: string
+          example: cerebrus_pulse
+        execution_ms:
+          type: number
+        coins_available:
+          type: integer
+        data_age_seconds:
+          type: number
+        warning:
+          type: string
+          description: "Optional. 'stale_data' if data older than 2 hours."
+
+    SentimentResponse:
+      type: object
+      properties:
+        timestamp_iso:
+          type: string
+          format: date-time
+        sentiment:
+          type: object
+          properties:
+            overall:
+              type: string
+              enum: [bullish, neutral, bearish]
+            score:
+              type: number
+              minimum: 0
+              maximum: 1
+            labels:
+              type: object
+              properties:
+                fear_greed:
+                  type: string
+                momentum:
+                  type: string
+                funding_bias:
+                  type: string
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    FundingResponse:
+      type: object
+      properties:
+        coin:
+          type: string
+        timestamp_iso:
+          type: string
+          format: date-time
+        funding:
+          type: object
+          properties:
+            current_rate:
+              type: number
+            annualized_pct:
+              type: number
+            lookback_hours:
+              type: integer
+            average_rate:
+              type: number
+            max_rate:
+              type: number
+            min_rate:
+              type: number
+            history:
+              type: array
+              items:
+                type: object
+                properties:
+                  timestamp:
+                    type: integer
+                  rate:
+                    type: number
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    BundleResponse:
+      type: object
+      properties:
+        coin:
+          type: string
+        timestamp_iso:
+          type: string
+          format: date-time
+        pulse:
+          description: Same schema as PulseResponse (minus top-level coin/timestamp)
+          type: object
+        sentiment:
+          description: Same schema as SentimentResponse.sentiment
+          type: object
+        funding:
+          description: Same schema as FundingResponse.funding
+          type: object
+        meta:
+          allOf:
+            - $ref: "#/components/schemas/Meta"
+            - type: object
+              properties:
+                bundle:
+                  type: boolean
+                  example: true
+                discount_pct:
+                  type: integer
+                  example: 20
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Coin 'XYZ' not available. Use coin='list' to see available coins."
+
+    RateLimitError:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Rate limit exceeded (per-IP)"
+        limit:
+          type: integer
+          example: 12
+        window:
+          type: integer
+          example: 60

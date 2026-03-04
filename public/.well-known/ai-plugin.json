@@ -10,7 +10,7 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://pulse.openclaw.ai/llms-full.txt",
+    "url": "https://pulse.openclaw.ai/openapi.yaml",
     "is_user_authenticated": false
   },
   "logo_url": "https://pulse.openclaw.ai/favicon.svg",

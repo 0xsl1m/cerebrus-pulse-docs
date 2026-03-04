@@ -520,6 +520,77 @@ html, body {
   border-color: rgba(245, 158, 11, 0.6);
 }
 
+/* ---- Metric Cards (social proof) ---- */
+.metric-card {
+  @apply relative rounded-xl p-6 text-center transition-all duration-300;
+  background: rgba(17, 24, 39, 0.5);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+}
+
+.metric-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.06);
+  transform: translateY(-2px);
+}
+
+.metric-value {
+  @apply text-3xl sm:text-4xl font-bold mb-1;
+}
+
+.metric-label {
+  @apply text-sm font-semibold text-[#E8ECF4];
+}
+
+.metric-sublabel {
+  @apply text-xs text-[#64748B] mt-0.5;
+}
+
+/* ---- Ecosystem Badges ---- */
+.ecosystem-badge {
+  @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300;
+  background: rgba(30, 41, 59, 0.5);
+  color: #CBD5E1;
+  border: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.ecosystem-badge:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(30, 41, 59, 0.7);
+}
+
+/* ---- Integration Cards ---- */
+.integration-card {
+  @apply flex flex-col items-center justify-center rounded-xl p-4 text-center transition-all duration-300;
+  background: rgba(17, 24, 39, 0.5);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+  text-decoration: none;
+}
+
+.integration-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.08);
+  transform: translateY(-2px);
+}
+
+/* ---- Demo Coin Buttons ---- */
+.demo-coin-btn {
+  @apply rounded-md px-2.5 py-1 text-xs font-mono font-semibold transition-all duration-200 cursor-pointer;
+  background: rgba(30, 41, 59, 0.5);
+  color: #94A3B8;
+  border: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.demo-coin-btn:hover {
+  color: #E8ECF4;
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.demo-coin-active {
+  color: #60A5FA;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
 /* ---- Focus-visible for accessibility ---- */
 a:focus-visible,
 button:focus-visible {
@@ -950,6 +1021,12 @@ button:focus-visible {
   }
   .price-card {
     padding: 1.25rem;
+  }
+  .metric-card {
+    padding: 1.25rem;
+  }
+  .metric-value {
+    font-size: 1.5rem;
   }
 }
 
