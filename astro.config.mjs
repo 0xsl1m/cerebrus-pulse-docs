@@ -12,6 +12,9 @@ export default defineConfig({
         src: './src/assets/pulse-logo.svg',
         replacesTitle: false,
       },
+      components: {
+        Head: './src/components/StarlightHead.astro',
+      },
       customCss: ['./src/styles/landing.css'],
       social: [],
       sidebar: [
