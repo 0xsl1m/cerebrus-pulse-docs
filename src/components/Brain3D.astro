@@ -14,11 +14,11 @@
   // Sci-fi holographic wireframe brain with electric neural firing
   // ============================================================
 
-  (function () {
+  function initBrain3D() {
     // Respect prefers-reduced-motion
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const canvas = document.getElementById('brain-3d-canvas') as HTMLCanvasElement;
+    const canvas = document.querySelector('.brain-3d-canvas') as HTMLCanvasElement;
     if (!canvas) return;
 
     // ---- Colors ----
@@ -714,7 +714,16 @@
       renderer.dispose();
       composer.dispose();
     });
-  })();
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBrain3D);
+  } else {
+    initBrain3D();
+  }
+  // Also handle Astro page transitions
+  document.addEventListener('astro:page-load', initBrain3D);
 </script>
 
 <style>
