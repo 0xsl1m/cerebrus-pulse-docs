@@ -1461,11 +1461,15 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ---- .xyz domain tag on headline ---- */
+.hero-headline-wrap {
+  position: relative;
+  display: inline-block;
+}
 .xyz-tag {
   position: absolute;
-  bottom: -0.3em;
-  right: -0.1em;
-  font-size: 0.18em;
+  bottom: -0.35em;
+  right: 0;
+  font-size: 0.28em;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-weight: 500;
   letter-spacing: 0.08em;
