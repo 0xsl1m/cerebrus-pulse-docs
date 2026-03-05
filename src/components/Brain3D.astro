@@ -43,12 +43,14 @@
       canvas,
       alpha: true,
       antialias: true,
+      premultipliedAlpha: false,
       powerPreference: 'high-performance',
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
+    renderer.autoClear = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.0;
     console.log('[Brain3D] Renderer created, WebGL context:', !!renderer.getContext());
 
     // ---- Scene & Camera ----
@@ -58,13 +60,20 @@
     camera.lookAt(0, -0.1, 0);
 
     // ---- Post-processing (Bloom) ----
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
+    // Create render target with alpha for transparent background
+    const renderTarget = new THREE.WebGLRenderTarget(512, 512, {
+      type: THREE.HalfFloatType,
+      format: THREE.RGBAFormat,
+    });
+    const composer = new EffectComposer(renderer, renderTarget);
+    const renderPass = new RenderPass(scene, camera);
+    renderPass.clearAlpha = 0; // transparent background
+    composer.addPass(renderPass);
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(512, 512),
-      1.4,   // strength
-      0.6,   // radius
-      0.15   // threshold
+      0.8,   // strength (was 1.4 — way too bright)
+      0.5,   // radius
+      0.3    // threshold (higher = less bloom on dim things)
     );
     composer.addPass(bloomPass);
 
@@ -83,7 +92,7 @@
       stemEdges: [number, number][];
     } {
       // Create an icosahedron and subdivide for brain mesh
-      const icoGeo = new THREE.IcosahedronGeometry(1.6, 3);
+      const icoGeo = new THREE.IcosahedronGeometry(1.6, 4);
       const positions = icoGeo.getAttribute('position');
       const index = icoGeo.getIndex();
 
@@ -365,7 +374,7 @@
     }
 
     // ---- Left hemisphere wireframe (blue) ----
-    const leftWire = createWireframe(brain.leftVerts, brain.leftEdges, BLUE, 0.35);
+    const leftWire = createWireframe(brain.leftVerts, brain.leftEdges, BLUE, 0.2);
     brainGroup.add(leftWire);
 
     // Brighter outline edges for left
@@ -375,11 +384,11 @@
       const avgLen = (va.length() + vb.length()) / 2;
       return avgLen > 1.45;
     });
-    const leftOutline = createWireframe(brain.leftVerts, leftOuterEdges, BLUE_LIGHT, 0.6);
+    const leftOutline = createWireframe(brain.leftVerts, leftOuterEdges, BLUE_LIGHT, 0.4);
     brainGroup.add(leftOutline);
 
     // ---- Right hemisphere wireframe (amber) ----
-    const rightWire = createWireframe(brain.rightVerts, brain.rightEdges, AMBER, 0.35);
+    const rightWire = createWireframe(brain.rightVerts, brain.rightEdges, AMBER, 0.2);
     brainGroup.add(rightWire);
 
     const rightOuterEdges = brain.rightEdges.filter(([a, b]) => {
@@ -388,7 +397,7 @@
       const avgLen = (va.length() + vb.length()) / 2;
       return avgLen > 1.45;
     });
-    const rightOutline = createWireframe(brain.rightVerts, rightOuterEdges, AMBER_LIGHT, 0.6);
+    const rightOutline = createWireframe(brain.rightVerts, rightOuterEdges, AMBER_LIGHT, 0.4);
     brainGroup.add(rightOutline);
 
     // ---- Bridge connections (violet) ----
@@ -584,10 +593,10 @@
     particleGeo.setAttribute('color', new THREE.Float32BufferAttribute(particleColors, 3));
 
     const particleMat = new THREE.PointsMaterial({
-      size: 0.03,
+      size: 0.02,
       vertexColors: true,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.3,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
@@ -706,7 +715,7 @@
       }
 
       // ---- Animate wireframe opacity (subtle breathing) ----
-      const breathe = 0.3 + Math.sin(elapsed * 0.5) * 0.08;
+      const breathe = 0.18 + Math.sin(elapsed * 0.5) * 0.05;
       (leftWire.material as THREE.LineBasicMaterial).opacity = breathe;
       (rightWire.material as THREE.LineBasicMaterial).opacity = breathe;
 
