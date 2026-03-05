@@ -5,7 +5,7 @@ description: Cerebrus Pulse — real-time multi-timeframe technical analysis for
 
 # Cerebrus Pulse
 
-**Real-time multi-timeframe technical analysis for 30+ Hyperliquid perpetuals, paid via x402 micropayments on Base.**
+**Real-time multi-timeframe technical analysis for 50+ Hyperliquid perpetuals, paid via x402 micropayments on Base.**
 
 Cerebrus Pulse is an API that delivers institutional-grade technical indicators, derivatives data, market regime detection, and multi-signal confluence scoring — all accessible with a single HTTP request and a USDC micropayment.
 
@@ -15,8 +15,8 @@ Cerebrus Pulse is an API that delivers institutional-grade technical indicators,
 - **Multi-signal confluence** — Automated scoring (0.0–1.0) combining all indicators into a directional bias
 - **Derivatives data** — Funding rates, open interest, impact bid/ask, spread (bps)
 - **Market regime** — Current regime classification (RISK_ON, RISK_OFF, etc.)
-- **3 timeframes** — 15-minute, 1-hour, 4-hour analysis
-- **30+ coins** — Major Hyperliquid perpetuals (BTC, ETH, SOL, and more)
+- **6 timeframes** — 5-minute, 15-minute, 1-hour, 4-hour, daily, weekly analysis
+- **50+ coins** — Major Hyperliquid perpetuals (BTC, ETH, SOL, and more)
 
 ## Payment Model
 
@@ -33,7 +33,7 @@ Pulse uses the [x402 protocol](https://www.x402.org/) for payments:
 
 | Endpoint | Price | Description |
 |----------|-------|-------------|
-| `GET /screener` | $0.04 USDC | Scan 30+ coins: signals, trends, vol regime, confluence |
+| `GET /screener` | $0.04 USDC | Scan 50+ coins: signals, trends, vol regime, confluence |
 | `GET /pulse/{coin}` | $0.02 USDC | Multi-timeframe technical analysis |
 | `GET /sentiment` | $0.01 USDC | Market sentiment labels |
 | `GET /funding/{coin}` | $0.01 USDC | Funding rate analysis |

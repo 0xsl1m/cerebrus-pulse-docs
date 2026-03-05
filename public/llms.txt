@@ -4,7 +4,7 @@
 
 ## What is Cerebrus Pulse?
 
-Cerebrus Pulse is a pay-per-query crypto analysis API that provides multi-timeframe technical analysis, market sentiment, funding rate data, and confluence scoring for 30+ Hyperliquid perpetual contracts. It requires no API keys, no subscriptions, and no accounts. Your wallet is your identity.
+Cerebrus Pulse is a pay-per-query crypto analysis API that provides multi-timeframe technical analysis, market sentiment, funding rate data, open interest analysis, spread/liquidity scoring, BTC-alt correlation, and confluence scoring for 50+ Hyperliquid perpetual contracts. It requires no API keys, no subscriptions, and no accounts. Your wallet is your identity.
 
 Cerebrus Pulse serves two audiences through two protocols:
 1. **x402 (HTTP micropayments)** — For developers, bots, and dashboards. Standard HTTP requests paid with USDC on Base blockchain.
@@ -22,10 +22,14 @@ Latency: Low (single HTTP request)
 
 ### Paid Endpoints
 
+- GET /screener?top_n=50 — $0.04 USDC — Market screener: scan 50+ coins for signal strength, RSI zone, trend, vol regime, funding bias, confluence, OI trend. 60s cache.
 - GET /pulse/{coin}?timeframes=1h,4h — $0.02 USDC — Multi-timeframe technical analysis (RSI, EMAs, ATR, Bollinger Bands, VWAP, Z-score, trend, regime, confluence scoring, derivatives data)
 - GET /sentiment — $0.01 USDC — Aggregated market sentiment analysis (fear/greed, momentum, funding bias)
 - GET /funding/{coin}?lookback_hours=24 — $0.01 USDC — Historical and current funding rates with annualized projections
-- GET /bundle/{coin}?timeframes=1h,4h — $0.04 USDC — Complete bundle: pulse + sentiment + funding combined (20% discount vs individual)
+- GET /oi/{coin} — $0.01 USDC — Open interest analysis: current OI, 1h/4h/24h deltas, percentile rank, trend, price-OI divergence signals
+- GET /spread/{coin} — $0.008 USDC — Spread and liquidity: bid-ask spread (bps), slippage estimates at $10k-$500k notional, liquidity score (1-10)
+- GET /correlation — $0.03 USDC — BTC-alt correlation matrix for top 15 coins with regime classification (CORRELATED/MIXED/DECORRELATED) and sector averages
+- GET /bundle/{coin}?timeframes=1h,4h — $0.04 USDC — Complete bundle: pulse + sentiment + funding + spread combined (17% discount vs individual)
 
 ### Free Endpoints
 
@@ -34,7 +38,7 @@ Latency: Low (single HTTP request)
 
 ### Supported Timeframes
 
-15m, 1h, 4h
+5m, 15m, 1h, 4h, 1d, 1w
 
 ### How x402 Payment Works
 
@@ -64,9 +68,9 @@ Best for: Autonomous agent workflows, AI-synthesized analysis
 4. Cerebrus executes the job and delivers result
 5. Payment released on delivery
 
-## Supported Coins (30+)
+## Supported Coins (50+)
 
-BTC, ETH, SOL, DOGE, XRP, ADA, AVAX, LINK, DOT, MATIC, ARB, OP, APT, SUI, SEI, TIA, INJ, FET, NEAR, ATOM, FIL, AAVE, UNI, MKR, LDO, PEPE, WIF, JUP, ONDO, RENDER, and more.
+AAVE, ADA, APT, ARB, ATOM, AVAX, BERA, BNB, BTC, CRV, DOGE, DOT, DYDX, EIGEN, ENA, ENS, ETH, FET, FIL, HBAR, HYPE, IMX, INJ, JUP, LDO, LINK, LTC, MATIC, MKR, MNT, NEAR, ONDO, OP, PENDLE, PEPE, POL, PYTH, RENDER, SEI, SNX, SOL, STX, SUI, TAO, TIA, TRX, UNI, WIF, WLD, XLM, XRP.
 
 Use GET /coins for the live list (free, no payment required).
 
@@ -112,11 +116,19 @@ Plus cross-timeframe:
 ## Links
 
 - Documentation: https://cerebruspulse.xyz/overview
-- API Reference: https://cerebruspulse.xyz/api/pulse
+- API Reference — Screener: https://cerebruspulse.xyz/api/screener
+- API Reference — Pulse: https://cerebruspulse.xyz/api/pulse
+- API Reference — Sentiment: https://cerebruspulse.xyz/api/sentiment
+- API Reference — Funding: https://cerebruspulse.xyz/api/funding
+- API Reference — OI: https://cerebruspulse.xyz/api/oi
+- API Reference — Spread: https://cerebruspulse.xyz/api/spread
+- API Reference — Correlation: https://cerebruspulse.xyz/api/correlation
+- API Reference — Bundle: https://cerebruspulse.xyz/api/bundle
 - Quickstart: https://cerebruspulse.xyz/quickstart
 - x402 Payments Guide: https://cerebruspulse.xyz/guides/x402-payments
 - ACP for Agents: https://cerebruspulse.xyz/guides/acp-agents
 - Python SDK: https://cerebruspulse.xyz/guides/python-sdk
 - TypeScript SDK: https://cerebruspulse.xyz/guides/typescript-sdk
 - Response Schemas: https://cerebruspulse.xyz/reference/response-schemas
+- Supported Coins: https://cerebruspulse.xyz/reference/coins-list
 - Rate Limits: https://cerebruspulse.xyz/reference/rate-limits

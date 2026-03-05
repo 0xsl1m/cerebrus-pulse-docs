@@ -62,7 +62,7 @@ async function getFunding(coin: string, lookbackHours = 24) {
   return resp.json();
 }
 
-// Bundle — all three combined (20% discount)
+// Bundle — all four combined (17% discount)
 async function getBundle(coin: string, timeframes = "1h,4h") {
   const resp = await fetchWithPayment(
     `${BASE_URL}/bundle/${coin}?timeframes=${timeframes}`

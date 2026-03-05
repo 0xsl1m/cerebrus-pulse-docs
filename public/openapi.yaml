@@ -3,7 +3,7 @@ info:
   title: Cerebrus Pulse
   version: 1.0.0
   description: |
-    Real-time crypto intelligence API for 30+ Hyperliquid perpetuals.
+    Real-time crypto intelligence API for 50+ Hyperliquid perpetuals.
     Multi-timeframe technical analysis, market sentiment, funding rates, and confluence scoring.
 
     **Payment:** x402 micropayments (USDC on Base). No API keys or subscriptions — your wallet is your identity.
@@ -55,7 +55,7 @@ paths:
         - name: timeframes
           in: query
           required: false
-          description: Comma-separated timeframes. Valid values: 15m, 1h, 4h
+          description: Comma-separated timeframes. Valid values: 5m, 15m, 1h, 4h, 1d, 1w
           schema:
             type: string
             default: "1h,4h"
@@ -149,8 +149,8 @@ paths:
       operationId: getBundle
       summary: Complete analysis bundle
       description: |
-        Returns pulse + sentiment + funding combined in one response.
-        20% discount versus calling endpoints individually.
+        Returns pulse + sentiment + funding + spread combined in one response.
+        17% discount versus calling endpoints individually.
         **Cost: $0.04 USDC per query.**
       tags: [Analysis]
       parameters:
@@ -164,7 +164,7 @@ paths:
         - name: timeframes
           in: query
           required: false
-          description: Comma-separated timeframes. Valid values: 15m, 1h, 4h
+          description: Comma-separated timeframes. Valid values: 5m, 15m, 1h, 4h, 1d, 1w
           schema:
             type: string
             default: "1h,4h"
@@ -183,6 +183,122 @@ paths:
           description: Rate limit exceeded
         "504":
           description: Engine timeout
+
+  /screener:
+    get:
+      operationId: getScreener
+      summary: Market screener
+      description: |
+        Scans all available coins and returns a compact summary for each — signal strength,
+        RSI zone, trend, volatility regime, funding bias, confluence, and OI trend. 60-second cache.
+        **Cost: $0.04 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: top_n
+          in: query
+          required: false
+          description: Maximum coins to return, sorted by signal strength (1-50)
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 50
+      responses:
+        "200":
+          description: Screener results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScreenerResponse"
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+
+  /oi/{coin}:
+    get:
+      operationId: getOI
+      summary: Open interest analysis
+      description: |
+        Returns open interest analysis — current OI, delta over 1h/4h/24h, percentile rank,
+        trend direction, and price-OI divergence signals.
+        **Cost: $0.01 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Coin ticker (case-insensitive)
+          schema:
+            type: string
+            example: BTC
+      responses:
+        "200":
+          description: Open interest data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OIResponse"
+        "400":
+          description: Invalid coin or no OI data available
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+
+  /spread/{coin}:
+    get:
+      operationId: getSpread
+      summary: Spread and liquidity analysis
+      description: |
+        Returns bid-ask spread, slippage estimates at multiple notional sizes ($10k-$500k),
+        and a liquidity score (1-10).
+        **Cost: $0.008 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Coin ticker (case-insensitive)
+          schema:
+            type: string
+            example: ETH
+      responses:
+        "200":
+          description: Spread and liquidity data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpreadResponse"
+        "400":
+          description: Invalid coin or no spread data available
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+
+  /correlation:
+    get:
+      operationId: getCorrelation
+      summary: BTC-alt correlation matrix
+      description: |
+        Returns BTC-alt correlation matrix for top 15 coins with regime classification
+        (CORRELATED/MIXED/DECORRELATED) and per-sector averages.
+        **Cost: $0.03 USDC per query.**
+      tags: [Analysis]
+      responses:
+        "200":
+          description: Correlation matrix data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CorrelationResponse"
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+        "500":
+          description: Insufficient candle data for correlation
 
   /health:
     get:
@@ -227,7 +343,7 @@ paths:
                     example: ["BTC", "ETH", "SOL", "DOGE", "XRP"]
                   count:
                     type: integer
-                    example: 30
+                    example: 51
 
 components:
   schemas:
@@ -480,7 +596,7 @@ components:
                   example: true
                 discount_pct:
                   type: integer
-                  example: 20
+                  example: 17
 
     Error:
       type: object
@@ -488,6 +604,155 @@ components:
         detail:
           type: string
           example: "Coin 'XYZ' not available. Use coin='list' to see available coins."
+
+    ScreenerResponse:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          example: screener
+        coins_scanned:
+          type: integer
+        top_n:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              coin:
+                type: string
+              signal_strength:
+                type: number
+              rsi_14:
+                type: number
+              rsi_zone:
+                type: string
+                enum: [overbought, bullish, neutral, bearish, oversold]
+              trend:
+                type: string
+              vol_regime:
+                type: string
+                enum: [LOW, NORMAL, HIGH, EXTREME]
+              funding_bias:
+                type: string
+                enum: [long_pays, short_pays, neutral]
+              confluence_bias:
+                type: string
+                enum: [bullish, neutral, bearish]
+              confluence_score:
+                type: number
+              oi_trend:
+                type: string
+                enum: [RISING, FALLING, FLAT]
+              price:
+                type: number
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    OIResponse:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          example: oi
+        coin:
+          type: string
+        timestamp_iso:
+          type: string
+          format: date-time
+        open_interest:
+          type: object
+          properties:
+            current:
+              type: number
+              description: Current OI in USD notional
+            delta_1h:
+              type: number
+              description: OI change over 1 hour (fraction)
+            delta_4h:
+              type: number
+              description: OI change over 4 hours (fraction)
+            delta_24h:
+              type: number
+              description: OI change over 24 hours (fraction)
+            percentile:
+              type: number
+              description: OI percentile rank (0-100)
+            trend:
+              type: string
+              enum: [RISING, FALLING, FLAT]
+            price_oi_divergence:
+              type: string
+              enum: [BULLISH_DIV, BEARISH_DIV, NONE]
+        price:
+          type: number
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    SpreadResponse:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          example: spread
+        coin:
+          type: string
+        timestamp_iso:
+          type: string
+          format: date-time
+        spread:
+          type: object
+          properties:
+            bid_ask_spread_bps:
+              type: number
+              description: Bid-ask spread in basis points
+            impact_bid:
+              type: number
+            impact_ask:
+              type: number
+            mid_price:
+              type: number
+            estimated_slippage_bps:
+              type: object
+              description: Slippage estimates at $10k, $50k, $100k, $500k notional
+              additionalProperties:
+                type: number
+            liquidity_score:
+              type: integer
+              minimum: 1
+              maximum: 10
+              description: "1=poor (>50bps spread), 10=excellent (<2bps)"
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    CorrelationResponse:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          example: correlation
+        timestamp_iso:
+          type: string
+          format: date-time
+        btc_correlation:
+          type: object
+          description: Per-coin correlation coefficient with BTC (-1.0 to 1.0)
+          additionalProperties:
+            type: number
+        average_correlation:
+          type: number
+        regime:
+          type: string
+          enum: [CORRELATED, MIXED, DECORRELATED, UNKNOWN]
+          description: "CORRELATED (avg >0.7), MIXED (0.3-0.7), DECORRELATED (<0.3)"
+        sector_averages:
+          type: object
+          description: Per-sector average correlation (L1, L2, DeFi, Meme)
+          additionalProperties:
+            type: number
+        meta:
+          $ref: "#/components/schemas/Meta"
 
     RateLimitError:
       type: object

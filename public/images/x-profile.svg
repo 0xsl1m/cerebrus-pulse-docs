@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <!-- Main blue-to-amber gradient -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <!-- Glow gradient for center -->
+    <radialGradient id="center-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.3"/>
+      <stop offset="60%" stop-color="#0a0e1a" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#060a14" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Outer ring glow -->
+    <radialGradient id="ring-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="70%" stop-color="transparent"/>
+      <stop offset="85%" stop-color="#3B82F6" stop-opacity="0.08"/>
+      <stop offset="95%" stop-color="#F59E0B" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <!-- Drop shadow filter -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Stronger glow for waveform -->
+    <filter id="wave-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Center dot glow -->
+    <filter id="dot-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background - dark navy matching site -->
+  <rect width="400" height="400" fill="#060a14"/>
+
+  <!-- Subtle ambient glow -->
+  <circle cx="200" cy="200" r="200" fill="url(#center-glow)"/>
+  <circle cx="200" cy="200" r="200" fill="url(#ring-glow)"/>
+
+  <!-- Outer ring - thicker, premium feel -->
+  <circle cx="200" cy="200" r="155" stroke="url(#brand-grad)" stroke-width="3" fill="none" filter="url(#glow)" opacity="0.9"/>
+
+  <!-- Inner subtle ring -->
+  <circle cx="200" cy="200" r="140" stroke="url(#brand-grad)" stroke-width="0.8" fill="none" opacity="0.25"/>
+
+  <!-- Neural network dots in background (subtle) -->
+  <!-- Top arc -->
+  <circle cx="130" cy="95" r="2.5" fill="#3B82F6" opacity="0.4"/>
+  <circle cx="200" cy="72" r="2" fill="#5B9CF6" opacity="0.3"/>
+  <circle cx="270" cy="95" r="2.5" fill="#7DB5F6" opacity="0.35"/>
+  <!-- Bottom arc -->
+  <circle cx="130" cy="305" r="2.5" fill="#D4880B" opacity="0.35"/>
+  <circle cx="200" cy="328" r="2" fill="#F59E0B" opacity="0.3"/>
+  <circle cx="270" cy="305" r="2.5" fill="#E8930B" opacity="0.4"/>
+  <!-- Sides -->
+  <circle cx="78" cy="170" r="2" fill="#3B82F6" opacity="0.3"/>
+  <circle cx="78" cy="230" r="2" fill="#6B93D6" opacity="0.25"/>
+  <circle cx="322" cy="170" r="2" fill="#C89520" opacity="0.3"/>
+  <circle cx="322" cy="230" r="2" fill="#F59E0B" opacity="0.25"/>
+
+  <!-- Faint connecting lines between neural dots -->
+  <line x1="130" y1="95" x2="200" y2="72" stroke="#3B82F6" stroke-width="0.5" opacity="0.15"/>
+  <line x1="200" y1="72" x2="270" y2="95" stroke="#5B9CF6" stroke-width="0.5" opacity="0.12"/>
+  <line x1="130" y1="305" x2="200" y2="328" stroke="#D4880B" stroke-width="0.5" opacity="0.15"/>
+  <line x1="200" y1="328" x2="270" y2="305" stroke="#F59E0B" stroke-width="0.5" opacity="0.12"/>
+  <line x1="78" y1="170" x2="130" y2="95" stroke="#3B82F6" stroke-width="0.5" opacity="0.1"/>
+  <line x1="322" y1="170" x2="270" y2="95" stroke="#C89520" stroke-width="0.5" opacity="0.1"/>
+  <line x1="78" y1="230" x2="130" y2="305" stroke="#6B93D6" stroke-width="0.5" opacity="0.1"/>
+  <line x1="322" y1="230" x2="270" y2="305" stroke="#F59E0B" stroke-width="0.5" opacity="0.1"/>
+
+  <!-- Main pulse waveform - the hero element -->
+  <!-- Scaled up version of the favicon waveform, centered -->
+  <g filter="url(#wave-glow)">
+    <path
+      d="M95 200 h35 l24 -62 l24 124 l24 -87 l24 50 h35"
+      stroke="url(#brand-grad)"
+      stroke-width="4.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+  </g>
+
+  <!-- Center pulse dot -->
+  <circle cx="200" cy="200" r="8" fill="#3B82F6" filter="url(#dot-glow)" opacity="0.9"/>
+  <circle cx="200" cy="200" r="4" fill="#ffffff" opacity="0.9"/>
+</svg>

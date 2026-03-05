@@ -7,7 +7,7 @@ interface Props {
 
 const {
   title = "Cerebrus Pulse — Real-time Crypto Intelligence API",
-  description = "Cerebrus Pulse is a pay-per-query crypto intelligence API for 30+ Hyperliquid perpetuals. 9 x402 endpoints: market screener, technical analysis, sentiment, funding, open interest, spread/liquidity, correlation matrix, and bundles. Plus ACP AI synthesis via Virtuals Protocol. From $0.008/query. No API keys required.",
+  description = "Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. 9 x402 endpoints: market screener, technical analysis, sentiment, funding, open interest, spread/liquidity, correlation matrix, and bundles. Plus ACP AI synthesis via Virtuals Protocol. From $0.008/query. No API keys required.",
   url = "https://cerebruspulse.xyz",
 } = Astro.props;
 
@@ -79,7 +79,7 @@ const webApplicationSchema = {
     {
       "@type": "Offer",
       "name": "Screener — Market Screener",
-      "description": "Scan 30+ coins at once for signal strength, RSI zone, trend direction, volatility regime, funding bias, confluence, and OI trend.",
+      "description": "Scan 50+ coins at once for signal strength, RSI zone, trend direction, volatility regime, funding bias, confluence, and OI trend.",
       "price": "0.04",
       "priceCurrency": "USD",
       "priceSpecification": {
@@ -190,8 +190,8 @@ const webApplicationSchema = {
     }
   ],
   "featureList": [
-    "Market screener: scan 30+ coins at once",
-    "Multi-timeframe technical analysis (15m, 1h, 4h)",
+    "Market screener: scan 50+ coins at once",
+    "Multi-timeframe technical analysis (5m, 15m, 1h, 4h, 1d, 1w)",
     "RSI, EMA (20/50/200), ATR, Bollinger Bands, VWAP, Z-score indicators",
     "Multi-signal confluence scoring (0.0-1.0)",
     "Market regime detection (RISK_ON, RISK_OFF)",
@@ -200,7 +200,7 @@ const webApplicationSchema = {
     "BTC-alt correlation matrix with regime classification",
     "Derivatives data (funding rates, open interest, spread)",
     "Market sentiment analysis",
-    "30+ Hyperliquid perpetuals supported",
+    "50+ Hyperliquid perpetuals supported",
     "x402 micropayments on Base (USDC)",
     "ACP agent commerce on Virtuals Protocol",
     "No API keys or subscriptions required",

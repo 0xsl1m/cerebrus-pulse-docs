@@ -4,7 +4,7 @@
 
 ## Service Overview
 
-Cerebrus Pulse is a pay-per-query crypto analysis API built by 0xsl1m. It provides multi-timeframe technical analysis, market sentiment, funding rate data, and multi-signal confluence scoring for 30+ Hyperliquid perpetual contracts.
+Cerebrus Pulse is a pay-per-query crypto analysis API built by 0xsl1m. It provides multi-timeframe technical analysis, market sentiment, funding rate data, and multi-signal confluence scoring for 50+ Hyperliquid perpetual contracts.
 
 Key differentiator: No API keys, no subscriptions, no accounts. Two payment protocols serve two audiences:
 - x402 (HTTP 402 micropayments) for developers, bots, dashboards
@@ -28,7 +28,7 @@ Path Parameters:
 - coin (string, required): Coin ticker, case-insensitive. Examples: BTC, ETH, SOL
 
 Query Parameters:
-- timeframes (string, default "1h,4h"): Comma-separated. Valid values: 15m, 1h, 4h
+- timeframes (string, default "1h,4h"): Comma-separated. Valid values: 5m, 15m, 1h, 4h, 1d, 1w
 
 Response Schema:
 ```json
@@ -94,7 +94,7 @@ Response Schema:
     "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
     "execution_ms": 189,
-    "coins_available": 30
+    "coins_available": 51
   }
 }
 ```
@@ -236,14 +236,14 @@ Errors: 400 (invalid coin or lookback_hours out of range), 402 (payment required
 
 ### GET /bundle/{coin}
 
-Price: $0.04 USDC (20% discount vs calling /pulse + /sentiment + /funding individually)
+Price: $0.04 USDC (17% discount vs calling /pulse + /sentiment + /funding individually)
 Description: Complete analysis bundle combining pulse technical analysis, sentiment, and funding data in one response.
 
 Path Parameters:
 - coin (string, required): Coin ticker, case-insensitive
 
 Query Parameters:
-- timeframes (string, default "1h,4h"): Comma-separated. Valid: 15m, 1h, 4h
+- timeframes (string, default "1h,4h"): Comma-separated. Valid: 5m, 15m, 1h, 4h, 1d, 1w
 
 Response Schema:
 ```json
@@ -276,7 +276,7 @@ Response Schema:
     "offering": "cerebrus_pulse",
     "bundle": true,
     "execution_ms": 340,
-    "discount_pct": 20
+    "discount_pct": 17
   }
 }
 ```
@@ -284,6 +284,211 @@ Response Schema:
 The pulse, sentiment, and funding keys contain the same schemas as their respective individual endpoints.
 
 Errors: 400 (invalid coin), 402 (payment required), 429 (rate limited), 504 (engine timeout)
+
+---
+
+### GET /screener
+
+Price: $0.04 USDC
+Description: Market screener — scans all available coins and returns a compact summary for each. 60-second cache.
+
+Query Parameters:
+- top_n (integer, default 50, range 1-50): Maximum coins to return, sorted by signal strength
+
+Response Schema:
+```json
+{
+  "endpoint": "screener",
+  "coins_scanned": 48,
+  "top_n": 10,
+  "results": [
+    {
+      "coin": "BTC",
+      "signal_strength": 0.72,
+      "rsi_14": 65.4,
+      "rsi_zone": "bullish",
+      "trend": "bullish",
+      "zscore": 1.25,
+      "atr_pct": 2.1,
+      "vol_regime": "NORMAL",
+      "funding_rate": 0.000125,
+      "funding_bias": "long_pays",
+      "confluence_bias": "bullish",
+      "confluence_score": 0.75,
+      "oi_trend": "RISING",
+      "price": 98765.43
+    }
+  ],
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "pulse_screener",
+    "execution_ms": 2400,
+    "data_age_seconds": 45.2
+  }
+}
+```
+
+Field Reference:
+- signal_strength (number, 0.0-3.0+): Composite signal strength from RSI deviation, Z-score, ATR, and trend
+- rsi_14 (number, 0-100): RSI 14-period
+- rsi_zone (string): oversold, bearish, neutral, bullish, overbought
+- trend (string): bullish, bearish, neutral
+- vol_regime (string): LOW, NORMAL, HIGH, EXTREME
+- funding_bias (string): long_pays, short_pays, neutral
+- confluence_bias (string): bullish, bearish, neutral
+- confluence_score (number, 0.0-1.0): Multi-signal confluence confidence
+- oi_trend (string): RISING, FALLING, FLAT
+
+Errors: 402 (payment required), 429 (rate limited)
+
+---
+
+### GET /oi/{coin}
+
+Price: $0.01 USDC
+Description: Open interest analysis with delta tracking, percentile ranking, and price-OI divergence detection.
+
+Path Parameters:
+- coin (string, required): Coin ticker, case-insensitive
+
+Response Schema:
+```json
+{
+  "endpoint": "oi",
+  "coin": "BTC",
+  "timestamp_iso": "2026-03-05T14:30:00Z",
+  "open_interest": {
+    "current": 1850000000,
+    "delta_1h": 0.0032,
+    "delta_4h": 0.0115,
+    "delta_24h": 0.0378,
+    "percentile": 88.4,
+    "trend": "RISING",
+    "price_oi_divergence": "NONE"
+  },
+  "price": 98765.43,
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "pulse_oi",
+    "execution_ms": 85,
+    "data_age_seconds": 30.1
+  }
+}
+```
+
+Field Reference:
+- open_interest.current (number): Current OI in USD notional
+- open_interest.delta_1h/4h/24h (number): OI change as fraction (0.01 = 1%) over 1h, 4h, 24h
+- open_interest.percentile (number, 0-100): Current OI percentile vs recent history
+- open_interest.trend (string): RISING (>3% 4h), FALLING (<-3% 4h), FLAT
+- open_interest.price_oi_divergence (string): BULLISH_DIV (price down + OI up), BEARISH_DIV (price up + OI down), NONE
+
+Errors: 400 (invalid coin), 402 (payment required), 429 (rate limited)
+
+---
+
+### GET /spread/{coin}
+
+Price: $0.008 USDC
+Description: Spread analysis with slippage estimates at multiple notional sizes and liquidity scoring.
+
+Path Parameters:
+- coin (string, required): Coin ticker, case-insensitive
+
+Response Schema:
+```json
+{
+  "endpoint": "spread",
+  "coin": "ETH",
+  "timestamp_iso": "2026-03-05T14:30:00Z",
+  "spread": {
+    "bid_ask_spread_bps": 3.39,
+    "impact_bid": 3841.50,
+    "impact_ask": 3842.80,
+    "mid_price": 3842.15,
+    "estimated_slippage_bps": {
+      "$10k": 0.17,
+      "$50k": 0.38,
+      "$100k": 0.54,
+      "$500k": 1.20
+    },
+    "liquidity_score": 8
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "pulse_spread",
+    "execution_ms": 12,
+    "data_age_seconds": 28.5
+  }
+}
+```
+
+Field Reference:
+- spread.bid_ask_spread_bps (number): Bid-ask spread in basis points
+- spread.impact_bid/impact_ask (number): Impact prices for large orders
+- spread.mid_price (number): Mid price between bid and ask
+- spread.estimated_slippage_bps (object): Estimated slippage at $10k, $50k, $100k, $500k notional
+- spread.liquidity_score (integer, 1-10): Liquidity rating. 10=excellent (<2bps), 1=poor (>50bps)
+
+Errors: 400 (invalid coin or no spread data), 402 (payment required), 429 (rate limited)
+
+---
+
+### GET /correlation
+
+Price: $0.03 USDC
+Description: BTC-alt correlation matrix for top 15 coins with regime classification and sector clustering.
+
+No parameters required.
+
+Response Schema:
+```json
+{
+  "endpoint": "correlation",
+  "timestamp_iso": "2026-03-05T14:30:00Z",
+  "btc_correlation": {
+    "BTC": 1.0,
+    "ETH": 0.8234,
+    "SOL": 0.7651,
+    "DOGE": 0.5432,
+    "XRP": 0.6123,
+    "AVAX": 0.7890,
+    "LINK": 0.6543,
+    "ARB": 0.7012,
+    "OP": 0.6789,
+    "SUI": 0.7234,
+    "NEAR": 0.6890,
+    "INJ": 0.5678,
+    "APT": 0.7456,
+    "ADA": 0.6234,
+    "PEPE": 0.4567
+  },
+  "average_correlation": 0.6710,
+  "regime": "MIXED",
+  "sector_averages": {
+    "L1": 0.7198,
+    "L2": 0.6901,
+    "DeFi": 0.6111,
+    "Meme": 0.5000
+  },
+  "meta": {
+    "provider": "OpenClaw/Cerebrus",
+    "offering": "pulse_correlation",
+    "execution_ms": 450,
+    "coins_analyzed": 15,
+    "lookback_bars": 30,
+    "timeframe": "1h"
+  }
+}
+```
+
+Field Reference:
+- btc_correlation (object): Per-coin correlation coefficient with BTC (-1.0 to 1.0)
+- average_correlation (number): Mean correlation across all non-BTC coins
+- regime (string): CORRELATED (avg >0.7), MIXED (0.3-0.7), DECORRELATED (avg <0.3)
+- sector_averages (object): Average correlation per sector (L1, L2, DeFi, Meme)
+
+Errors: 402 (payment required), 429 (rate limited), 500 (insufficient candle data)
 
 ---
 
@@ -399,7 +604,22 @@ print(f"Sentiment: {sentiment['sentiment']['overall']}")
 funding = client.get("https://api.cerebruspulse.xyz/funding/BTC?lookback_hours=48").json()
 print(f"Funding: {funding['funding']['annualized_pct']}% annualized")
 
-# Bundle (all data, 20% cheaper)
+# Screener (scan all coins at once)
+screener = client.get("https://api.cerebruspulse.xyz/screener?top_n=10").json()
+
+# Open interest analysis
+oi = client.get("https://api.cerebruspulse.xyz/oi/BTC").json()
+print(f"OI trend: {oi['open_interest']['trend']}")
+
+# Spread and liquidity
+spread = client.get("https://api.cerebruspulse.xyz/spread/ETH").json()
+print(f"Liquidity score: {spread['spread']['liquidity_score']}/10")
+
+# Correlation matrix
+corr = client.get("https://api.cerebruspulse.xyz/correlation").json()
+print(f"Correlation regime: {corr['regime']}")
+
+# Bundle (all data, 17% cheaper)
 bundle = client.get("https://api.cerebruspulse.xyz/bundle/BTC?timeframes=1h,4h").json()
 ```
 
@@ -499,23 +719,27 @@ Error response format (all errors):
 3. Do not retry on 400 — fix the request parameters first
 4. Retry once on 504 — engine timeouts are usually transient
 5. Respect 503 retry_after — gateway is in maintenance
-6. Use GET /bundle for multi-data needs — 1 request instead of 3, 20% cheaper, fewer rate limit slots consumed
+6. Use GET /bundle for multi-data needs — 1 request instead of 4, 17% cheaper, fewer rate limit slots consumed
 7. Use GET /coins to validate coin tickers before making paid requests
-8. Cache results appropriately — crypto data updates on candle close intervals (15m/1h/4h)
+8. Cache results appropriately — crypto data updates on candle close intervals (5m/15m/1h/4h/1d/1w)
+9. Use GET /screener for market-wide scanning — 1 call at $0.04 vs 50+ individual /pulse calls at $0.02 each
 
 ---
 
 ## Supported Coins
 
-BTC, ETH, SOL, DOGE, XRP, ADA, AVAX, LINK, DOT, MATIC, ARB, OP, APT, SUI, SEI, TIA, INJ, FET, NEAR, ATOM, FIL, AAVE, UNI, MKR, LDO, PEPE, WIF, JUP, ONDO, RENDER, and more.
+AAVE, ADA, APT, ARB, ATOM, AVAX, BERA, BNB, BTC, CRV, DOGE, DOT, DYDX, EIGEN, ENA, ENS, ETH, FET, FIL, HBAR, HYPE, IMX, INJ, JUP, LDO, LINK, LTC, MATIC, MKR, MNT, NEAR, ONDO, OP, PENDLE, PEPE, POL, PYTH, RENDER, SEI, SNX, SOL, STX, SUI, TAO, TIA, TRX, UNI, WIF, WLD, XLM, XRP.
 
 Use GET /coins for the authoritative live list (free, no payment required).
 
 ## Supported Timeframes
 
+- 5m (5-minute candles)
 - 15m (15-minute candles)
 - 1h (1-hour candles)
 - 4h (4-hour candles)
+- 1d (daily candles, aggregated from 1h)
+- 1w (weekly candles, aggregated from 1h)
 
 Default: 1h,4h when not specified.
 
@@ -529,6 +753,10 @@ Default: 1h,4h when not specified.
 - API — Pulse: https://cerebruspulse.xyz/api/pulse
 - API — Sentiment: https://cerebruspulse.xyz/api/sentiment
 - API — Funding: https://cerebruspulse.xyz/api/funding
+- API — Screener: https://cerebruspulse.xyz/api/screener
+- API — OI: https://cerebruspulse.xyz/api/oi
+- API — Spread: https://cerebruspulse.xyz/api/spread
+- API — Correlation: https://cerebruspulse.xyz/api/correlation
 - API — Bundle: https://cerebruspulse.xyz/api/bundle
 - API — Health: https://cerebruspulse.xyz/api/health
 - API — Coins: https://cerebruspulse.xyz/api/coins
