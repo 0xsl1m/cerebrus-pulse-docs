@@ -305,7 +305,7 @@
         }
         // Connect top of fiber to bottom stem ring
         const bottomRingBase = (stemLevels - 1) * stemRingsPerLevel;
-        stemEdges.push([bottomRingBase + (fiber * stemRingsPerLevel / 4) % stemRingsPerLevel, fiberVerts[0]]);
+        stemEdges.push([bottomRingBase + Math.floor(fiber * stemRingsPerLevel / 4) % stemRingsPerLevel, fiberVerts[0]]);
       }
 
       icoGeo.dispose();
