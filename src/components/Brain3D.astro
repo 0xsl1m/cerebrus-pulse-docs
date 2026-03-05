@@ -113,6 +113,7 @@
       }
 
       if (index) {
+        // Indexed geometry
         for (let i = 0; i < index.count; i += 3) {
           const idxA = index.getX(i);
           const idxB = index.getX(i + 1);
@@ -127,7 +128,21 @@
           addEdge(b, c);
           addEdge(a, c);
         }
+      } else {
+        // Non-indexed geometry — every 3 positions is a triangle
+        for (let i = 0; i < positions.count; i += 3) {
+          const vA = new THREE.Vector3().fromBufferAttribute(positions, i);
+          const vB = new THREE.Vector3().fromBufferAttribute(positions, i + 1);
+          const vC = new THREE.Vector3().fromBufferAttribute(positions, i + 2);
+          const a = addVert(vA);
+          const b = addVert(vB);
+          const c = addVert(vC);
+          addEdge(a, b);
+          addEdge(b, c);
+          addEdge(a, c);
+        }
       }
+      console.log('[Brain3D] Geometry: indexed=' + !!index, 'verts=' + allVerts.length, 'edges=' + edges.length);
 
       // ---- Deform sphere into brain shape ----
       for (const v of allVerts) {
@@ -307,6 +322,8 @@
         const bottomRingBase = (stemLevels - 1) * stemRingsPerLevel;
         stemEdges.push([bottomRingBase + Math.floor(fiber * stemRingsPerLevel / 4) % stemRingsPerLevel, fiberVerts[0]]);
       }
+
+      console.log('[Brain3D] Hemispheres: L=' + leftVerts.length + '/' + leftEdges.length + ' R=' + rightVerts.length + '/' + rightEdges.length + ' bridge=' + bridgeEdges.length + ' stem=' + stemVerts.length + '/' + stemEdges.length);
 
       icoGeo.dispose();
       return { leftVerts, rightVerts, leftEdges, rightEdges, bridgeEdges, stemVerts, stemEdges };
