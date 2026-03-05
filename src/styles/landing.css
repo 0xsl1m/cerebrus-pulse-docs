@@ -1467,7 +1467,7 @@ h1, h2, h3, h4, h5, h6,
 }
 .xyz-tag {
   position: absolute;
-  bottom: -0.35em;
+  bottom: -0.75em;
   right: 0;
   font-size: 0.55em;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
