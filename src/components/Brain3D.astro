@@ -5,27 +5,22 @@
 
 <script>
   import * as THREE from 'three';
-  // Bloom via CSS filter instead of EffectComposer (which kills alpha transparency)
 
   // ============================================================
-  // CEREBRUS PULSE — 3D Neural Brain Visualization
-  // Sci-fi holographic wireframe brain with electric neural firing
+  // CEREBRUS PULSE — 3D Neural Brain Visualization v2
+  // Holographic wireframe brain with lightning pulses, cascade
+  // firing, surge events, mouse parallax, click cascades,
+  // vertex breathing, scan line, and proximity glow
   // ============================================================
 
   function initBrain3D() {
-    // Prevent double-init
     if ((window as any).__brain3dInit) return;
     (window as any).__brain3dInit = true;
 
-    // Respect prefers-reduced-motion
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const canvas = document.querySelector('.brain-3d-canvas') as HTMLCanvasElement;
-    if (!canvas) {
-      console.warn('[Brain3D] Canvas not found');
-      return;
-    }
-    console.log('[Brain3D] Canvas found, parent size:', canvas.parentElement?.clientWidth, canvas.parentElement?.clientHeight);
+    if (!canvas) return;
 
     // ---- Colors ----
     const BLUE = new THREE.Color(0x3B82F6);
@@ -49,7 +44,6 @@
     renderer.autoClear = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
-    console.log('[Brain3D] Renderer created, WebGL context:', !!renderer.getContext());
 
     // ---- Scene & Camera ----
     const scene = new THREE.Scene();
@@ -58,11 +52,37 @@
     camera.lookAt(0, -0.1, 0);
 
     // ============================================================
-    // BRAIN GEOMETRY — Procedural parametric brain shape
-    // Uses deformed icosphere split into hemispheres
+    // INTERACTIVITY STATE
+    // ============================================================
+    const mouseNDC = new THREE.Vector2(0, 0);
+    const mouseWorld = new THREE.Vector3();
+    const raycaster = new THREE.Raycaster();
+    let isHovering = false;
+    let activityLevel = 0.3; // 0-1 unified activity
+    let targetActivity = 0.3;
+    let lastClickPoint: THREE.Vector3 | null = null;
+    let lastClickTime = 0;
+    let mouseSpeed = 0; // tracks how fast the mouse is moving
+    let prevMouseNDC = new THREE.Vector2(0, 0);
+
+    // Invisible sphere for raycasting mouse position into brain space
+    const hitSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(2.2, 8, 6),
+      new THREE.MeshBasicMaterial({ visible: false })
+    );
+
+    // Smooth rotation targets
+    let targetRotY = 0;
+    let targetRotX = -0.05;
+    // Smoothed mouse for non-jittery parallax
+    let smoothMouseX = 0;
+    let smoothMouseY = 0;
+
+    // ============================================================
+    // BRAIN GEOMETRY
     // ============================================================
 
-    function createBrainGeometry(): {
+    interface BrainGeometry {
       leftVerts: THREE.Vector3[];
       rightVerts: THREE.Vector3[];
       leftEdges: [number, number][];
@@ -70,13 +90,18 @@
       bridgeEdges: [THREE.Vector3, THREE.Vector3][];
       stemVerts: THREE.Vector3[];
       stemEdges: [number, number][];
-    } {
-      // Create an icosahedron and subdivide for brain mesh
+      leftAdj: Map<number, number[]>;
+      rightAdj: Map<number, number[]>;
+      leftNormals: THREE.Vector3[];
+      rightNormals: THREE.Vector3[];
+      stemNormals: THREE.Vector3[];
+    }
+
+    function createBrainGeometry(): BrainGeometry {
       const icoGeo = new THREE.IcosahedronGeometry(1.6, 4);
       const positions = icoGeo.getAttribute('position');
       const index = icoGeo.getIndex();
 
-      // Collect unique vertices
       const vertMap = new Map<string, number>();
       const allVerts: THREE.Vector3[] = [];
 
@@ -89,7 +114,6 @@
         return idx;
       }
 
-      // Collect edges from triangles
       const edgeSet = new Set<string>();
       const edges: [number, number][] = [];
 
@@ -102,7 +126,6 @@
       }
 
       if (index) {
-        // Indexed geometry
         for (let i = 0; i < index.count; i += 3) {
           const idxA = index.getX(i);
           const idxB = index.getX(i + 1);
@@ -118,7 +141,6 @@
           addEdge(a, c);
         }
       } else {
-        // Non-indexed geometry — every 3 positions is a triangle
         for (let i = 0; i < positions.count; i += 3) {
           const vA = new THREE.Vector3().fromBufferAttribute(positions, i);
           const vB = new THREE.Vector3().fromBufferAttribute(positions, i + 1);
@@ -131,49 +153,42 @@
           addEdge(a, c);
         }
       }
-      console.log('[Brain3D] Geometry: indexed=' + !!index, 'verts=' + allVerts.length, 'edges=' + edges.length);
+
+      // Store normals before deformation (normalized positions = sphere normals)
+      const allNormals: THREE.Vector3[] = allVerts.map(v => v.clone().normalize());
 
       // ---- Deform sphere into brain shape ----
       for (const v of allVerts) {
-        // Normalize to sphere first
         const len = v.length();
         const nx = v.x / len;
         const ny = v.y / len;
         const nz = v.z / len;
 
-        // Brain proportions: wider, slightly squashed top-bottom, elongated front-back
-        let sx = 1.15;  // wider
-        let sy = 0.88;  // shorter vertically
-        let sz = 1.0;   // normal depth
+        let sx = 1.15;
+        let sy = 0.88;
+        let sz = 1.0;
 
-        // Hemisphere separation — push each side outward slightly
         if (nx > 0.05) sx *= 1.05;
         else if (nx < -0.05) sx *= 1.05;
 
-        // Interhemispheric fissure — pinch at midline top
         const midlinePinch = Math.exp(-nx * nx * 20) * 0.15;
         if (ny > 0) {
           sy -= midlinePinch * ny;
         }
 
-        // Frontal lobe bulge (front, slightly higher)
         const frontalBulge = Math.max(0, nz) * Math.max(0, ny + 0.3) * 0.2;
         sz += frontalBulge;
 
-        // Temporal lobe bulge (sides, lower)
         const temporalBulge = Math.abs(nx) * Math.max(0, -ny - 0.1) * 0.18;
         sx += temporalBulge;
 
-        // Occipital bulge (rear, slightly lower)
         const occipitalBulge = Math.max(0, -nz - 0.2) * Math.max(0, -ny) * 0.15;
         sz += occipitalBulge;
 
-        // Flatten bottom for brain stem connection
         if (ny < -0.7) {
           sy *= 0.7 + (ny + 1) * 0.3;
         }
 
-        // Cortical folds — high-frequency noise displacement
         const fold1 = Math.sin(nx * 12 + ny * 8) * Math.sin(ny * 15 + nz * 10) * 0.06;
         const fold2 = Math.sin(nx * 20 + nz * 14) * Math.sin(ny * 18) * 0.03;
         const foldDisp = (fold1 + fold2) * len;
@@ -182,7 +197,6 @@
         v.y = ny * len * sy + ny * foldDisp;
         v.z = nz * len * sz + nz * foldDisp;
 
-        // Add jagged edge — high-frequency vertex displacement for "electric" look
         const jag = (Math.sin(v.x * 30 + v.y * 25) * Math.cos(v.z * 20 + v.x * 15)) * 0.025;
         v.x += jag;
         v.y += jag * 0.7;
@@ -192,8 +206,8 @@
       // Split into hemispheres
       const leftVerts: THREE.Vector3[] = [];
       const rightVerts: THREE.Vector3[] = [];
-      const leftIdx: number[] = [];
-      const rightIdx: number[] = [];
+      const leftNormals: THREE.Vector3[] = [];
+      const rightNormals: THREE.Vector3[] = [];
       const oldToLeft = new Map<number, number>();
       const oldToRight = new Map<number, number>();
 
@@ -201,12 +215,12 @@
         if (allVerts[i].x <= 0.08) {
           oldToLeft.set(i, leftVerts.length);
           leftVerts.push(allVerts[i]);
-          leftIdx.push(i);
+          leftNormals.push(allNormals[i]);
         }
         if (allVerts[i].x >= -0.08) {
           oldToRight.set(i, rightVerts.length);
           rightVerts.push(allVerts[i]);
-          rightIdx.push(i);
+          rightNormals.push(allNormals[i]);
         }
       }
 
@@ -222,12 +236,26 @@
         }
       }
 
+      // Build adjacency maps
+      function buildAdj(edgeList: [number, number][]): Map<number, number[]> {
+        const adj = new Map<number, number[]>();
+        for (const [a, b] of edgeList) {
+          if (!adj.has(a)) adj.set(a, []);
+          if (!adj.has(b)) adj.set(b, []);
+          adj.get(a)!.push(b);
+          adj.get(b)!.push(a);
+        }
+        return adj;
+      }
+
+      const leftAdj = buildAdj(leftEdges);
+      const rightAdj = buildAdj(rightEdges);
+
       // ---- Bridge connections (corpus callosum) ----
       const bridgeEdges: [THREE.Vector3, THREE.Vector3][] = [];
       const bridgeLeftCandidates = leftVerts.filter(v => v.x > -0.3 && v.x < 0.1 && v.y > -0.5);
       const bridgeRightCandidates = rightVerts.filter(v => v.x < 0.3 && v.x > -0.1 && v.y > -0.5);
 
-      // Pick closest cross-hemisphere pairs
       for (let i = 0; i < Math.min(bridgeLeftCandidates.length, 20); i++) {
         const lv = bridgeLeftCandidates[i];
         let bestDist = Infinity;
@@ -246,41 +274,39 @@
 
       // ---- Brain stem ----
       const stemVerts: THREE.Vector3[] = [];
+      const stemNormals: THREE.Vector3[] = [];
       const stemEdges: [number, number][] = [];
 
-      // Generate stem as a tapered cylinder of vertices going downward
       const stemLevels = 8;
       const stemRingsPerLevel = 6;
       for (let level = 0; level < stemLevels; level++) {
         const t = level / (stemLevels - 1);
         const y = -1.25 - t * 1.2;
-        // Medulla bulge at top, taper at bottom
         let radius = 0.2;
-        if (t < 0.2) radius = 0.25 + (0.2 - t) * 0.5; // medulla bulge
+        if (t < 0.2) radius = 0.25 + (0.2 - t) * 0.5;
         else radius = 0.22 - t * 0.12;
 
         for (let r = 0; r < stemRingsPerLevel; r++) {
           const angle = (r / stemRingsPerLevel) * Math.PI * 2;
           const jitter = (Math.sin(level * 7 + r * 13) * 0.02);
-          stemVerts.push(new THREE.Vector3(
+          const pos = new THREE.Vector3(
             Math.cos(angle) * radius + jitter,
             y + (Math.sin(angle + level) * 0.02),
             Math.sin(angle) * radius + jitter
-          ));
+          );
+          stemVerts.push(pos);
+          stemNormals.push(new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)));
         }
 
-        // Ring edges
         const baseIdx = level * stemRingsPerLevel;
         for (let r = 0; r < stemRingsPerLevel; r++) {
           stemEdges.push([baseIdx + r, baseIdx + (r + 1) % stemRingsPerLevel]);
         }
 
-        // Connect to previous level
         if (level > 0) {
           const prevBase = (level - 1) * stemRingsPerLevel;
           for (let r = 0; r < stemRingsPerLevel; r++) {
             stemEdges.push([prevBase + r, baseIdx + r]);
-            // Cross-bracing for structural look
             if (r % 2 === 0) {
               stemEdges.push([prevBase + r, baseIdx + (r + 1) % stemRingsPerLevel]);
             }
@@ -288,7 +314,6 @@
         }
       }
 
-      // Add nerve fiber lines descending from stem
       for (let fiber = 0; fiber < 4; fiber++) {
         const angle = (fiber / 4) * Math.PI * 2 + Math.PI / 4;
         const fiberVerts: number[] = [];
@@ -302,20 +327,18 @@
             y,
             Math.sin(angle) * (0.08 + spread) + Math.cos(seg * 7) * 0.02
           ));
+          stemNormals.push(new THREE.Vector3(Math.cos(angle), -0.5, Math.sin(angle)).normalize());
           fiberVerts.push(idx);
           if (seg > 0) {
             stemEdges.push([fiberVerts[seg - 1], idx]);
           }
         }
-        // Connect top of fiber to bottom stem ring
         const bottomRingBase = (stemLevels - 1) * stemRingsPerLevel;
         stemEdges.push([bottomRingBase + Math.floor(fiber * stemRingsPerLevel / 4) % stemRingsPerLevel, fiberVerts[0]]);
       }
 
-      console.log('[Brain3D] Hemispheres: L=' + leftVerts.length + '/' + leftEdges.length + ' R=' + rightVerts.length + '/' + rightEdges.length + ' bridge=' + bridgeEdges.length + ' stem=' + stemVerts.length + '/' + stemEdges.length);
-
       icoGeo.dispose();
-      return { leftVerts, rightVerts, leftEdges, rightEdges, bridgeEdges, stemVerts, stemEdges };
+      return { leftVerts, rightVerts, leftEdges, rightEdges, bridgeEdges, stemVerts, stemEdges, leftAdj, rightAdj, leftNormals, rightNormals, stemNormals };
     }
 
     // ============================================================
@@ -325,24 +348,99 @@
     const brain = createBrainGeometry();
     const brainGroup = new THREE.Group();
     scene.add(brainGroup);
-
-    // Shift brain up slightly so it's centered higher in the canvas
     brainGroup.position.y = 0.35;
 
-    // ---- Helper: create wireframe lines from verts + edges ----
-    function createWireframe(
+    // Add hit sphere to brain group for raycasting
+    brainGroup.add(hitSphere);
+
+    // ---- Scan line shader for outline wireframes ----
+    const scanLineVertexShader = `
+      varying vec3 vWorldPos;
+      void main() {
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPos = worldPosition.xyz;
+        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+      }
+    `;
+
+    const scanLineFragmentShader = `
+      uniform vec3 uColor;
+      uniform float uOpacity;
+      uniform float uScanY;
+      uniform float uSurgeIntensity;
+      uniform float uGlowIntensity;
+      uniform vec3 uMousePos;
+      uniform float uMouseActive;
+      varying vec3 vWorldPos;
+      void main() {
+        float scanDist = abs(vWorldPos.y - uScanY);
+        float scanGlow = smoothstep(0.2, 0.0, scanDist) * 0.4;
+        float surge = uSurgeIntensity * 0.35;
+
+        // Mouse proximity hotspot on wireframe
+        float mouseDist = distance(vWorldPos, uMousePos);
+        float mouseGlow = smoothstep(1.5, 0.0, mouseDist) * uMouseActive * 0.6;
+
+        vec3 col = uColor + vec3(scanGlow * 0.6, scanGlow * 0.8, scanGlow);
+        col = mix(col, vec3(0.9, 0.95, 1.0), uSurgeIntensity * 0.3);
+        col += vec3(uGlowIntensity * 0.15);
+        col += vec3(mouseGlow * 0.4, mouseGlow * 0.6, mouseGlow * 0.8); // white-blue hotspot
+        float alpha = uOpacity + scanGlow + surge + uGlowIntensity * 0.1 + mouseGlow;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `;
+
+    // ---- Helper: create wireframe lines with shader material ----
+    function createShaderWireframe(
       verts: THREE.Vector3[],
       edges: [number, number][],
       color: THREE.Color,
       opacity: number
-    ): THREE.LineSegments {
+    ): { lines: THREE.LineSegments; material: THREE.ShaderMaterial; origPositions: Float32Array } {
       const geo = new THREE.BufferGeometry();
       const posArr: number[] = [];
       for (const [a, b] of edges) {
         posArr.push(verts[a].x, verts[a].y, verts[a].z);
         posArr.push(verts[b].x, verts[b].y, verts[b].z);
       }
-      geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
+      const origPositions = new Float32Array(posArr);
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr.slice(), 3));
+
+      const mat = new THREE.ShaderMaterial({
+        vertexShader: scanLineVertexShader,
+        fragmentShader: scanLineFragmentShader,
+        uniforms: {
+          uColor: { value: color },
+          uOpacity: { value: opacity },
+          uScanY: { value: -2.0 },
+          uSurgeIntensity: { value: 0.0 },
+          uGlowIntensity: { value: 0.0 },
+          uMousePos: { value: new THREE.Vector3() },
+          uMouseActive: { value: 0.0 },
+        },
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const lines = new THREE.LineSegments(geo, mat);
+      return { lines, material: mat, origPositions };
+    }
+
+    // ---- Simple wireframe (for inner wireframes) ----
+    function createWireframe(
+      verts: THREE.Vector3[],
+      edges: [number, number][],
+      color: THREE.Color,
+      opacity: number
+    ): { lines: THREE.LineSegments; origPositions: Float32Array } {
+      const geo = new THREE.BufferGeometry();
+      const posArr: number[] = [];
+      for (const [a, b] of edges) {
+        posArr.push(verts[a].x, verts[a].y, verts[a].z);
+        posArr.push(verts[b].x, verts[b].y, verts[b].z);
+      }
+      const origPositions = new Float32Array(posArr);
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr.slice(), 3));
       const mat = new THREE.LineBasicMaterial({
         color,
         transparent: true,
@@ -350,42 +448,58 @@
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
-      return new THREE.LineSegments(geo, mat);
+      return { lines: new THREE.LineSegments(geo, mat), origPositions };
     }
 
-    // ---- Left hemisphere wireframe (blue) ----
-    const leftWire = createWireframe(brain.leftVerts, brain.leftEdges, BLUE, 0.35);
-    brainGroup.add(leftWire);
+    // Store normals for vertex displacement breathing
+    // For wireframes: each edge has 2 vertices, and we store normals per-vertex in the buffer
+    function buildWireframeNormals(verts: THREE.Vector3[], normals: THREE.Vector3[], edges: [number, number][]): Float32Array {
+      const result = new Float32Array(edges.length * 2 * 3);
+      for (let i = 0; i < edges.length; i++) {
+        const [a, b] = edges[i];
+        const na = normals[a];
+        const nb = normals[b];
+        result[i * 6] = na.x;
+        result[i * 6 + 1] = na.y;
+        result[i * 6 + 2] = na.z;
+        result[i * 6 + 3] = nb.x;
+        result[i * 6 + 4] = nb.y;
+        result[i * 6 + 5] = nb.z;
+      }
+      return result;
+    }
 
-    // Brighter outline edges for left
+    // ---- Left hemisphere ----
+    const leftWireData = createWireframe(brain.leftVerts, brain.leftEdges, BLUE, 0.35);
+    brainGroup.add(leftWireData.lines);
+    const leftWireNormals = buildWireframeNormals(brain.leftVerts, brain.leftNormals, brain.leftEdges);
+
     const leftOuterEdges = brain.leftEdges.filter(([a, b]) => {
-      const va = brain.leftVerts[a];
-      const vb = brain.leftVerts[b];
-      const avgLen = (va.length() + vb.length()) / 2;
+      const avgLen = (brain.leftVerts[a].length() + brain.leftVerts[b].length()) / 2;
       return avgLen > 1.45;
     });
-    const leftOutline = createWireframe(brain.leftVerts, leftOuterEdges, BLUE_LIGHT, 0.6);
-    brainGroup.add(leftOutline);
+    const leftOutlineData = createShaderWireframe(brain.leftVerts, leftOuterEdges, BLUE_LIGHT, 0.6);
+    brainGroup.add(leftOutlineData.lines);
+    const leftOutlineNormals = buildWireframeNormals(brain.leftVerts, brain.leftNormals, leftOuterEdges);
 
-    // ---- Right hemisphere wireframe (amber) ----
-    const rightWire = createWireframe(brain.rightVerts, brain.rightEdges, AMBER, 0.35);
-    brainGroup.add(rightWire);
+    // ---- Right hemisphere ----
+    const rightWireData = createWireframe(brain.rightVerts, brain.rightEdges, AMBER, 0.35);
+    brainGroup.add(rightWireData.lines);
+    const rightWireNormals = buildWireframeNormals(brain.rightVerts, brain.rightNormals, brain.rightEdges);
 
     const rightOuterEdges = brain.rightEdges.filter(([a, b]) => {
-      const va = brain.rightVerts[a];
-      const vb = brain.rightVerts[b];
-      const avgLen = (va.length() + vb.length()) / 2;
+      const avgLen = (brain.rightVerts[a].length() + brain.rightVerts[b].length()) / 2;
       return avgLen > 1.45;
     });
-    const rightOutline = createWireframe(brain.rightVerts, rightOuterEdges, AMBER_LIGHT, 0.6);
-    brainGroup.add(rightOutline);
+    const rightOutlineData = createShaderWireframe(brain.rightVerts, rightOuterEdges, AMBER_LIGHT, 0.6);
+    brainGroup.add(rightOutlineData.lines);
+    const rightOutlineNormals = buildWireframeNormals(brain.rightVerts, brain.rightNormals, rightOuterEdges);
 
-    // ---- Bridge connections (violet) ----
+    // ---- Bridge connections ----
     const bridgeGeo = new THREE.BufferGeometry();
     const bridgePos: number[] = [];
     for (const [a, b] of brain.bridgeEdges) {
-      bridgePos.push(a.x, a.y, a.z);
-      bridgePos.push(b.x, b.y, b.z);
+      bridgePos.push(a.x, a.y, a.z, b.x, b.y, b.z);
     }
     bridgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(bridgePos, 3));
     const bridgeMat = new THREE.LineBasicMaterial({
@@ -398,19 +512,19 @@
     const bridgeLines = new THREE.LineSegments(bridgeGeo, bridgeMat);
     brainGroup.add(bridgeLines);
 
-    // ---- Brain stem (violet/purple) ----
-    const stemWire = createWireframe(brain.stemVerts, brain.stemEdges, VIOLET, 0.4);
-    brainGroup.add(stemWire);
+    // ---- Brain stem ----
+    const stemWireData = createWireframe(brain.stemVerts, brain.stemEdges, VIOLET, 0.4);
+    brainGroup.add(stemWireData.lines);
+    const stemWireNormals = buildWireframeNormals(brain.stemVerts, brain.stemNormals, brain.stemEdges);
 
     // ============================================================
-    // NEURAL NODES — Instanced spheres at vertices
+    // NEURAL NODES — Instanced spheres (smoother geometry)
     // ============================================================
 
     const NODE_COUNT_LEFT = Math.min(brain.leftVerts.length, 120);
     const NODE_COUNT_RIGHT = Math.min(brain.rightVerts.length, 120);
     const NODE_COUNT_STEM = Math.min(brain.stemVerts.length, 30);
 
-    // Pick a subset of verts evenly distributed
     function pickSubset(verts: THREE.Vector3[], count: number): THREE.Vector3[] {
       if (verts.length <= count) return verts.slice();
       const step = verts.length / count;
@@ -421,13 +535,13 @@
       return result;
     }
 
-    const nodeGeo = new THREE.SphereGeometry(0.015, 5, 3);
+    const nodeGeo = new THREE.SphereGeometry(0.015, 8, 6); // smoother spheres
 
     function createNodes(
       verts: THREE.Vector3[],
       count: number,
       color: THREE.Color
-    ): { mesh: THREE.InstancedMesh; positions: THREE.Vector3[]; phases: number[] } {
+    ): { mesh: THREE.InstancedMesh; positions: THREE.Vector3[]; phases: number[]; baseColor: THREE.Color } {
       const subset = pickSubset(verts, count);
       const mat = new THREE.MeshBasicMaterial({
         color,
@@ -439,15 +553,21 @@
       const dummy = new THREE.Object3D();
       const phases: number[] = [];
 
+      // Initialize instance colors
+      const colorAttr = new Float32Array(subset.length * 3);
       for (let i = 0; i < subset.length; i++) {
         dummy.position.copy(subset[i]);
         dummy.scale.setScalar(0.5 + Math.random() * 0.4);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
         phases.push(Math.random() * Math.PI * 2);
+        colorAttr[i * 3] = color.r;
+        colorAttr[i * 3 + 1] = color.g;
+        colorAttr[i * 3 + 2] = color.b;
       }
       mesh.instanceMatrix.needsUpdate = true;
-      return { mesh, positions: subset, phases };
+      mesh.instanceColor = new THREE.InstancedBufferAttribute(colorAttr, 3);
+      return { mesh, positions: subset, phases, baseColor: color.clone() };
     }
 
     const leftNodes = createNodes(brain.leftVerts, NODE_COUNT_LEFT, BLUE_LIGHT);
@@ -460,84 +580,184 @@
     brainGroup.add(stemNodes.mesh);
 
     // ============================================================
-    // NEURAL PULSES — Electric arcs traveling along edges
+    // LIGHTNING BOLT PULSES
     // ============================================================
 
-    interface Pulse {
+    interface LightningPulse {
       startPos: THREE.Vector3;
       endPos: THREE.Vector3;
       progress: number;
       speed: number;
       color: THREE.Color;
+      cascadeDepth: number;
+      hemisphere: 'left' | 'right' | 'bridge' | 'stem';
+      endVertIdx: number; // index in the hemisphere's vert array (-1 for bridge)
+      jitterFrame: number;
     }
 
-    const pulses: Pulse[] = [];
-    const MAX_PULSES = 50;
-    const pulseGeo = new THREE.SphereGeometry(0.018, 4, 3);
+    const pulses: LightningPulse[] = [];
+    const MAX_PULSES = 60;
+    const BOLT_SEGMENTS = 6; // 7 points = 6 segments
 
-    function spawnPulse() {
-      if (pulses.length >= MAX_PULSES) return;
+    // Pre-allocate lightning bolt Line objects
+    const boltLines: THREE.Line[] = [];
+    const boltGeometries: THREE.BufferGeometry[] = [];
+    const boltMaterials: THREE.LineBasicMaterial[] = [];
 
-      const roll = Math.random();
-      let startPos: THREE.Vector3;
-      let endPos: THREE.Vector3;
-      let color: THREE.Color;
-
-      if (roll < 0.35 && brain.leftEdges.length > 0) {
-        // Left hemisphere pulse
-        const edge = brain.leftEdges[Math.floor(Math.random() * brain.leftEdges.length)];
-        startPos = brain.leftVerts[edge[0]];
-        endPos = brain.leftVerts[edge[1]];
-        color = BLUE_LIGHT;
-      } else if (roll < 0.7 && brain.rightEdges.length > 0) {
-        // Right hemisphere pulse
-        const edge = brain.rightEdges[Math.floor(Math.random() * brain.rightEdges.length)];
-        startPos = brain.rightVerts[edge[0]];
-        endPos = brain.rightVerts[edge[1]];
-        color = AMBER_LIGHT;
-      } else if (roll < 0.85 && brain.bridgeEdges.length > 0) {
-        // Bridge pulse
-        const bridge = brain.bridgeEdges[Math.floor(Math.random() * brain.bridgeEdges.length)];
-        startPos = bridge[0];
-        endPos = bridge[1];
-        color = VIOLET_LIGHT;
-      } else if (brain.stemEdges.length > 0) {
-        // Stem pulse
-        const edge = brain.stemEdges[Math.floor(Math.random() * brain.stemEdges.length)];
-        startPos = brain.stemVerts[edge[0]];
-        endPos = brain.stemVerts[edge[1]];
-        color = VIOLET;
-      } else {
-        return;
-      }
-
-      pulses.push({
-        startPos,
-        endPos,
-        progress: 0,
-        speed: 0.8 + Math.random() * 1.6,
-        color,
-      });
-    }
-
-    // Create pulse meshes pool
-    const pulseMeshes: THREE.Mesh[] = [];
     for (let i = 0; i < MAX_PULSES; i++) {
-      const mat = new THREE.MeshBasicMaterial({
+      const geo = new THREE.BufferGeometry();
+      const posArr = new Float32Array((BOLT_SEGMENTS + 1) * 3);
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
+      const mat = new THREE.LineBasicMaterial({
         color: 0xffffff,
         transparent: true,
         opacity: 0,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
-      const mesh = new THREE.Mesh(pulseGeo, mat);
-      mesh.visible = false;
-      brainGroup.add(mesh);
-      pulseMeshes.push(mesh);
+      const line = new THREE.Line(geo, mat);
+      line.visible = false;
+      brainGroup.add(line);
+      boltLines.push(line);
+      boltGeometries.push(geo);
+      boltMaterials.push(mat);
+    }
+
+    // Temp vectors for bolt jitter calculation
+    const _boltDir = new THREE.Vector3();
+    const _boltPerp1 = new THREE.Vector3();
+    const _boltPerp2 = new THREE.Vector3();
+
+    function updateBoltGeometry(geo: THREE.BufferGeometry, start: THREE.Vector3, end: THREE.Vector3, jitterAmount: number) {
+      const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
+      const arr = posAttr.array as Float32Array;
+
+      _boltDir.subVectors(end, start);
+      // Find a perpendicular vector
+      if (Math.abs(_boltDir.x) < 0.9) {
+        _boltPerp1.set(1, 0, 0).cross(_boltDir).normalize();
+      } else {
+        _boltPerp1.set(0, 1, 0).cross(_boltDir).normalize();
+      }
+      _boltPerp2.crossVectors(_boltDir, _boltPerp1).normalize();
+
+      for (let i = 0; i <= BOLT_SEGMENTS; i++) {
+        const t = i / BOLT_SEGMENTS;
+        // Interpolate along the edge
+        const x = start.x + _boltDir.x * t;
+        const y = start.y + _boltDir.y * t;
+        const z = start.z + _boltDir.z * t;
+
+        // Add jagged offset (less at endpoints, more in middle)
+        const envelope = Math.sin(t * Math.PI); // 0 at ends, 1 at middle
+        const jit1 = (Math.random() - 0.5) * 2 * jitterAmount * envelope;
+        const jit2 = (Math.random() - 0.5) * 2 * jitterAmount * envelope;
+
+        arr[i * 3] = x + _boltPerp1.x * jit1 + _boltPerp2.x * jit2;
+        arr[i * 3 + 1] = y + _boltPerp1.y * jit1 + _boltPerp2.y * jit2;
+        arr[i * 3 + 2] = z + _boltPerp1.z * jit1 + _boltPerp2.z * jit2;
+      }
+      posAttr.needsUpdate = true;
+    }
+
+    function spawnPulse(forcedStart?: THREE.Vector3, forcedEnd?: THREE.Vector3, forcedColor?: THREE.Color, forcedHemi?: string, forcedEndIdx?: number, cascadeDepth = 0) {
+      if (pulses.length >= MAX_PULSES) return;
+
+      let startPos: THREE.Vector3;
+      let endPos: THREE.Vector3;
+      let color: THREE.Color;
+      let hemisphere: 'left' | 'right' | 'bridge' | 'stem';
+      let endVertIdx = -1;
+
+      if (forcedStart && forcedEnd && forcedColor && forcedHemi) {
+        startPos = forcedStart;
+        endPos = forcedEnd;
+        color = forcedColor;
+        hemisphere = forcedHemi as any;
+        endVertIdx = forcedEndIdx ?? -1;
+      } else {
+        const roll = Math.random();
+
+        if (roll < 0.35 && brain.leftEdges.length > 0) {
+          const edge = brain.leftEdges[Math.floor(Math.random() * brain.leftEdges.length)];
+          startPos = brain.leftVerts[edge[0]];
+          endPos = brain.leftVerts[edge[1]];
+          color = BLUE_LIGHT;
+          hemisphere = 'left';
+          endVertIdx = edge[1];
+        } else if (roll < 0.7 && brain.rightEdges.length > 0) {
+          const edge = brain.rightEdges[Math.floor(Math.random() * brain.rightEdges.length)];
+          startPos = brain.rightVerts[edge[0]];
+          endPos = brain.rightVerts[edge[1]];
+          color = AMBER_LIGHT;
+          hemisphere = 'right';
+          endVertIdx = edge[1];
+        } else if (roll < 0.85 && brain.bridgeEdges.length > 0) {
+          const bridge = brain.bridgeEdges[Math.floor(Math.random() * brain.bridgeEdges.length)];
+          startPos = bridge[0];
+          endPos = bridge[1];
+          color = VIOLET_LIGHT;
+          hemisphere = 'bridge';
+        } else if (brain.stemEdges.length > 0) {
+          const edge = brain.stemEdges[Math.floor(Math.random() * brain.stemEdges.length)];
+          startPos = brain.stemVerts[edge[0]];
+          endPos = brain.stemVerts[edge[1]];
+          color = VIOLET;
+          hemisphere = 'stem';
+        } else {
+          return;
+        }
+      }
+
+      pulses.push({
+        startPos,
+        endPos,
+        progress: 0,
+        speed: (0.8 + Math.random() * 1.6) * (1 + cascadeDepth * 0.2),
+        color,
+        cascadeDepth,
+        hemisphere,
+        endVertIdx,
+        jitterFrame: 0,
+      });
+    }
+
+    // Cascade: spawn new pulses from the endpoint vertex
+    function cascadeFromVertex(vertIdx: number, hemisphere: 'left' | 'right', depth: number) {
+      if (depth >= 3) return;
+      const adj = hemisphere === 'left' ? brain.leftAdj : brain.rightAdj;
+      const verts = hemisphere === 'left' ? brain.leftVerts : brain.rightVerts;
+      const color = hemisphere === 'left' ? BLUE_LIGHT : AMBER_LIGHT;
+      const neighbors = adj.get(vertIdx);
+      if (!neighbors || neighbors.length === 0) return;
+
+      // Spawn 1-2 cascade pulses
+      const count = 1 + (Math.random() < 0.4 ? 1 : 0);
+      const shuffled = neighbors.slice().sort(() => Math.random() - 0.5);
+      for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+        spawnPulse(verts[vertIdx], verts[shuffled[i]], color, hemisphere, shuffled[i], depth + 1);
+      }
     }
 
     // ============================================================
-    // BACKGROUND PARTICLE FIELD — depth particles around brain
+    // SURGE EVENT SYSTEM
+    // ============================================================
+
+    let surgeIntensity = 0;
+    let surgeActive = false;
+    let surgeStartTime = 0;
+    let nextSurgeAt = 4 + Math.random() * 4;
+
+    function triggerSurge(intensity = 1.0, duration = 0.5) {
+      surgeActive = true;
+      surgeStartTime = -1; // will be set in animate
+      surgeIntensity = 0;
+      (window as any).__surgePeakIntensity = intensity;
+      (window as any).__surgeDuration = duration;
+    }
+
+    // ============================================================
+    // BACKGROUND PARTICLES
     // ============================================================
 
     const PARTICLE_COUNT = 300;
@@ -547,7 +767,6 @@
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3;
-      // Distribute in a large sphere around brain
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       const r = 3 + Math.random() * 5;
@@ -585,7 +804,102 @@
     scene.add(particleField);
 
     // ============================================================
-    // RESIZE HANDLER
+    // MOUSE / TOUCH EVENT HANDLERS
+    // ============================================================
+
+    function onMouseMove(e: MouseEvent) {
+      if (reducedMotion) return;
+      const rect = canvas.getBoundingClientRect();
+      mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    function onMouseEnter() {
+      isHovering = true;
+    }
+
+    function onMouseLeave() {
+      isHovering = false;
+      mouseNDC.set(0, 0);
+    }
+
+    function handleClick(worldPoint: THREE.Vector3) {
+      lastClickPoint = worldPoint.clone();
+      lastClickTime = performance.now();
+
+      // Find closest vertex across both hemispheres
+      let bestDist = Infinity;
+      let bestIdx = -1;
+      let bestHemi: 'left' | 'right' = 'left';
+
+      const localPoint = brainGroup.worldToLocal(worldPoint.clone());
+
+      for (let i = 0; i < brain.leftVerts.length; i++) {
+        const d = localPoint.distanceTo(brain.leftVerts[i]);
+        if (d < bestDist) { bestDist = d; bestIdx = i; bestHemi = 'left'; }
+      }
+      for (let i = 0; i < brain.rightVerts.length; i++) {
+        const d = localPoint.distanceTo(brain.rightVerts[i]);
+        if (d < bestDist) { bestDist = d; bestIdx = i; bestHemi = 'right'; }
+      }
+
+      if (bestIdx >= 0) {
+        // Spawn 5-8 cascade pulses from click point
+        const adj = bestHemi === 'left' ? brain.leftAdj : brain.rightAdj;
+        const verts = bestHemi === 'left' ? brain.leftVerts : brain.rightVerts;
+        const color = bestHemi === 'left' ? BLUE_LIGHT : AMBER_LIGHT;
+        const neighbors = adj.get(bestIdx);
+        if (neighbors) {
+          const shuffled = neighbors.slice().sort(() => Math.random() - 0.5);
+          const count = Math.min(5 + Math.floor(Math.random() * 4), shuffled.length);
+          for (let i = 0; i < count; i++) {
+            spawnPulse(verts[bestIdx], verts[shuffled[i]], color, bestHemi, shuffled[i], 0);
+          }
+        }
+        // Mini-surge
+        triggerSurge(0.6, 0.3);
+      }
+    }
+
+    function onClick(e: MouseEvent) {
+      if (reducedMotion) return;
+      const rect = canvas.getBoundingClientRect();
+      const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+      const intersects = raycaster.intersectObject(hitSphere);
+      if (intersects.length > 0) {
+        handleClick(intersects[0].point);
+      }
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      if (reducedMotion) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = canvas.getBoundingClientRect();
+      const ndcX = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+      const ndcY = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+      const intersects = raycaster.intersectObject(hitSphere);
+      if (intersects.length > 0) {
+        handleClick(intersects[0].point);
+      }
+    }
+
+    // Listen on the hero section (or document) so mouse tracking works
+    // even when the text overlay (z-10) is on top of the canvas
+    const heroSection = canvas.closest('.landing-hero') || document;
+    heroSection.addEventListener('mousemove', onMouseMove as EventListener);
+    heroSection.addEventListener('mouseenter', onMouseEnter);
+    heroSection.addEventListener('mouseleave', onMouseLeave);
+    heroSection.addEventListener('click', onClick as EventListener);
+    heroSection.addEventListener('touchstart', onTouchStart as EventListener, { passive: true });
+
+    // ============================================================
+    // RESIZE
     // ============================================================
 
     function resize() {
@@ -606,10 +920,42 @@
     }
 
     resize();
-    console.log('[Brain3D] Initial resize done, canvas size:', canvas.width, canvas.height);
     window.addEventListener('resize', resize);
-    // Retry resize after a tick in case layout wasn't ready
-    setTimeout(() => { resize(); console.log('[Brain3D] Deferred resize, canvas:', canvas.width, canvas.height); }, 100);
+    setTimeout(resize, 100);
+
+    // ============================================================
+    // VERTEX DISPLACEMENT HELPER
+    // ============================================================
+
+    const _rippleVec = new THREE.Vector3();
+
+    function displaceWireframe(
+      lines: THREE.LineSegments | THREE.Line,
+      origPositions: Float32Array,
+      normals: Float32Array,
+      breathAmount: number,
+      mouseLocalPos: THREE.Vector3 | null,
+      mouseActive: boolean
+    ) {
+      const posAttr = lines.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const arr = posAttr.array as Float32Array;
+      for (let i = 0; i < arr.length; i += 3) {
+        let ripple = 0;
+        // Mouse proximity ripple — vertices near cursor push outward
+        if (mouseActive && mouseLocalPos) {
+          _rippleVec.set(origPositions[i], origPositions[i + 1], origPositions[i + 2]);
+          const dist = _rippleVec.distanceTo(mouseLocalPos);
+          if (dist < 1.2) {
+            const strength = (1 - dist / 1.2);
+            ripple = strength * strength * 0.06 * (1 + mouseSpeed * 3);
+          }
+        }
+        arr[i] = origPositions[i] + normals[i] * (breathAmount + ripple);
+        arr[i + 1] = origPositions[i + 1] + normals[i + 1] * (breathAmount + ripple);
+        arr[i + 2] = origPositions[i + 2] + normals[i + 2] * (breathAmount + ripple);
+      }
+      posAttr.needsUpdate = true;
+    }
 
     // ============================================================
     // ANIMATION LOOP
@@ -617,94 +963,234 @@
 
     let animId: number | null = null;
     let lastSpawnTime = 0;
+    let frameCount = 0;
     const timer = new THREE.Timer();
+    const _tempColor = new THREE.Color();
+    const _mouseLocal = new THREE.Vector3();
 
     function animate() {
       animId = requestAnimationFrame(animate);
 
       timer.update();
       const elapsed = timer.getElapsed();
+      frameCount++;
 
       if (reducedMotion) {
-        // Static render — single frame, no animation
         renderer.render(scene, camera);
         if (animId) cancelAnimationFrame(animId);
         animId = null;
         return;
       }
 
-      // ---- Gentle brain rotation ----
-      brainGroup.rotation.y = Math.sin(elapsed * 0.15) * 0.25;
-      brainGroup.rotation.x = Math.sin(elapsed * 0.1) * 0.05 - 0.05;
-      brainGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.03;
+      // ---- Activity system ----
+      targetActivity = 0.3;
+      if (isHovering) targetActivity += 0.4;
+      if (surgeActive) targetActivity += 0.3;
+      if (lastClickTime && performance.now() - lastClickTime < 500) targetActivity += 0.3;
+      targetActivity = Math.min(targetActivity, 1.0);
+      activityLevel += (targetActivity - activityLevel) * 0.08;
 
-      // ---- Node firing animation ----
+      // ---- Surge system ----
+      if (!surgeActive && elapsed > nextSurgeAt) {
+        triggerSurge(1.0, 0.5);
+        nextSurgeAt = elapsed + 4 + Math.random() * 4;
+      }
+
+      if (surgeActive) {
+        if (surgeStartTime < 0) surgeStartTime = elapsed;
+        const surgeDuration = (window as any).__surgeDuration || 0.5;
+        const surgeT = (elapsed - surgeStartTime) / surgeDuration;
+        const peakIntensity = (window as any).__surgePeakIntensity || 1.0;
+        if (surgeT >= 1.0) {
+          surgeActive = false;
+          surgeIntensity = 0;
+        } else {
+          surgeIntensity = Math.sin(surgeT * Math.PI) * peakIntensity;
+        }
+      }
+
+      // ---- Mouse speed tracking ----
+      const dx = mouseNDC.x - prevMouseNDC.x;
+      const dy = mouseNDC.y - prevMouseNDC.y;
+      const rawSpeed = Math.sqrt(dx * dx + dy * dy);
+      mouseSpeed += (rawSpeed - mouseSpeed) * 0.15; // smooth it
+      prevMouseNDC.copy(mouseNDC);
+
+      // ---- Mouse parallax rotation (strong, noticeable) ----
+      smoothMouseX += (mouseNDC.x - smoothMouseX) * 0.08;
+      smoothMouseY += (mouseNDC.y - smoothMouseY) * 0.08;
+      targetRotY = Math.sin(elapsed * 0.15) * 0.15 + smoothMouseX * 0.45;
+      targetRotX = Math.sin(elapsed * 0.1) * 0.04 - 0.05 + smoothMouseY * 0.25;
+      brainGroup.rotation.y += (targetRotY - brainGroup.rotation.y) * 0.08;
+      brainGroup.rotation.x += (targetRotX - brainGroup.rotation.x) * 0.08;
+      brainGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.03 + smoothMouseX * 0.04;
+
+      // ---- Scan line ----
+      const scanY = Math.sin(elapsed * 0.7) * 2.5;
+
+      // ---- Vertex displacement breathing + mouse ripple ----
+      const breathDisp = Math.sin(elapsed * 0.5) * 0.015;
+      const mLocal = isHovering ? _mouseLocal : null;
+      displaceWireframe(leftWireData.lines, leftWireData.origPositions, leftWireNormals, breathDisp, mLocal, isHovering);
+      displaceWireframe(rightWireData.lines, rightWireData.origPositions, rightWireNormals, breathDisp, mLocal, isHovering);
+      displaceWireframe(leftOutlineData.lines, leftOutlineData.origPositions, leftOutlineNormals, breathDisp, mLocal, isHovering);
+      displaceWireframe(rightOutlineData.lines, rightOutlineData.origPositions, rightOutlineNormals, breathDisp, mLocal, isHovering);
+      displaceWireframe(stemWireData.lines, stemWireData.origPositions, stemWireNormals, breathDisp * 0.5, mLocal, isHovering);
+
+      // ---- Mouse world position for proximity ----
+      if (isHovering) {
+        raycaster.setFromCamera(mouseNDC, camera);
+        const hits = raycaster.intersectObject(hitSphere);
+        if (hits.length > 0) {
+          mouseWorld.copy(hits[0].point);
+          _mouseLocal.copy(mouseWorld);
+          brainGroup.worldToLocal(_mouseLocal);
+        }
+      }
+
+      // ---- Wireframe opacity + shader uniforms ----
+      const breathe = 0.3 + Math.sin(elapsed * 0.5) * 0.08 + activityLevel * 0.15;
+      const flickerL = Math.random() < 0.03 ? 0.3 + Math.random() * 0.4 : 0;
+      const flickerR = Math.random() < 0.03 ? 0.3 + Math.random() * 0.4 : 0;
+      const flickerB = Math.random() < 0.05 ? 0.2 + Math.random() * 0.3 : 0;
+
+      (leftWireData.lines.material as THREE.LineBasicMaterial).opacity = breathe + surgeIntensity * 0.2;
+      (rightWireData.lines.material as THREE.LineBasicMaterial).opacity = breathe + surgeIntensity * 0.2;
+
+      // Outline shader uniforms
+      const hoverGlow = isHovering ? activityLevel * 0.5 + mouseSpeed * 2 : 0;
+      leftOutlineData.material.uniforms.uOpacity.value = 0.6 + flickerL + surgeIntensity * 0.3;
+      leftOutlineData.material.uniforms.uScanY.value = scanY;
+      leftOutlineData.material.uniforms.uSurgeIntensity.value = surgeIntensity;
+      leftOutlineData.material.uniforms.uGlowIntensity.value = hoverGlow;
+      leftOutlineData.material.uniforms.uMousePos.value.copy(isHovering ? mouseWorld : _mouseLocal);
+      leftOutlineData.material.uniforms.uMouseActive.value = isHovering ? 1.0 : 0.0;
+
+      rightOutlineData.material.uniforms.uOpacity.value = 0.6 + flickerR + surgeIntensity * 0.3;
+      rightOutlineData.material.uniforms.uScanY.value = scanY;
+      rightOutlineData.material.uniforms.uSurgeIntensity.value = surgeIntensity;
+      rightOutlineData.material.uniforms.uGlowIntensity.value = hoverGlow;
+      rightOutlineData.material.uniforms.uMousePos.value.copy(isHovering ? mouseWorld : _mouseLocal);
+      rightOutlineData.material.uniforms.uMouseActive.value = isHovering ? 1.0 : 0.0;
+
+      (bridgeLines.material as THREE.LineBasicMaterial).opacity = 0.45 + flickerB + surgeIntensity * 0.2;
+      (stemWireData.lines.material as THREE.LineBasicMaterial).opacity = 0.4 + surgeIntensity * 0.15;
+
+      // ---- Node firing + proximity glow ----
       const dummy = new THREE.Object3D();
       const fireNodes = (nodes: typeof leftNodes, baseScale: number) => {
         for (let i = 0; i < nodes.positions.length; i++) {
           const phase = nodes.phases[i];
-          const fireIntensity = Math.pow(Math.max(0, Math.sin(elapsed * 1.5 + phase)), 4);
-          const scale = baseScale * (0.4 + fireIntensity * 1.2);
+          const raw = Math.sin(elapsed * (2.0 + activityLevel) + phase);
+          const fireIntensity = Math.pow(Math.max(0, raw), 6); // sharper spikes
+          let scale = baseScale * (0.4 + fireIntensity * 1.5 + surgeIntensity * 0.5);
+
+          // Proximity glow — large radius, strong effect
+          let proxBright = 0;
+          if (isHovering) {
+            const dist = nodes.positions[i].distanceTo(_mouseLocal);
+            if (dist < 1.5) {
+              proxBright = (1 - dist / 1.5);
+              proxBright = proxBright * proxBright; // quadratic falloff for hotspot feel
+              scale += proxBright * 1.2 * (1 + mouseSpeed * 4);
+            }
+          }
+
           dummy.position.copy(nodes.positions[i]);
           dummy.scale.setScalar(scale);
           dummy.updateMatrix();
           nodes.mesh.setMatrixAt(i, dummy.matrix);
+
+          // Per-instance color: brighten near mouse
+          if (nodes.mesh.instanceColor) {
+            const bright = proxBright * 0.5 + fireIntensity * 0.2 + surgeIntensity * 0.3;
+            _tempColor.copy(nodes.baseColor).lerp(WHITE, bright);
+            nodes.mesh.instanceColor.setXYZ(i, _tempColor.r, _tempColor.g, _tempColor.b);
+          }
         }
         nodes.mesh.instanceMatrix.needsUpdate = true;
+        if (nodes.mesh.instanceColor) (nodes.mesh.instanceColor as THREE.InstancedBufferAttribute).needsUpdate = true;
       };
 
       fireNodes(leftNodes, 0.8);
       fireNodes(rightNodes, 0.8);
       fireNodes(stemNodes, 0.6);
 
-      // ---- Spawn pulses ----
-      if (elapsed - lastSpawnTime > 0.04) {
+      // ---- Spawn lightning pulses ----
+      const spawnInterval = 0.04 / (1 + activityLevel);
+      if (elapsed - lastSpawnTime > spawnInterval) {
         spawnPulse();
+        // During surge, spawn extra
+        if (surgeIntensity > 0.3) {
+          spawnPulse();
+          spawnPulse();
+        }
+        // Mouse-attracted pulses: spawn near cursor while hovering
+        if (isHovering && Math.random() < 0.4 + mouseSpeed * 3) {
+          // Find closest vertex to mouse and spawn a pulse from it
+          let bestDist = Infinity;
+          let bestIdx = -1;
+          let bestHemi: 'left' | 'right' = 'left';
+          for (let vi = 0; vi < brain.leftVerts.length; vi++) {
+            const d = brain.leftVerts[vi].distanceTo(_mouseLocal);
+            if (d < bestDist) { bestDist = d; bestIdx = vi; bestHemi = 'left'; }
+          }
+          for (let vi = 0; vi < brain.rightVerts.length; vi++) {
+            const d = brain.rightVerts[vi].distanceTo(_mouseLocal);
+            if (d < bestDist) { bestDist = d; bestIdx = vi; bestHemi = 'right'; }
+          }
+          if (bestIdx >= 0 && bestDist < 1.5) {
+            const adj = bestHemi === 'left' ? brain.leftAdj : brain.rightAdj;
+            const verts = bestHemi === 'left' ? brain.leftVerts : brain.rightVerts;
+            const color = bestHemi === 'left' ? BLUE_LIGHT : AMBER_LIGHT;
+            const neighbors = adj.get(bestIdx);
+            if (neighbors && neighbors.length > 0) {
+              const target = neighbors[Math.floor(Math.random() * neighbors.length)];
+              spawnPulse(verts[bestIdx], verts[target], color, bestHemi, target, 0);
+            }
+          }
+        }
         lastSpawnTime = elapsed;
       }
 
-      // ---- Update pulses ----
+      // ---- Update lightning pulses ----
       for (let i = pulses.length - 1; i >= 0; i--) {
         const p = pulses[i];
         p.progress += p.speed * 0.016;
+        p.jitterFrame++;
 
         if (p.progress >= 1) {
+          // Cascade firing
+          if (p.endVertIdx >= 0 && (p.hemisphere === 'left' || p.hemisphere === 'right') && Math.random() < 0.3) {
+            cascadeFromVertex(p.endVertIdx, p.hemisphere, p.cascadeDepth);
+          }
           pulses.splice(i, 1);
-          pulseMeshes[i].visible = false;
+          if (i < boltLines.length) boltLines[i].visible = false;
           continue;
         }
 
-        if (i < pulseMeshes.length) {
-          const mesh = pulseMeshes[i];
-          mesh.visible = true;
-          mesh.position.lerpVectors(p.startPos, p.endPos, p.progress);
+        if (i < boltLines.length) {
+          const line = boltLines[i];
+          line.visible = true;
 
-          const mat = mesh.material as THREE.MeshBasicMaterial;
+          // Re-jitter every 3 frames for crackling
+          const jitterInterval = Math.max(1, 3 - Math.floor(activityLevel * 2));
+          if (p.jitterFrame % jitterInterval === 0) {
+            const jitterAmount = 0.04 * (1 - p.cascadeDepth * 0.15);
+            updateBoltGeometry(boltGeometries[i], p.startPos, p.endPos, jitterAmount);
+          }
+
+          const mat = boltMaterials[i];
           mat.color.copy(p.color);
-          // Fade in-out
           const fade = Math.sin(p.progress * Math.PI);
-          mat.opacity = fade * 1.0;
-          mesh.scale.setScalar(0.4 + fade * 0.5);
+          mat.opacity = fade * (0.8 + surgeIntensity * 0.3);
         }
       }
 
-      // Hide unused pulse meshes
-      for (let i = pulses.length; i < pulseMeshes.length; i++) {
-        pulseMeshes[i].visible = false;
+      // Hide unused bolt lines
+      for (let i = pulses.length; i < boltLines.length; i++) {
+        boltLines[i].visible = false;
       }
-
-      // ---- Animate wireframe opacity (breathing + electric flicker) ----
-      const breathe = 0.3 + Math.sin(elapsed * 0.5) * 0.08;
-      // Random electric flicker surges on outlines
-      const flickerL = Math.random() < 0.03 ? 0.3 + Math.random() * 0.4 : 0;
-      const flickerR = Math.random() < 0.03 ? 0.3 + Math.random() * 0.4 : 0;
-      (leftWire.material as THREE.LineBasicMaterial).opacity = breathe;
-      (rightWire.material as THREE.LineBasicMaterial).opacity = breathe;
-      (leftOutline.material as THREE.LineBasicMaterial).opacity = 0.6 + flickerL;
-      (rightOutline.material as THREE.LineBasicMaterial).opacity = 0.6 + flickerR;
-      // Bridge flicker
-      const flickerB = Math.random() < 0.05 ? 0.2 + Math.random() * 0.3 : 0;
-      (bridgeLines.material as THREE.LineBasicMaterial).opacity = 0.45 + flickerB;
 
       // ---- Rotate particle field ----
       particleField.rotation.y = elapsed * 0.02;
@@ -714,16 +1200,13 @@
       renderer.render(scene, camera);
     }
 
-    // ---- Start animation immediately ----
     animate();
 
     // ---- IntersectionObserver: pause when off-screen ----
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          if (!animId) {
-            animate();
-          }
+          if (!animId) animate();
         } else {
           if (animId) {
             cancelAnimationFrame(animId);
@@ -735,21 +1218,28 @@
     );
     observer.observe(canvas);
 
-    // ---- Cleanup on page navigation (Astro) ----
+    // ---- Cleanup ----
     document.addEventListener('astro:before-swap', () => {
       if (animId) cancelAnimationFrame(animId);
       observer.disconnect();
+      heroSection.removeEventListener('mousemove', onMouseMove as EventListener);
+      heroSection.removeEventListener('mouseenter', onMouseEnter);
+      heroSection.removeEventListener('mouseleave', onMouseLeave);
+      heroSection.removeEventListener('click', onClick as EventListener);
+      heroSection.removeEventListener('touchstart', onTouchStart as EventListener);
       renderer.dispose();
+      nodeGeo.dispose();
+      particleGeo.dispose();
+      for (const geo of boltGeometries) geo.dispose();
+      for (const mat of boltMaterials) mat.dispose();
     });
   }
 
-  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initBrain3D);
   } else {
     initBrain3D();
   }
-  // Also handle Astro page transitions
   document.addEventListener('astro:page-load', initBrain3D);
 </script>
 
