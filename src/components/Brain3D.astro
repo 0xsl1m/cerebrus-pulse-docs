@@ -1020,7 +1020,7 @@
       smoothMouseX += (mouseNDC.x - smoothMouseX) * 0.08;
       smoothMouseY += (mouseNDC.y - smoothMouseY) * 0.08;
       targetRotY = Math.sin(elapsed * 0.15) * 0.15 + smoothMouseX * 0.45;
-      targetRotX = Math.sin(elapsed * 0.1) * 0.04 - 0.05 + smoothMouseY * 0.25;
+      targetRotX = Math.sin(elapsed * 0.1) * 0.04 - 0.05 - smoothMouseY * 0.25;
       brainGroup.rotation.y += (targetRotY - brainGroup.rotation.y) * 0.08;
       brainGroup.rotation.x += (targetRotX - brainGroup.rotation.x) * 0.08;
       brainGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.03 + smoothMouseX * 0.04;
