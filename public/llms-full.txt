@@ -10,7 +10,7 @@ Key differentiator: No API keys, no subscriptions, no accounts. Two payment prot
 - x402 (HTTP 402 micropayments) for developers, bots, dashboards
 - ACP (Agent Commerce Protocol) for autonomous AI agents on Virtuals Protocol
 
-Base URL: https://cerebruspulse.xyz
+Base URL: https://api.cerebruspulse.xyz
 Blockchain: Base (chain ID 8453)
 Payment token: USDC (x402) or VIRTUAL (ACP)
 Provider: Cerebrus Pulse
@@ -384,7 +384,7 @@ client = Client(
 )
 
 # Technical analysis for ETH on 1h and 4h timeframes
-response = client.get("https://cerebruspulse.xyz/pulse/ETH?timeframes=1h,4h")
+response = client.get("https://api.cerebruspulse.xyz/pulse/ETH?timeframes=1h,4h")
 data = response.json()
 
 print(f"Price: ${data['price']['current']}")
@@ -392,15 +392,15 @@ print(f"Confluence: {data['confluence']['score']} ({data['confluence']['bias']})
 print(f"Regime: {data['regime']['current']}")
 
 # Market sentiment
-sentiment = client.get("https://cerebruspulse.xyz/sentiment").json()
+sentiment = client.get("https://api.cerebruspulse.xyz/sentiment").json()
 print(f"Sentiment: {sentiment['sentiment']['overall']}")
 
 # Funding rates
-funding = client.get("https://cerebruspulse.xyz/funding/BTC?lookback_hours=48").json()
+funding = client.get("https://api.cerebruspulse.xyz/funding/BTC?lookback_hours=48").json()
 print(f"Funding: {funding['funding']['annualized_pct']}% annualized")
 
 # Bundle (all data, 20% cheaper)
-bundle = client.get("https://cerebruspulse.xyz/bundle/BTC?timeframes=1h,4h").json()
+bundle = client.get("https://api.cerebruspulse.xyz/bundle/BTC?timeframes=1h,4h").json()
 ```
 
 ### TypeScript / Node.js
@@ -414,13 +414,13 @@ const client = new x402Client({
 });
 
 // Technical analysis
-const pulse = await client.get("https://cerebruspulse.xyz/pulse/SOL?timeframes=1h,4h");
+const pulse = await client.get("https://api.cerebruspulse.xyz/pulse/SOL?timeframes=1h,4h");
 console.log(`RSI 1h: ${pulse.timeframes["1h"].indicators.rsi_14}`);
 console.log(`Trend: ${pulse.timeframes["1h"].indicators.trend.label}`);
 console.log(`Confluence: ${pulse.confluence.score} (${pulse.confluence.bias})`);
 
 // Bundle for complete view
-const bundle = await client.get("https://cerebruspulse.xyz/bundle/ETH");
+const bundle = await client.get("https://api.cerebruspulse.xyz/bundle/ETH");
 console.log(`Price: $${bundle.pulse.price.current}`);
 console.log(`Sentiment: ${bundle.sentiment.overall}`);
 console.log(`Funding: ${bundle.funding.annualized_pct}%`);
@@ -430,7 +430,7 @@ console.log(`Funding: ${bundle.funding.annualized_pct}%`);
 
 ```bash
 # First request returns 402 with payment details
-curl -v https://cerebruspulse.xyz/pulse/BTC?timeframes=1h
+curl -v https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h
 
 # The x402 SDK handles payment automatically.
 # Without SDK, extract payment details from 402 response headers

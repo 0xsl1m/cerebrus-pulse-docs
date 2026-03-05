@@ -18,13 +18,13 @@ info:
   contact:
     name: 0xsl1m
     email: sl1m@ghost.love
-    url: https://cerebruspulse.xyz
+    url: https://api.cerebruspulse.xyz
   license:
     name: Proprietary
-    url: https://cerebruspulse.xyz/overview
+    url: https://api.cerebruspulse.xyz/overview
 
 servers:
-  - url: https://cerebruspulse.xyz
+  - url: https://api.cerebruspulse.xyz
     description: Production
 
 tags:

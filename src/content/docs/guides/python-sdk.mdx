@@ -33,7 +33,7 @@ signer = ExactEvmSigner(Account.from_key(PRIVATE_KEY))
 ```python
 import asyncio
 
-BASE_URL = "https://cerebruspulse.xyz"
+BASE_URL = "https://api.cerebruspulse.xyz"
 
 async def get_pulse(coin: str, timeframes: str = "1h,4h") -> dict:
     async with x402HttpxClient() as client:

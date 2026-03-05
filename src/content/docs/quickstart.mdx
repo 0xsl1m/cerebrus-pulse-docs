@@ -50,7 +50,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
             # Fetch BTC technical analysis (1h + 4h timeframes)
             resp = await client.get(
-                "https://cerebruspulse.xyz/pulse/BTC",
+                "https://api.cerebruspulse.xyz/pulse/BTC",
                 params={"timeframes": "1h,4h"}
             )
             data = resp.json()
@@ -86,7 +86,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
     const fetchWithPayment = withX402Payment(wallet);
 
     const response = await fetchWithPayment(
-      "https://cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h"
+      "https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h"
     );
 
     const data = await response.json();
@@ -98,7 +98,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   <TabItem label="cURL">
     ```bash
     # Step 1: Initial request returns 402 with payment details
-    curl -i https://cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h
+    curl -i https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h
     # HTTP/1.1 402 Payment Required
     # x-402-payment: <base64-encoded payment details>
 
