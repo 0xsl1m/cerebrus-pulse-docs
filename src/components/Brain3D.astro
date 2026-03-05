@@ -15,11 +15,19 @@
   // ============================================================
 
   function initBrain3D() {
+    // Prevent double-init
+    if ((window as any).__brain3dInit) return;
+    (window as any).__brain3dInit = true;
+
     // Respect prefers-reduced-motion
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const canvas = document.querySelector('.brain-3d-canvas') as HTMLCanvasElement;
-    if (!canvas) return;
+    if (!canvas) {
+      console.warn('[Brain3D] Canvas not found');
+      return;
+    }
+    console.log('[Brain3D] Canvas found, parent size:', canvas.parentElement?.clientWidth, canvas.parentElement?.clientHeight);
 
     // ---- Colors ----
     const BLUE = new THREE.Color(0x3B82F6);
@@ -41,6 +49,7 @@
     renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
+    console.log('[Brain3D] Renderer created, WebGL context:', !!renderer.getContext());
 
     // ---- Scene & Camera ----
     const scene = new THREE.Scene();
@@ -593,9 +602,10 @@
     }
 
     resize();
+    console.log('[Brain3D] Initial resize done, canvas size:', canvas.width, canvas.height);
     window.addEventListener('resize', resize);
     // Retry resize after a tick in case layout wasn't ready
-    setTimeout(resize, 100);
+    setTimeout(() => { resize(); console.log('[Brain3D] Deferred resize, canvas:', canvas.width, canvas.height); }, 100);
 
     // ============================================================
     // ANIMATION LOOP
