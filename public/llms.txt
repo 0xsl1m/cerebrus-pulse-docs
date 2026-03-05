@@ -12,7 +12,7 @@ Cerebrus Pulse serves two audiences through two protocols:
 
 ## Base URL
 
-https://cerebruspulse.xyz
+https://api.cerebruspulse.xyz
 
 ## Integration Path 1: x402 (Direct API)
 
