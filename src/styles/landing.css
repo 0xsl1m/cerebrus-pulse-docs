@@ -893,7 +893,7 @@ button:focus-visible {
   justify-content: center;
   pointer-events: none;
   z-index: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* ---- Ambient glow behind the brain ---- */

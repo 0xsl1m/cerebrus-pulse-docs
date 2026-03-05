@@ -5,9 +5,7 @@
 
 <script>
   import * as THREE from 'three';
-  import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-  import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-  import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+  // Bloom via CSS filter instead of EffectComposer (which kills alpha transparency)
 
   // ============================================================
   // CEREBRUS PULSE — 3D Neural Brain Visualization
@@ -58,24 +56,6 @@
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     camera.position.set(0, 0.3, 5.5);
     camera.lookAt(0, -0.1, 0);
-
-    // ---- Post-processing (Bloom) ----
-    // Create render target with alpha for transparent background
-    const renderTarget = new THREE.WebGLRenderTarget(512, 512, {
-      type: THREE.HalfFloatType,
-      format: THREE.RGBAFormat,
-    });
-    const composer = new EffectComposer(renderer, renderTarget);
-    const renderPass = new RenderPass(scene, camera);
-    renderPass.clearAlpha = 0; // transparent background
-    composer.addPass(renderPass);
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(512, 512),
-      0.8,   // strength (was 1.4 — way too bright)
-      0.5,   // radius
-      0.3    // threshold (higher = less bloom on dim things)
-    );
-    composer.addPass(bloomPass);
 
     // ============================================================
     // BRAIN GEOMETRY — Procedural parametric brain shape
@@ -623,8 +603,6 @@
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h, false);
-      composer.setSize(w, h);
-      bloomPass.resolution.set(w, h);
     }
 
     resize();
@@ -648,7 +626,7 @@
 
       if (reducedMotion) {
         // Static render — single frame, no animation
-        composer.render();
+        renderer.render(scene, camera);
         if (animId) cancelAnimationFrame(animId);
         animId = null;
         return;
@@ -724,7 +702,7 @@
       particleField.rotation.x = Math.sin(elapsed * 0.05) * 0.1;
 
       // ---- Render ----
-      composer.render();
+      renderer.render(scene, camera);
     }
 
     // ---- Start animation immediately ----
@@ -755,7 +733,6 @@
       if (animId) cancelAnimationFrame(animId);
       observer.disconnect();
       renderer.dispose();
-      composer.dispose();
     });
   }
 
@@ -774,5 +751,7 @@
     width: 100% !important;
     height: 100% !important;
     display: block;
+    opacity: 0.7;
+    filter: brightness(1.1) contrast(1.1);
   }
 </style>
