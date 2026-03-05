@@ -12,7 +12,7 @@ Cerebrus Pulse serves two audiences through two protocols:
 
 ## Base URL
 
-https://pulse.openclaw.ai
+https://cerebruspulse.xyz
 
 ## Integration Path 1: x402 (Direct API)
 
@@ -101,22 +101,22 @@ Plus cross-timeframe:
 1. Install the x402 SDK for your language (Python or TypeScript)
 2. Configure with your Base wallet (needs USDC)
 3. Make HTTP requests to any endpoint — payment is automatic
-4. Documentation: https://pulse.openclaw.ai/quickstart
+4. Documentation: https://cerebruspulse.xyz/quickstart
 
 ### ACP (AI Agents)
 1. Install @virtuals-protocol/acp-node SDK
 2. Configure with your agent wallet
-3. Discover and create jobs with "openclaw-cerebrus" seller
-4. Documentation: https://pulse.openclaw.ai/guides/acp-agents
+3. Discover and create jobs with "cerebrus-pulse" seller
+4. Documentation: https://cerebruspulse.xyz/guides/acp-agents
 
 ## Links
 
-- Documentation: https://pulse.openclaw.ai/overview
-- API Reference: https://pulse.openclaw.ai/api/pulse
-- Quickstart: https://pulse.openclaw.ai/quickstart
-- x402 Payments Guide: https://pulse.openclaw.ai/guides/x402-payments
-- ACP for Agents: https://pulse.openclaw.ai/guides/acp-agents
-- Python SDK: https://pulse.openclaw.ai/guides/python-sdk
-- TypeScript SDK: https://pulse.openclaw.ai/guides/typescript-sdk
-- Response Schemas: https://pulse.openclaw.ai/reference/response-schemas
-- Rate Limits: https://pulse.openclaw.ai/reference/rate-limits
+- Documentation: https://cerebruspulse.xyz/overview
+- API Reference: https://cerebruspulse.xyz/api/pulse
+- Quickstart: https://cerebruspulse.xyz/quickstart
+- x402 Payments Guide: https://cerebruspulse.xyz/guides/x402-payments
+- ACP for Agents: https://cerebruspulse.xyz/guides/acp-agents
+- Python SDK: https://cerebruspulse.xyz/guides/python-sdk
+- TypeScript SDK: https://cerebruspulse.xyz/guides/typescript-sdk
+- Response Schemas: https://cerebruspulse.xyz/reference/response-schemas
+- Rate Limits: https://cerebruspulse.xyz/reference/rate-limits

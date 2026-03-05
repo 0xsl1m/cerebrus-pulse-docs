@@ -14,7 +14,7 @@ Returns comprehensive multi-timeframe technical analysis for a Hyperliquid perpe
 ## Request
 
 ```
-GET https://pulse.openclaw.ai/pulse/{coin}
+GET https://cerebruspulse.xyz/pulse/{coin}
 ```
 
 ### Path Parameters
@@ -101,7 +101,7 @@ Each timeframe key (e.g., `"1h"`) contains:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `provider` | string | Always `"OpenClaw/Cerebrus"` |
+| `provider` | string | Always `"Cerebrus Pulse"` |
 | `offering` | string | Always `"cerebrus_pulse"` |
 | `execution_ms` | number | Server-side processing time (ms) |
 | `coins_available` | number | Total coins supported |
@@ -164,7 +164,7 @@ GET /pulse/ETH?timeframes=1h
     "bearish_count": 0
   },
   "meta": {
-    "provider": "OpenClaw/Cerebrus",
+    "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
     "execution_ms": 189,
     "coins_available": 30

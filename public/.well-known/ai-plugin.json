@@ -10,10 +10,10 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://pulse.openclaw.ai/openapi.yaml",
+    "url": "https://cerebruspulse.xyz/openapi.yaml",
     "is_user_authenticated": false
   },
-  "logo_url": "https://pulse.openclaw.ai/favicon.svg",
-  "contact_email": "contact@openclaw.ai",
-  "legal_info_url": "https://pulse.openclaw.ai/overview"
+  "logo_url": "https://cerebruspulse.xyz/favicon.svg",
+  "contact_email": "sl1m@ghost.love",
+  "legal_info_url": "https://cerebruspulse.xyz/overview"
 }

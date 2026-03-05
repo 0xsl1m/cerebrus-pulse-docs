@@ -16,15 +16,15 @@ info:
 
     **Also available via ACP** (Agent Commerce Protocol) on Virtuals Protocol for autonomous AI agents.
   contact:
-    name: OpenClaw
-    email: contact@openclaw.ai
-    url: https://pulse.openclaw.ai
+    name: 0xsl1m
+    email: sl1m@ghost.love
+    url: https://cerebruspulse.xyz
   license:
     name: Proprietary
-    url: https://pulse.openclaw.ai/overview
+    url: https://cerebruspulse.xyz/overview
 
 servers:
-  - url: https://pulse.openclaw.ai
+  - url: https://cerebruspulse.xyz
     description: Production
 
 tags:
@@ -376,7 +376,7 @@ components:
       properties:
         provider:
           type: string
-          example: OpenClaw/Cerebrus
+          example: Cerebrus Pulse
         offering:
           type: string
           example: cerebrus_pulse

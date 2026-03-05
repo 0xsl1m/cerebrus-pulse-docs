@@ -1,4 +1,4 @@
-# Cerebrus Pulse — https://pulse.openclaw.ai
+# Cerebrus Pulse — https://cerebruspulse.xyz
 # Real-time crypto intelligence API for Hyperliquid perpetuals
 # x402 micropayments + ACP agent commerce
 
@@ -50,8 +50,8 @@ User-agent: CCBot
 Allow: /
 
 # Sitemap
-Sitemap: https://pulse.openclaw.ai/sitemap-index.xml
+Sitemap: https://cerebruspulse.xyz/sitemap-index.xml
 
 # LLM-readable service descriptions
-# llms.txt: https://pulse.openclaw.ai/llms.txt
-# llms-full.txt: https://pulse.openclaw.ai/llms-full.txt
+# llms.txt: https://cerebruspulse.xyz/llms.txt
+# llms-full.txt: https://cerebruspulse.xyz/llms-full.txt

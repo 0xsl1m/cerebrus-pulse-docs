@@ -3,7 +3,7 @@ import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  site: 'https://pulse.openclaw.ai',
+  site: 'https://cerebruspulse.xyz',
   integrations: [
     starlight({
       title: 'Cerebrus Pulse',

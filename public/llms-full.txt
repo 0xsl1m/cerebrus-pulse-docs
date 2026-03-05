@@ -4,16 +4,16 @@
 
 ## Service Overview
 
-Cerebrus Pulse is a pay-per-query crypto analysis API built by OpenClaw. It provides multi-timeframe technical analysis, market sentiment, funding rate data, and multi-signal confluence scoring for 30+ Hyperliquid perpetual contracts.
+Cerebrus Pulse is a pay-per-query crypto analysis API built by 0xsl1m. It provides multi-timeframe technical analysis, market sentiment, funding rate data, and multi-signal confluence scoring for 30+ Hyperliquid perpetual contracts.
 
 Key differentiator: No API keys, no subscriptions, no accounts. Two payment protocols serve two audiences:
 - x402 (HTTP 402 micropayments) for developers, bots, dashboards
 - ACP (Agent Commerce Protocol) for autonomous AI agents on Virtuals Protocol
 
-Base URL: https://pulse.openclaw.ai
+Base URL: https://cerebruspulse.xyz
 Blockchain: Base (chain ID 8453)
 Payment token: USDC (x402) or VIRTUAL (ACP)
-Provider: OpenClaw/Cerebrus
+Provider: Cerebrus Pulse
 
 ---
 
@@ -91,7 +91,7 @@ Response Schema:
     "bearish_count": 0
   },
   "meta": {
-    "provider": "OpenClaw/Cerebrus",
+    "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
     "execution_ms": 189,
     "coins_available": 30
@@ -135,7 +135,7 @@ Field Reference — Regime:
 - as_of (number): Unix timestamp of last regime calculation
 
 Field Reference — Meta:
-- provider (string): Always "OpenClaw/Cerebrus"
+- provider (string): Always "Cerebrus Pulse"
 - offering (string): Always "cerebrus_pulse"
 - execution_ms (number): Server processing time in milliseconds
 - coins_available (number): Total coins supported
@@ -167,7 +167,7 @@ Response Schema:
     }
   },
   "meta": {
-    "provider": "OpenClaw/Cerebrus",
+    "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
     "execution_ms": 95
   }
@@ -214,7 +214,7 @@ Response Schema:
     ]
   },
   "meta": {
-    "provider": "OpenClaw/Cerebrus",
+    "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
     "execution_ms": 120
   }
@@ -272,7 +272,7 @@ Response Schema:
     "history": ["..."]
   },
   "meta": {
-    "provider": "OpenClaw/Cerebrus",
+    "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
     "bundle": true,
     "execution_ms": 340,
@@ -307,7 +307,7 @@ ACP is the Virtuals Protocol standard for agent-to-agent transactions. Instead o
 
 ### ACP Seller ID
 
-openclaw-cerebrus
+cerebrus-pulse
 
 ### Available Offerings
 
@@ -345,7 +345,7 @@ const acp = new AcpClient({
 
 // Request a Cerebrus Synthesis (Standard tier)
 const job = await acp.createJob({
-  seller: "openclaw-cerebrus",
+  seller: "cerebrus-pulse",
   offering: "cerebrus_synthesis",
   requirements: {
     query: "Analyze the current Bitcoin market structure and identify key support/resistance levels",
@@ -384,7 +384,7 @@ client = Client(
 )
 
 # Technical analysis for ETH on 1h and 4h timeframes
-response = client.get("https://pulse.openclaw.ai/pulse/ETH?timeframes=1h,4h")
+response = client.get("https://cerebruspulse.xyz/pulse/ETH?timeframes=1h,4h")
 data = response.json()
 
 print(f"Price: ${data['price']['current']}")
@@ -392,15 +392,15 @@ print(f"Confluence: {data['confluence']['score']} ({data['confluence']['bias']})
 print(f"Regime: {data['regime']['current']}")
 
 # Market sentiment
-sentiment = client.get("https://pulse.openclaw.ai/sentiment").json()
+sentiment = client.get("https://cerebruspulse.xyz/sentiment").json()
 print(f"Sentiment: {sentiment['sentiment']['overall']}")
 
 # Funding rates
-funding = client.get("https://pulse.openclaw.ai/funding/BTC?lookback_hours=48").json()
+funding = client.get("https://cerebruspulse.xyz/funding/BTC?lookback_hours=48").json()
 print(f"Funding: {funding['funding']['annualized_pct']}% annualized")
 
 # Bundle (all data, 20% cheaper)
-bundle = client.get("https://pulse.openclaw.ai/bundle/BTC?timeframes=1h,4h").json()
+bundle = client.get("https://cerebruspulse.xyz/bundle/BTC?timeframes=1h,4h").json()
 ```
 
 ### TypeScript / Node.js
@@ -414,13 +414,13 @@ const client = new x402Client({
 });
 
 // Technical analysis
-const pulse = await client.get("https://pulse.openclaw.ai/pulse/SOL?timeframes=1h,4h");
+const pulse = await client.get("https://cerebruspulse.xyz/pulse/SOL?timeframes=1h,4h");
 console.log(`RSI 1h: ${pulse.timeframes["1h"].indicators.rsi_14}`);
 console.log(`Trend: ${pulse.timeframes["1h"].indicators.trend.label}`);
 console.log(`Confluence: ${pulse.confluence.score} (${pulse.confluence.bias})`);
 
 // Bundle for complete view
-const bundle = await client.get("https://pulse.openclaw.ai/bundle/ETH");
+const bundle = await client.get("https://cerebruspulse.xyz/bundle/ETH");
 console.log(`Price: $${bundle.pulse.price.current}`);
 console.log(`Sentiment: ${bundle.sentiment.overall}`);
 console.log(`Funding: ${bundle.funding.annualized_pct}%`);
@@ -430,7 +430,7 @@ console.log(`Funding: ${bundle.funding.annualized_pct}%`);
 
 ```bash
 # First request returns 402 with payment details
-curl -v https://pulse.openclaw.ai/pulse/BTC?timeframes=1h
+curl -v https://cerebruspulse.xyz/pulse/BTC?timeframes=1h
 
 # The x402 SDK handles payment automatically.
 # Without SDK, extract payment details from 402 response headers
@@ -523,20 +523,20 @@ Default: 1h,4h when not specified.
 
 ## Links
 
-- Homepage: https://pulse.openclaw.ai
-- Documentation: https://pulse.openclaw.ai/overview
-- Quickstart: https://pulse.openclaw.ai/quickstart
-- API — Pulse: https://pulse.openclaw.ai/api/pulse
-- API — Sentiment: https://pulse.openclaw.ai/api/sentiment
-- API — Funding: https://pulse.openclaw.ai/api/funding
-- API — Bundle: https://pulse.openclaw.ai/api/bundle
-- API — Health: https://pulse.openclaw.ai/api/health
-- API — Coins: https://pulse.openclaw.ai/api/coins
-- Guide — x402 Payments: https://pulse.openclaw.ai/guides/x402-payments
-- Guide — Python SDK: https://pulse.openclaw.ai/guides/python-sdk
-- Guide — TypeScript SDK: https://pulse.openclaw.ai/guides/typescript-sdk
-- Guide — ACP for Agents: https://pulse.openclaw.ai/guides/acp-agents
-- Reference — Response Schemas: https://pulse.openclaw.ai/reference/response-schemas
-- Reference — Supported Coins: https://pulse.openclaw.ai/reference/coins-list
-- Reference — Rate Limits & Errors: https://pulse.openclaw.ai/reference/rate-limits
-- Reference — x402 vs ACP: https://pulse.openclaw.ai/reference/x402-vs-acp
+- Homepage: https://cerebruspulse.xyz
+- Documentation: https://cerebruspulse.xyz/overview
+- Quickstart: https://cerebruspulse.xyz/quickstart
+- API — Pulse: https://cerebruspulse.xyz/api/pulse
+- API — Sentiment: https://cerebruspulse.xyz/api/sentiment
+- API — Funding: https://cerebruspulse.xyz/api/funding
+- API — Bundle: https://cerebruspulse.xyz/api/bundle
+- API — Health: https://cerebruspulse.xyz/api/health
+- API — Coins: https://cerebruspulse.xyz/api/coins
+- Guide — x402 Payments: https://cerebruspulse.xyz/guides/x402-payments
+- Guide — Python SDK: https://cerebruspulse.xyz/guides/python-sdk
+- Guide — TypeScript SDK: https://cerebruspulse.xyz/guides/typescript-sdk
+- Guide — ACP for Agents: https://cerebruspulse.xyz/guides/acp-agents
+- Reference — Response Schemas: https://cerebruspulse.xyz/reference/response-schemas
+- Reference — Supported Coins: https://cerebruspulse.xyz/reference/coins-list
+- Reference — Rate Limits & Errors: https://cerebruspulse.xyz/reference/rate-limits
+- Reference — x402 vs ACP: https://cerebruspulse.xyz/reference/x402-vs-acp
