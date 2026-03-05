@@ -1,6 +1,7 @@
 ---
 import '../styles/landing.css';
 import StructuredData from '../components/StructuredData.astro';
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title: string;
@@ -351,9 +352,6 @@ const ogImage = canonicalURL + '/images/og-image.jpg';
 
       })();
     </script>
-    <script>
-      import { inject } from '@vercel/analytics';
-      inject();
-    </script>
+    <Analytics />
   </body>
 </html>

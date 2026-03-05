@@ -1,8 +1,6 @@
 ---
 import Default from '@astrojs/starlight/components/Head.astro';
+import Analytics from '@vercel/analytics/astro';
 ---
 <Default><slot /></Default>
-<script>
-  import { inject } from '@vercel/analytics';
-  inject();
-</script>
+<Analytics />
