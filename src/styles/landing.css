@@ -881,6 +881,17 @@ button:focus-visible {
   filter: saturate(0.7);
 }
 
+/* ---- Hero text backdrop: radial dark vignette for readability ---- */
+.hero-text-backdrop {
+  background: radial-gradient(
+    ellipse 90% 70% at 50% 50%,
+    rgba(11, 15, 26, 0.75) 0%,
+    rgba(11, 15, 26, 0.5) 50%,
+    transparent 80%
+  );
+  border-radius: 2rem;
+}
+
 /* ---- Brain Container: shifted up in hero ---- */
 .brain-container {
   position: absolute;
