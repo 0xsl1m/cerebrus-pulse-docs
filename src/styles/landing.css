@@ -975,217 +975,52 @@ button:focus-visible {
   100% { opacity: 1; transform: rotateY(-12deg) rotateX(4deg) rotateZ(-1deg) scale(1); }
 }
 
-/* ---- Brain halo: electric arc outer stroke ---- */
-.brain-halo-blue {
-  stroke-dasharray: 3 8 12 5 2 15 8 3 20 6;
-  animation: halo-arc-blue 2s linear infinite;
-  filter: drop-shadow(0 0 3px rgba(96, 165, 250, 0.6));
-}
-
-.brain-halo-amber {
-  stroke-dasharray: 5 12 8 3 15 2 6 20 3 8;
-  animation: halo-arc-amber 2s linear infinite;
-  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.6));
-}
-
-@keyframes halo-arc-blue {
-  0% {
-    stroke-dashoffset: 0;
-    opacity: 0.1;
-  }
-  25% { opacity: 0.25; }
-  50% {
-    stroke-dashoffset: -50;
-    opacity: 0.08;
-  }
-  75% { opacity: 0.22; }
-  100% {
-    stroke-dashoffset: -100;
-    opacity: 0.1;
-  }
-}
-
-@keyframes halo-arc-amber {
-  0% {
-    stroke-dashoffset: 0;
-    opacity: 0.1;
-  }
-  25% { opacity: 0.22; }
-  50% {
-    stroke-dashoffset: -50;
-    opacity: 0.08;
-  }
-  75% { opacity: 0.25; }
-  100% {
-    stroke-dashoffset: -100;
-    opacity: 0.1;
-  }
-}
-
-/* ---- Brain outlines: electric wire with crackle ---- */
+/* ---- Brain outlines: neon glow with subtle flicker ---- */
 .brain-outline-blue {
-  stroke: #93C5FD;
-  stroke-dasharray: 40 2 8 2 3 2 20 2 5 2;
-  animation: outline-electric-blue 1.8s linear infinite, outline-flicker-blue 4s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(147, 197, 253, 0.9));
+  animation: outline-flicker-blue 6s ease-in-out infinite;
 }
 
 .brain-outline-amber {
-  stroke: #FCD34D;
-  stroke-dasharray: 35 2 10 2 5 2 25 2 3 2;
-  animation: outline-electric-amber 1.8s linear infinite, outline-flicker-amber 4s ease-in-out infinite 2s;
-  filter: drop-shadow(0 0 3px rgba(252, 211, 77, 0.9));
-}
-
-@keyframes outline-electric-blue {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -86; }
-}
-
-@keyframes outline-electric-amber {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -86; }
+  animation: outline-flicker-amber 6s ease-in-out infinite 3s;
 }
 
 @keyframes outline-flicker-blue {
-  0%, 100% {
-    opacity: 0.85;
-    stroke-width: 1.8;
-    stroke: #93C5FD;
-    filter: drop-shadow(0 0 3px rgba(147, 197, 253, 0.9));
-  }
-  8% {
-    opacity: 1;
-    stroke-width: 2.8;
-    stroke: #DBEAFE;
-    filter: drop-shadow(0 0 6px rgba(147, 197, 253, 1))
-            drop-shadow(0 0 12px rgba(59, 130, 246, 0.5));
-  }
-  10% {
-    opacity: 0.5;
-    stroke-width: 1.5;
-    stroke: #60A5FA;
-  }
-  12% {
-    opacity: 1;
-    stroke-width: 3;
-    stroke: #EFF6FF;
-    filter: drop-shadow(0 0 8px rgba(147, 197, 253, 1))
-            drop-shadow(0 0 14px rgba(59, 130, 246, 0.6));
-  }
-  16% {
-    opacity: 0.85;
-    stroke-width: 1.8;
-    stroke: #93C5FD;
-    filter: drop-shadow(0 0 3px rgba(147, 197, 253, 0.9));
-  }
-  50% {
-    opacity: 0.9;
-    stroke-width: 2;
-  }
-  72% {
-    opacity: 0.6;
-    stroke-width: 1.5;
-  }
-  74% {
-    opacity: 1;
-    stroke-width: 2.5;
-    stroke: #DBEAFE;
-    filter: drop-shadow(0 0 5px rgba(147, 197, 253, 1));
-  }
-  78% {
-    opacity: 0.85;
-    stroke-width: 1.8;
-    stroke: #93C5FD;
-    filter: drop-shadow(0 0 3px rgba(147, 197, 253, 0.9));
-  }
+  0%, 100% { opacity: 0.9; stroke-width: 1.5; }
+  20% { opacity: 1; stroke-width: 1.8; }
+  22% { opacity: 0.5; stroke-width: 1.2; }
+  24% { opacity: 1; stroke-width: 2; }
+  50% { opacity: 0.85; stroke-width: 1.5; }
+  70% { opacity: 0.6; stroke-width: 1.3; }
+  72% { opacity: 1; stroke-width: 1.8; }
 }
 
 @keyframes outline-flicker-amber {
-  0%, 100% {
-    opacity: 0.85;
-    stroke-width: 1.8;
-    stroke: #FCD34D;
-    filter: drop-shadow(0 0 3px rgba(252, 211, 77, 0.9));
-  }
-  8% {
-    opacity: 1;
-    stroke-width: 2.8;
-    stroke: #FEF3C7;
-    filter: drop-shadow(0 0 6px rgba(252, 211, 77, 1))
-            drop-shadow(0 0 12px rgba(245, 158, 11, 0.5));
-  }
-  10% {
-    opacity: 0.5;
-    stroke-width: 1.5;
-    stroke: #FBBF24;
-  }
-  12% {
-    opacity: 1;
-    stroke-width: 3;
-    stroke: #FFFBEB;
-    filter: drop-shadow(0 0 8px rgba(252, 211, 77, 1))
-            drop-shadow(0 0 14px rgba(245, 158, 11, 0.6));
-  }
-  16% {
-    opacity: 0.85;
-    stroke-width: 1.8;
-    stroke: #FCD34D;
-    filter: drop-shadow(0 0 3px rgba(252, 211, 77, 0.9));
-  }
-  50% {
-    opacity: 0.9;
-    stroke-width: 2;
-  }
-  72% {
-    opacity: 0.6;
-    stroke-width: 1.5;
-  }
-  74% {
-    opacity: 1;
-    stroke-width: 2.5;
-    stroke: #FEF3C7;
-    filter: drop-shadow(0 0 5px rgba(252, 211, 77, 1));
-  }
-  78% {
-    opacity: 0.85;
-    stroke-width: 1.8;
-    stroke: #FCD34D;
-    filter: drop-shadow(0 0 3px rgba(252, 211, 77, 0.9));
-  }
+  0%, 100% { opacity: 0.9; stroke-width: 1.5; }
+  20% { opacity: 1; stroke-width: 1.8; }
+  22% { opacity: 0.5; stroke-width: 1.2; }
+  24% { opacity: 1; stroke-width: 2; }
+  50% { opacity: 0.85; stroke-width: 1.5; }
+  70% { opacity: 0.6; stroke-width: 1.3; }
+  72% { opacity: 1; stroke-width: 1.8; }
 }
 
-/* ---- Brain folds: electric shimmer with glow ---- */
+/* ---- Brain folds: shimmer (neon filter on parent handles glow) ---- */
 .brain-fold-blue {
   animation: fold-shimmer-blue 5s ease-in-out infinite;
-  filter: drop-shadow(0 0 2px rgba(96, 165, 250, 0.4));
 }
 
 .brain-fold-amber {
   animation: fold-shimmer-amber 5s ease-in-out infinite 2.5s;
-  filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4));
 }
 
 @keyframes fold-shimmer-blue {
-  0%, 100% {
-    opacity: 0.3;
-    filter: drop-shadow(0 0 2px rgba(96, 165, 250, 0.3));
-  }
-  50% {
-    opacity: 0.75;
-    filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.7));
-  }
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.55; }
 }
 
 @keyframes fold-shimmer-amber {
-  0%, 100% {
-    opacity: 0.3;
-    filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.3));
-  }
-  50% {
-    opacity: 0.75;
-    filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.7));
-  }
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.55; }
 }
 
 /* ---- Neural Pathways: electrical pulse via stroke-dashoffset ---- */
@@ -1357,14 +1192,41 @@ button:focus-visible {
   }
 }
 
-/* ---- Brain Stem: subtle pulse ---- */
-.brain-stem path:first-child {
+/* ---- Brain Stem: neon pulse ---- */
+.stem-main {
   animation: stem-pulse 4s ease-in-out infinite;
 }
 
+.stem-medulla {
+  animation: stem-pulse 4s ease-in-out infinite 1s;
+}
+
+.stem-fiber {
+  stroke-dasharray: 4 8;
+}
+
+.stem-fiber-1 { animation: stem-fiber-flow 2.5s linear infinite; }
+.stem-fiber-2 { animation: stem-fiber-flow 3s linear infinite 0.5s; }
+.stem-fiber-3 { animation: stem-fiber-flow 2.8s linear infinite 1s; }
+
+.stem-branch {
+  animation: stem-branch-pulse 3s ease-in-out infinite;
+}
+
 @keyframes stem-pulse {
-  0%, 100% { opacity: 0.3; stroke-width: 1.5; }
-  50% { opacity: 0.6; stroke-width: 2; }
+  0%, 100% { opacity: 0.7; stroke-width: 2; }
+  50% { opacity: 1; stroke-width: 2.5; }
+}
+
+@keyframes stem-fiber-flow {
+  0% { stroke-dashoffset: 24; opacity: 0.2; }
+  50% { opacity: 0.5; }
+  100% { stroke-dashoffset: 0; opacity: 0.2; }
+}
+
+@keyframes stem-branch-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.35; }
 }
 
 /* ---- Brain midline: slow dash scroll ---- */

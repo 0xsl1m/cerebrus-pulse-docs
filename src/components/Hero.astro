@@ -39,7 +39,55 @@
         fill="none"
       >
         <defs>
-          <!-- Blue glow filter for left hemisphere — intensified -->
+          <!-- ====== NEON OUTLINE FILTERS ====== -->
+          <!-- Blue neon: white-hot core + blue outer bloom -->
+          <filter id="neon-blue" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur1" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur2" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur3" />
+            <feFlood flood-color="#60A5FA" flood-opacity="0.6" result="color1" />
+            <feFlood flood-color="#3B82F6" flood-opacity="0.3" result="color2" />
+            <feComposite in="color1" in2="blur2" operator="in" result="glow1" />
+            <feComposite in="color2" in2="blur3" operator="in" result="glow2" />
+            <feMerge>
+              <feMergeNode in="glow2" />
+              <feMergeNode in="glow1" />
+              <feMergeNode in="blur1" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <!-- Amber neon: white-hot core + amber outer bloom -->
+          <filter id="neon-amber" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur1" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur2" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur3" />
+            <feFlood flood-color="#FBBF24" flood-opacity="0.6" result="color1" />
+            <feFlood flood-color="#F59E0B" flood-opacity="0.3" result="color2" />
+            <feComposite in="color1" in2="blur2" operator="in" result="glow1" />
+            <feComposite in="color2" in2="blur3" operator="in" result="glow2" />
+            <feMerge>
+              <feMergeNode in="glow2" />
+              <feMergeNode in="glow1" />
+              <feMergeNode in="blur1" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <!-- Stem neon: purple/violet bloom -->
+          <filter id="neon-stem" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur1" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur2" />
+            <feFlood flood-color="#A78BFA" flood-opacity="0.5" result="color1" />
+            <feComposite in="color1" in2="blur2" operator="in" result="glow1" />
+            <feMerge>
+              <feMergeNode in="glow1" />
+              <feMergeNode in="blur1" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <!-- Blue glow filter for neural net -->
           <filter id="glow-blue" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="6" result="blur" />
             <feFlood flood-color="#3B82F6" flood-opacity="0.8" result="color" />
@@ -50,7 +98,7 @@
             </feMerge>
           </filter>
 
-          <!-- Amber glow filter for right hemisphere — intensified -->
+          <!-- Amber glow filter for neural net -->
           <filter id="glow-amber" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="6" result="blur" />
             <feFlood flood-color="#F59E0B" flood-opacity="0.8" result="color" />
@@ -61,7 +109,7 @@
             </feMerge>
           </filter>
 
-          <!-- Intense glow for firing nodes — boosted -->
+          <!-- Intense glow for firing nodes -->
           <filter id="glow-node-blue" x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="8" result="blur" />
             <feFlood flood-color="#60A5FA" flood-opacity="0.9" result="color" />
@@ -115,6 +163,13 @@
             <stop offset="50%" stop-color="#C084FC" />
             <stop offset="100%" stop-color="#FBBF24" />
           </linearGradient>
+
+          <!-- Stem gradient (vertical blue → purple → amber) -->
+          <linearGradient id="stem-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#A78BFA" />
+            <stop offset="40%" stop-color="#C084FC" />
+            <stop offset="100%" stop-color="#818CF8" />
+          </linearGradient>
         </defs>
 
         <!-- ============================================ -->
@@ -148,38 +203,8 @@
         <!-- ============================================ -->
         <!-- LEFT HEMISPHERE OUTLINE (Blue / x402)       -->
         <!-- ============================================ -->
-        <g class="hemisphere-left">
-          <!-- Electric halo — wider faint outer stroke -->
-          <path
-            class="brain-halo brain-halo-blue"
-            d="M400 120
-               C390 108, 370 95, 350 88
-               C338 83, 322 78, 305 75
-               C285 72, 262 76, 245 82
-               C225 90, 205 98, 188 112
-               C172 126, 155 145, 142 165
-               C135 175, 128 188, 122 202
-               C118 218, 112 232, 108 250
-               C105 265, 102 278, 100 295
-               C98 315, 98 332, 100 350
-               C102 362, 106 372, 112 385
-               C116 395, 112 408, 108 420
-               C105 435, 104 448, 108 462
-               C112 478, 118 492, 128 505
-               C138 520, 148 532, 162 545
-               C172 555, 185 565, 200 572
-               C218 580, 238 586, 260 590
-               C278 593, 298 594, 318 590
-               C338 585, 355 576, 370 562
-               C380 552, 388 540, 392 528
-               C396 515, 398 502, 400 488
-               L400 120Z"
-            stroke="#60A5FA"
-            stroke-width="6"
-            fill="none"
-            opacity="0.12"
-          />
-          <!-- Outer brain contour - left hemisphere (anatomical with gyri bumps) -->
+        <g class="hemisphere-left" filter="url(#neon-blue)">
+          <!-- Outer brain contour — neon core line -->
           <path
             class="brain-outline brain-outline-blue"
             d="M400 120
@@ -204,15 +229,15 @@
                C380 552, 388 540, 392 528
                C396 515, 398 502, 400 488
                L400 120Z"
-            stroke="#3B82F6"
-            stroke-width="2"
+            stroke="#DBEAFE"
+            stroke-width="1.5"
             fill="none"
-            opacity="0.8"
+            opacity="0.9"
           />
           <!-- Frontal lobe gyri (upper-front folds) -->
           <path class="brain-fold brain-fold-blue"
             d="M385 135 C365 128, 328 115, 295 118 C262 122, 232 138, 208 158 C192 172, 178 188, 168 208"
-            stroke="#3B82F6" stroke-width="1" fill="none" opacity="0.35"/>
+            stroke="#93C5FD" stroke-width="0.8" fill="none" opacity="0.35"/>
           <path class="brain-fold brain-fold-blue"
             d="M375 158 C348 155, 308 148, 272 155 C242 162, 215 178, 192 200"
             stroke="#3B82F6" stroke-width="0.8" fill="none" opacity="0.28"/>
@@ -223,11 +248,11 @@
           <!-- Central sulcus (Rolandic fissure) — primary landmark -->
           <path class="brain-fold brain-fold-blue"
             d="M365 128 C355 162, 338 198, 318 238 C298 278, 278 322, 265 368 C255 408, 252 442, 258 475"
-            stroke="#3B82F6" stroke-width="1.2" fill="none" opacity="0.35"/>
+            stroke="#93C5FD" stroke-width="1" fill="none" opacity="0.35"/>
           <!-- Lateral sulcus (Sylvian fissure) — deep, prominent -->
           <path class="brain-fold brain-fold-blue"
             d="M388 268 C362 282, 328 298, 288 312 C252 325, 218 342, 185 365 C158 385, 138 408, 125 435"
-            stroke="#3B82F6" stroke-width="1.2" fill="none" opacity="0.35"/>
+            stroke="#93C5FD" stroke-width="1" fill="none" opacity="0.35"/>
           <!-- Parietal lobe folds -->
           <path class="brain-fold brain-fold-blue"
             d="M395 225 C375 235, 345 248, 315 252 C288 255, 258 248, 235 258"
@@ -259,38 +284,8 @@
         <!-- ============================================ -->
         <!-- RIGHT HEMISPHERE OUTLINE (Amber / ACP)      -->
         <!-- ============================================ -->
-        <g class="hemisphere-right">
-          <!-- Electric halo — wider faint outer stroke -->
-          <path
-            class="brain-halo brain-halo-amber"
-            d="M400 120
-               C410 108, 430 95, 450 88
-               C462 83, 478 78, 495 75
-               C515 72, 538 76, 555 82
-               C575 90, 595 98, 612 112
-               C628 126, 645 145, 658 165
-               C665 175, 672 188, 678 202
-               C682 218, 688 232, 692 250
-               C695 265, 698 278, 700 295
-               C702 315, 702 332, 700 350
-               C698 362, 694 372, 688 385
-               C684 395, 688 408, 692 420
-               C695 435, 696 448, 692 462
-               C688 478, 682 492, 672 505
-               C662 520, 652 532, 638 545
-               C628 555, 615 565, 600 572
-               C582 580, 562 586, 540 590
-               C522 593, 502 594, 482 590
-               C462 585, 445 576, 430 562
-               C420 552, 412 540, 408 528
-               C404 515, 402 502, 400 488
-               L400 120Z"
-            stroke="#FBBF24"
-            stroke-width="6"
-            fill="none"
-            opacity="0.12"
-          />
-          <!-- Outer brain contour - right hemisphere (anatomical with gyri bumps) -->
+        <g class="hemisphere-right" filter="url(#neon-amber)">
+          <!-- Outer brain contour — neon core line -->
           <path
             class="brain-outline brain-outline-amber"
             d="M400 120
@@ -315,15 +310,15 @@
                C420 552, 412 540, 408 528
                C404 515, 402 502, 400 488
                L400 120Z"
-            stroke="#F59E0B"
-            stroke-width="2"
+            stroke="#FEF3C7"
+            stroke-width="1.5"
             fill="none"
-            opacity="0.8"
+            opacity="0.9"
           />
           <!-- Frontal lobe gyri (upper-front folds) -->
           <path class="brain-fold brain-fold-amber"
             d="M415 135 C435 128, 472 115, 505 118 C538 122, 568 138, 592 158 C608 172, 622 188, 632 208"
-            stroke="#F59E0B" stroke-width="1" fill="none" opacity="0.35"/>
+            stroke="#FCD34D" stroke-width="0.8" fill="none" opacity="0.35"/>
           <path class="brain-fold brain-fold-amber"
             d="M425 158 C452 155, 492 148, 528 155 C558 162, 585 178, 608 200"
             stroke="#F59E0B" stroke-width="0.8" fill="none" opacity="0.28"/>
@@ -334,11 +329,11 @@
           <!-- Central sulcus (Rolandic fissure) — primary landmark -->
           <path class="brain-fold brain-fold-amber"
             d="M435 128 C445 162, 462 198, 482 238 C502 278, 522 322, 535 368 C545 408, 548 442, 542 475"
-            stroke="#F59E0B" stroke-width="1.2" fill="none" opacity="0.35"/>
+            stroke="#FCD34D" stroke-width="1" fill="none" opacity="0.35"/>
           <!-- Lateral sulcus (Sylvian fissure) — deep, prominent -->
           <path class="brain-fold brain-fold-amber"
             d="M412 268 C438 282, 472 298, 512 312 C548 325, 582 342, 615 365 C642 385, 662 408, 675 435"
-            stroke="#F59E0B" stroke-width="1.2" fill="none" opacity="0.35"/>
+            stroke="#FCD34D" stroke-width="1" fill="none" opacity="0.35"/>
           <!-- Parietal lobe folds -->
           <path class="brain-fold brain-fold-amber"
             d="M405 225 C425 235, 455 248, 485 252 C512 255, 542 248, 565 258"
@@ -577,19 +572,66 @@
         <!-- ============================================ -->
         <!-- BRAIN STEM                                   -->
         <!-- ============================================ -->
-        <g class="brain-stem">
+        <g class="brain-stem" filter="url(#neon-stem)">
+          <!-- Main stem — tapered spinal column -->
           <path
-            d="M385 530 C388 555, 390 580, 388 610 C386 630, 395 645, 400 660
-               C405 645, 414 630, 412 610 C410 580, 412 555, 415 530"
-            stroke="url(#bridge-gradient)"
-            stroke-width="1.5"
+            class="stem-main"
+            d="M388 520 C386 538, 384 558, 383 575
+               C382 595, 384 618, 390 638
+               C394 650, 397 658, 400 665
+               C403 658, 406 650, 410 638
+               C416 618, 418 595, 417 575
+               C416 558, 414 538, 412 520"
+            stroke="url(#stem-gradient)"
+            stroke-width="2"
             fill="none"
-            opacity="0.4"
+            opacity="0.85"
+            stroke-linecap="round"
           />
-          <!-- Stem detail lines -->
-          <path d="M392 550 L392 600" stroke="#3B82F6" stroke-width="0.5" opacity="0.2" />
-          <path d="M400 545 L400 610" stroke="#A78BFA" stroke-width="0.5" opacity="0.2" />
-          <path d="M408 550 L408 600" stroke="#F59E0B" stroke-width="0.5" opacity="0.2" />
+          <!-- Medulla oblongata bulge -->
+          <path
+            class="stem-medulla"
+            d="M384 528 C380 540, 378 555, 382 568
+               C386 578, 395 582, 400 583
+               C405 582, 414 578, 418 568
+               C422 555, 420 540, 416 528"
+            stroke="url(#stem-gradient)"
+            stroke-width="1.2"
+            fill="none"
+            opacity="0.6"
+          />
+          <!-- Nerve fiber detail lines -->
+          <path class="stem-fiber stem-fiber-1" d="M390 535 C389 555, 388 578, 392 605 C394 625, 397 645, 400 658" stroke="#93C5FD" stroke-width="0.6" fill="none" opacity="0.35" stroke-linecap="round" />
+          <path class="stem-fiber stem-fiber-2" d="M400 530 C400 555, 400 580, 400 610 C400 635, 400 650, 400 665" stroke="#C084FC" stroke-width="0.8" fill="none" opacity="0.4" stroke-linecap="round" />
+          <path class="stem-fiber stem-fiber-3" d="M410 535 C411 555, 412 578, 408 605 C406 625, 403 645, 400 658" stroke="#FCD34D" stroke-width="0.6" fill="none" opacity="0.35" stroke-linecap="round" />
+          <!-- Lateral nerve branches -->
+          <path class="stem-branch" d="M384 545 C375 548, 368 555, 365 565" stroke="#818CF8" stroke-width="0.5" fill="none" opacity="0.25" stroke-linecap="round" />
+          <path class="stem-branch" d="M416 545 C425 548, 432 555, 435 565" stroke="#818CF8" stroke-width="0.5" fill="none" opacity="0.25" stroke-linecap="round" />
+          <path class="stem-branch" d="M383 575 C374 580, 367 588, 363 598" stroke="#A78BFA" stroke-width="0.5" fill="none" opacity="0.2" stroke-linecap="round" />
+          <path class="stem-branch" d="M417 575 C426 580, 433 588, 437 598" stroke="#A78BFA" stroke-width="0.5" fill="none" opacity="0.2" stroke-linecap="round" />
+          <!-- Stem signal pulses (small traveling dots) -->
+          <circle class="stem-pulse-dot stem-pulse-1" r="1.5" fill="#C084FC" opacity="0">
+            <animateMotion dur="2s" repeatCount="indefinite" begin="0s">
+              <mpath href="#stem-fiber-path-1" />
+            </animateMotion>
+            <animate attributeName="opacity" values="0;0.8;0.8;0" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle class="stem-pulse-dot stem-pulse-2" r="1.5" fill="#93C5FD" opacity="0">
+            <animateMotion dur="2.4s" repeatCount="indefinite" begin="0.8s">
+              <mpath href="#stem-fiber-path-2" />
+            </animateMotion>
+            <animate attributeName="opacity" values="0;0.7;0.7;0" dur="2.4s" repeatCount="indefinite" begin="0.8s" />
+          </circle>
+          <circle class="stem-pulse-dot stem-pulse-3" r="1.5" fill="#FCD34D" opacity="0">
+            <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.4s">
+              <mpath href="#stem-fiber-path-3" />
+            </animateMotion>
+            <animate attributeName="opacity" values="0;0.7;0.7;0" dur="2.2s" repeatCount="indefinite" begin="1.4s" />
+          </circle>
+          <!-- Hidden paths for animateMotion references -->
+          <path id="stem-fiber-path-1" d="M390 535 C389 555, 388 578, 392 605 C394 625, 397 645, 400 658" fill="none" stroke="none" />
+          <path id="stem-fiber-path-2" d="M400 530 C400 555, 400 580, 400 610 C400 635, 400 650, 400 665" fill="none" stroke="none" />
+          <path id="stem-fiber-path-3" d="M410 535 C411 555, 412 578, 408 605 C406 625, 403 645, 400 658" fill="none" stroke="none" />
         </g>
 
         <!-- ============================================ -->
