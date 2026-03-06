@@ -1491,6 +1491,36 @@ h1, h2, h3, h4, h5, h6,
   position: relative;
   display: inline-block;
 }
+/* Mobile: stack vertically */
+.hero-headline-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.hero-headline-logo {
+  height: 5rem;
+  width: auto;
+  margin: 0.25rem 0;
+}
+/* Desktop: inline */
+@media (min-width: 640px) {
+  .hero-headline-stack {
+    display: inline-block;
+    flex-direction: unset;
+    align-items: unset;
+  }
+  .hero-headline-logo {
+    display: inline-block;
+    height: 1.7em;
+    margin: 0;
+    vertical-align: middle;
+    position: relative;
+    top: -0.05em;
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+  }
+}
 .xyz-tag {
   position: absolute;
   bottom: -0.1em;

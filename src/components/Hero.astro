@@ -65,18 +65,10 @@ import Brain3D from './Brain3D.astro';
 
     <!-- Main headline — stacked on mobile, inline on desktop -->
     <h1 class="hero-glitch-wrapper mb-4 sm:mb-6 font-extrabold leading-tight animate-slide-up-delay-1">
-      <!-- Mobile: vertical stack -->
-      <span class="hero-headline-wrap flex flex-col items-center gap-0 sm:hidden text-5xl">
+      <span class="hero-headline-wrap hero-headline-stack text-5xl sm:text-4xl md:text-7xl lg:text-8xl">
         <span class="gradient-text hero-glitch" data-text="Cerebrus"><span class="hero-glitch-text">Cerebrus</span></span>
-        <img src="/images/pulse-logo.png" alt="" class="h-20 w-auto my-1" />
-        <span class="relative">
-          <span class="gradient-text hero-glitch" data-text="Pulse"><span class="hero-glitch-text">Pulse</span></span>
-          <span class="xyz-tag">.xyz</span>
-        </span>
-      </span>
-      <!-- Desktop: inline -->
-      <span class="hero-headline-wrap hidden sm:inline text-4xl md:text-7xl lg:text-8xl">
-        <span class="gradient-text hero-glitch" data-text="Cerebrus"><span class="hero-glitch-text">Cerebrus</span></span> <img src="/images/pulse-logo.png" alt="" class="inline-block h-[1.7em] w-auto align-middle relative -top-[0.05em] -mx-5" /> <span class="gradient-text hero-glitch" data-text="Pulse"><span class="hero-glitch-text">Pulse</span></span>
+        <img src="/images/pulse-logo.png" alt="" class="hero-headline-logo" />
+        <span class="gradient-text hero-glitch" data-text="Pulse"><span class="hero-glitch-text">Pulse</span></span>
         <span class="xyz-tag">.xyz</span>
       </span>
     </h1>
