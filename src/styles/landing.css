@@ -1491,12 +1491,28 @@ h1, h2, h3, h4, h5, h6,
   position: relative;
   display: inline-block;
 }
-/* Mobile: stack vertically */
+/* Mobile: stack vertically, offset text */
 .hero-headline-stack {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0;
+}
+.hero-headline-stack > .hero-glitch:first-child {
+  align-self: flex-start;
+  padding-left: 1.5rem;
+}
+.hero-headline-stack > .hero-glitch:nth-child(3) {
+  align-self: flex-end;
+  padding-right: 1.5rem;
+}
+@media (min-width: 640px) {
+  .hero-headline-stack > .hero-glitch:first-child,
+  .hero-headline-stack > .hero-glitch:nth-child(3) {
+    align-self: unset;
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 .hero-headline-logo {
   height: 5rem;
