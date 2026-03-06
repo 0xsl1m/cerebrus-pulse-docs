@@ -1006,10 +1006,11 @@
     const crownFillGeo = new THREE.BufferGeometry();
     crownFillGeo.setAttribute('position', new THREE.Float32BufferAttribute(fillVerts, 3));
     crownFillGeo.computeVertexNormals();
+    const isMobile = window.innerWidth < 768;
     const crownFillMat = new THREE.MeshBasicMaterial({
       color: PINK,
       transparent: true,
-      opacity: 0.35,
+      opacity: isMobile ? 0.55 : 0.35,
       side: THREE.DoubleSide,
       depthWrite: false,
     });
