@@ -834,8 +834,7 @@
     const TINES = 7;
     const SEGS = 42;        // ring segments (divisible by TINES)
     const BAND_H = 0.12;    // band thickness
-    const TINE_H = 0.55;    // major tine peak height
-    const MINOR_H = TINE_H * 0.5; // minor tine height
+    const TINE_H = 0.55;    // tine peak height
     const TINE_SEGS = SEGS / TINES; // 6 segments per tine section
 
     // ---- Build crystalline crown wireframe ----
@@ -863,18 +862,16 @@
       else { cl(up[i], lo[n]); }
     }
 
-    // ---- Major tines (7) — crystalline faceted structure ----
-    // Each uses 4 base points + 2 shoulder vertices + tip = 7 vertices
+    // ---- Tines (7) — crystalline faceted peaks ----
     const tineTips: THREE.Vector3[] = [];
-    const tineShoulderL: THREE.Vector3[] = [];
-    const tineShoulderR: THREE.Vector3[] = [];
+    const gemCenters: THREE.Vector3[] = [];
+    const outerGemVerts: {t: THREE.Vector3, b: THREE.Vector3, l: THREE.Vector3, r: THREE.Vector3}[] = [];
+    const innerGemVerts: {t: THREE.Vector3, b: THREE.Vector3, l: THREE.Vector3, r: THREE.Vector3}[] = [];
 
     for (let t = 0; t < TINES; t++) {
       const ci = t * TINE_SEGS;
-      const oL = (ci - 3 + SEGS) % SEGS; // outer left base
-      const iL = (ci - 1 + SEGS) % SEGS; // inner left base
-      const iR = (ci + 1) % SEGS;        // inner right base
-      const oR = (ci + 3) % SEGS;        // outer right base
+      const li = (ci - 2 + SEGS) % SEGS;
+      const ri = (ci + 2) % SEGS;
       const tipAngle = (ci / SEGS) * Math.PI * 2;
       const tipR = CR * 0.88;
       const tip = new THREE.Vector3(
@@ -882,39 +879,38 @@
       );
       tineTips.push(tip);
 
-      // Shoulder vertices at 55% height between outer bases and tip
-      const sLa = ((ci - 2 + SEGS) % SEGS / SEGS) * Math.PI * 2;
-      const sRa = ((ci + 2) % SEGS / SEGS) * Math.PI * 2;
-      const sR_crown = CR * 0.93;
-      const sL = new THREE.Vector3(Math.cos(sLa) * sR_crown, BAND_H + TINE_H * 0.55, Math.sin(sLa) * sR_crown);
-      const sR = new THREE.Vector3(Math.cos(sRa) * sR_crown, BAND_H + TINE_H * 0.55, Math.sin(sRa) * sR_crown);
-      tineShoulderL.push(sL);
-      tineShoulderR.push(sR);
+      // Tine edges — side slopes only, no center spine
+      cl(up[li], tip);
+      cl(up[ri], tip);
 
-      // Outer facets: outer base -> shoulder
-      cl(up[oL], sL);
-      cl(up[oR], sR);
-      // Inner facets: inner base -> shoulder
-      cl(up[iL], sL);
-      cl(up[iR], sR);
-      // Upper slopes: shoulder -> tip
-      cl(sL, tip);
-      cl(sR, tip);
-      // Shoulder brace
-      cl(sL, sR);
-      // Inner direct lines: inner base -> tip (creates diamond pattern)
-      cl(up[iL], tip);
-      cl(up[iR], tip);
-      // Cross diagonals through the crystal
-      cl(up[iL], sR);
-      cl(up[iR], sL);
-      // Center facet lines: center base -> shoulders
-      cl(up[ci], sL);
-      cl(up[ci], sR);
+      // Floating nested diamond gems — not connected to wireframe
+      const cAngle = (ci / SEGS) * Math.PI * 2;
+      const gemR = CR * 0.91;
+      const gemCY = BAND_H + TINE_H * 0.42;
+      const gemH = TINE_H * 0.28;  // tall diamond
+      const gemW = 0.10;
+      const gPerp = new THREE.Vector3(-Math.sin(cAngle), 0, Math.cos(cAngle));
+      const gCenter = new THREE.Vector3(Math.cos(cAngle) * gemR, gemCY, Math.sin(cAngle) * gemR);
+      gemCenters.push(gCenter.clone());
+      // Outer diamond
+      const gT = gCenter.clone().add(new THREE.Vector3(0, gemH, 0));
+      const gB = gCenter.clone().add(new THREE.Vector3(0, -gemH, 0));
+      const gL = gCenter.clone().add(gPerp.clone().multiplyScalar(-gemW));
+      const gR_v = gCenter.clone().add(gPerp.clone().multiplyScalar(gemW));
+      cl(gT, gL); cl(gL, gB); cl(gB, gR_v); cl(gR_v, gT);
+      outerGemVerts.push({t: gT, b: gB, l: gL, r: gR_v});
+      // Inner diamond (60% scale)
+      const iS = 0.6;
+      const iT = gCenter.clone().add(new THREE.Vector3(0, gemH * iS, 0));
+      const iB = gCenter.clone().add(new THREE.Vector3(0, -gemH * iS, 0));
+      const iL = gCenter.clone().add(gPerp.clone().multiplyScalar(-gemW * iS));
+      const iR = gCenter.clone().add(gPerp.clone().multiplyScalar(gemW * iS));
+      cl(iT, iL); cl(iL, iB); cl(iB, iR); cl(iR, iT);
+      innerGemVerts.push({t: iT, b: iB, l: iL, r: iR});
     }
 
-    // ---- Minor tines (7) — diamond-shaped crystals between major tines ----
-    const minorTips: THREE.Vector3[] = [];
+    // ---- Minor tines (7) — shorter crystalline peaks between majors ----
+    const MINOR_H = TINE_H * 0.45;
     for (let t = 0; t < TINES; t++) {
       const ci = t * TINE_SEGS + Math.round(TINE_SEGS / 2);
       const li = (ci - 1 + SEGS) % SEGS;
@@ -924,44 +920,11 @@
       const mTip = new THREE.Vector3(
         Math.cos(tipAngle) * tipR, BAND_H + MINOR_H, Math.sin(tipAngle) * tipR
       );
-      minorTips.push(mTip);
 
-      // Diamond midpoints on each slope
-      const dmL = new THREE.Vector3().lerpVectors(up[li], mTip, 0.5);
-      const dmR = new THREE.Vector3().lerpVectors(up[ri], mTip, 0.5);
-
-      // Slopes split at midpoints
-      cl(up[li], dmL);
-      cl(dmL, mTip);
-      cl(up[ri], dmR);
-      cl(dmR, mTip);
-      // Diamond brace
-      cl(dmL, dmR);
-      // Center spine
+      // Simple faceted minor tine: two slopes + center spine
+      cl(up[li], mTip);
+      cl(up[ri], mTip);
       cl(up[ci], mTip);
-      // Cross facets
-      cl(up[ci], dmL);
-      cl(up[ci], dmR);
-    }
-
-    // ---- Connecting web: shoulders <-> minor tips ----
-    for (let t = 0; t < TINES; t++) {
-      const nextT = (t + 1) % TINES;
-      cl(tineShoulderR[t], minorTips[t]);
-      cl(tineShoulderL[nextT], minorTips[t]);
-    }
-
-    // ---- Inner floating ring at mid-height ----
-    const INNER_R = CR * 0.62;
-    const INNER_Y = BAND_H + TINE_H * 0.38;
-    const innerRingVerts: number[] = [];
-    for (let i = 0; i < SEGS; i++) {
-      const a1 = (i / SEGS) * Math.PI * 2;
-      const a2 = ((i + 1) % SEGS / SEGS) * Math.PI * 2;
-      innerRingVerts.push(
-        Math.cos(a1) * INNER_R, INNER_Y, Math.sin(a1) * INNER_R,
-        Math.cos(a2) * INNER_R, INNER_Y, Math.sin(a2) * INNER_R
-      );
     }
 
     // ---- Create crown frame with triple-layer glow ----
@@ -1016,25 +979,14 @@
       tri(lo[i], up[n], up[i]);
     }
 
-    // Major tine fills
+    // Tine fills
     for (let t = 0; t < TINES; t++) {
       const ci = t * TINE_SEGS;
-      const oL = (ci - 3 + SEGS) % SEGS;
-      const iL = (ci - 1 + SEGS) % SEGS;
-      const iR = (ci + 1) % SEGS;
-      const oR = (ci + 3) % SEGS;
+      const li = (ci - 2 + SEGS) % SEGS;
+      const ri = (ci + 2) % SEGS;
       const tip = tineTips[t];
-      const sL = tineShoulderL[t];
-      const sR = tineShoulderR[t];
-      // Lower facets
-      tri(up[oL], up[iL], sL);
-      tri(up[iR], up[oR], sR);
-      tri(up[iL], up[ci], sL);
-      tri(up[ci], up[iR], sR);
-      // Upper facets
-      tri(sL, tip, sR);
-      tri(up[iL], sL, tip);
-      tri(up[iR], tip, sR);
+      tri(up[li], tip, up[ci]);
+      tri(up[ci], tip, up[ri]);
     }
 
     // Minor tine fills
@@ -1042,37 +994,63 @@
       const ci = t * TINE_SEGS + Math.round(TINE_SEGS / 2);
       const li = (ci - 1 + SEGS) % SEGS;
       const ri = (ci + 1) % SEGS;
-      tri(up[li], minorTips[t], up[ri]);
+      const tipAngle = (ci / SEGS) * Math.PI * 2;
+      const tipR = CR * 0.93;
+      const mTip = new THREE.Vector3(
+        Math.cos(tipAngle) * tipR, BAND_H + MINOR_H, Math.sin(tipAngle) * tipR
+      );
+      tri(up[li], mTip, up[ri]);
     }
 
+    // Pink fill (band + tines + minor tines)
     const crownFillGeo = new THREE.BufferGeometry();
     crownFillGeo.setAttribute('position', new THREE.Float32BufferAttribute(fillVerts, 3));
     crownFillGeo.computeVertexNormals();
     const crownFillMat = new THREE.MeshBasicMaterial({
       color: PINK,
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.35,
       side: THREE.DoubleSide,
       depthWrite: false,
     });
     const crownFill = new THREE.Mesh(crownFillGeo, crownFillMat);
     crownGroup.add(crownFill);
 
-    // ---- Inner ring (counter-rotating, dashed) ----
-    const innerRingGeo = new THREE.BufferGeometry();
-    innerRingGeo.setAttribute('position', new THREE.Float32BufferAttribute(innerRingVerts, 3));
-    const innerRingMat = new THREE.LineDashedMaterial({
-      color: MAGENTA,
+    // Blue fill — outer diamonds
+    const outerGemFillVerts: number[] = [];
+    for (const g of outerGemVerts) {
+      outerGemFillVerts.push(g.l.x,g.l.y,g.l.z, g.t.x,g.t.y,g.t.z, g.r.x,g.r.y,g.r.z);
+      outerGemFillVerts.push(g.l.x,g.l.y,g.l.z, g.r.x,g.r.y,g.r.z, g.b.x,g.b.y,g.b.z);
+    }
+    const outerGemGeo = new THREE.BufferGeometry();
+    outerGemGeo.setAttribute('position', new THREE.Float32BufferAttribute(outerGemFillVerts, 3));
+    outerGemGeo.computeVertexNormals();
+    const outerGemMat = new THREE.MeshBasicMaterial({
+      color: 0x3B82F6,
       transparent: true,
-      opacity: 0.55,
-      dashSize: 0.1,
-      gapSize: 0.08,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.35,
+      side: THREE.DoubleSide,
       depthWrite: false,
     });
-    const innerRingLine = new THREE.LineSegments(innerRingGeo, innerRingMat);
-    innerRingLine.computeLineDistances();
-    crownGroup.add(innerRingLine);
+    crownGroup.add(new THREE.Mesh(outerGemGeo, outerGemMat));
+
+    // Amber fill — inner diamonds
+    const innerGemFillVerts: number[] = [];
+    for (const g of innerGemVerts) {
+      innerGemFillVerts.push(g.l.x,g.l.y,g.l.z, g.t.x,g.t.y,g.t.z, g.r.x,g.r.y,g.r.z);
+      innerGemFillVerts.push(g.l.x,g.l.y,g.l.z, g.r.x,g.r.y,g.r.z, g.b.x,g.b.y,g.b.z);
+    }
+    const innerGemGeo = new THREE.BufferGeometry();
+    innerGemGeo.setAttribute('position', new THREE.Float32BufferAttribute(innerGemFillVerts, 3));
+    innerGemGeo.computeVertexNormals();
+    const innerGemMat = new THREE.MeshBasicMaterial({
+      color: 0xF59E0B,
+      transparent: true,
+      opacity: 0.45,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    crownGroup.add(new THREE.Mesh(innerGemGeo, innerGemMat));
 
     // ---- Twinkling wireframe stars at each tine tip ----
     const STAR_R = 0.055;
@@ -1085,9 +1063,12 @@
     ]);
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
 
+    const TOTAL_STARS = TINES * 2; // tips + gems
     const starGroups: THREE.Group[] = [];
     const starMats: THREE.LineBasicMaterial[] = [];
-    const starPhases = new Float32Array(TINES);
+    const starPhases = new Float32Array(TOTAL_STARS);
+
+    // Stars on tine tips
     for (let t = 0; t < TINES; t++) {
       starPhases[t] = Math.random() * Math.PI * 2;
       const mat = new THREE.LineBasicMaterial({
@@ -1100,6 +1081,32 @@
       const star = new THREE.LineSegments(starGeo, mat);
       const group = new THREE.Group();
       group.position.copy(tineTips[t]);
+      group.add(star);
+      crownGroup.add(group);
+      starGroups.push(group);
+      starMats.push(mat);
+    }
+
+    // Smaller stars on gem centers
+    const GEM_STAR_R = 0.035;
+    const gemStarGeo = new THREE.BufferGeometry();
+    gemStarGeo.setAttribute('position', new THREE.Float32BufferAttribute([
+      -GEM_STAR_R, 0, 0,  GEM_STAR_R, 0, 0,
+      0, -GEM_STAR_R, 0,  0, GEM_STAR_R, 0,
+      0, 0, -GEM_STAR_R,  0, 0, GEM_STAR_R,
+    ], 3));
+    for (let t = 0; t < TINES; t++) {
+      starPhases[TINES + t] = Math.random() * Math.PI * 2;
+      const mat = new THREE.LineBasicMaterial({
+        color: CROWN_WHITE,
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const star = new THREE.LineSegments(gemStarGeo, mat);
+      const group = new THREE.Group();
+      group.position.copy(gemCenters[t]);
       group.add(star);
       crownGroup.add(group);
       starGroups.push(group);
@@ -1523,8 +1530,6 @@
 
       // ---- Crown animation ----
       crownGroup.rotation.y = elapsed * 0.15;
-      innerRingLine.rotation.y = -elapsed * 0.4;
-      innerRingMat.dashOffset = elapsed * 1.2;
 
       // Triple glow pulse
       const glowPulse = Math.sin(elapsed * 1.5);
@@ -1534,14 +1539,20 @@
       // Point light pulse
       crownLight.intensity = 0.3 + Math.sin(elapsed * 2) * 0.15;
 
-      // Twinkling stars — rotate + shimmer
-      for (let i = 0; i < TINES; i++) {
+      // Twinkling stars — rotate + sporadic shimmer (tips + gems)
+      for (let i = 0; i < TOTAL_STARS; i++) {
         const sp = starPhases[i];
         starGroups[i].rotation.y = elapsed * (1.5 + i * 0.3);
         starGroups[i].rotation.z = elapsed * (0.8 + i * 0.2);
-        // Twinkle: rapid brightness variation
-        const twinkle = Math.sin(elapsed * 6 + sp) * Math.sin(elapsed * 9.3 + sp * 2);
-        starMats[i].opacity = 0.4 + twinkle * 0.5;
+        // Layer multiple sine waves at irrational ratios for aperiodic sparkle
+        const t1 = Math.sin(elapsed * 4.7 + sp);
+        const t2 = Math.sin(elapsed * 7.3 + sp * 1.7);
+        const t3 = Math.sin(elapsed * 13.1 + sp * 3.1);
+        const burst = Math.max(0, t1 * t2 * t3); // only sparkle when all align
+        const flicker = Math.pow(burst, 2.5); // sharpen into brief flashes
+        starMats[i].opacity = 0.08 + flicker * 0.9;
+        const s = 0.8 + flicker * 0.5;
+        starGroups[i].scale.setScalar(s);
       }
 
       // Energy beams — sequential firing
@@ -1596,8 +1607,8 @@
       particleGeo.dispose();
       crownFrameGeo.dispose();
       crownFillGeo.dispose();
-      innerRingGeo.dispose();
       starGeo.dispose();
+      gemStarGeo.dispose();
       beamGeo.dispose();
       for (const geo of boltGeometries) geo.dispose();
       for (const mat of boltMaterials) mat.dispose();
