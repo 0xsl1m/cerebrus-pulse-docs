@@ -1,5 +1,84 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" fill="none">
-  <circle cx="24" cy="24" r="20" stroke="#0088cc" stroke-width="2.5" fill="none"/>
-  <path d="M12 24h6l4-10 4 20 4-14 4 8h6" stroke="#0088cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <circle cx="24" cy="24" r="3" fill="#0088cc"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 68" fill="none">
+  <defs>
+    <linearGradient id="blG" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#93C5FD"/><stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="amG" x1="0.8" y1="0" x2="0.2" y2="1">
+      <stop offset="0%" stop-color="#FDE68A"/><stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="pkG" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF69B4"/><stop offset="100%" stop-color="#FF1493"/>
+    </linearGradient>
+    <filter id="gl" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- ======== CROWN BACK ARC (behind brain) ======== -->
+  <g transform="rotate(-5, 32, 24)">
+    <!-- Back arc — top semicircle, faded behind brain -->
+    <path d="M12,24 A20,5.5 0 0,0 52,24" stroke="#FF1493" stroke-width="1.5"
+          fill="none" opacity="0.2" stroke-dasharray="3 2"/>
+    <!-- Back tines (barely visible, depth cue) -->
+    <polygon points="22,19.5 24,12 26,19" stroke="#FF1493" stroke-width="0.8"
+             fill="rgba(255,20,147,0.06)" opacity="0.25"/>
+    <polygon points="38,19 40,12 42,19.5" stroke="#FF1493" stroke-width="0.8"
+             fill="rgba(255,20,147,0.06)" opacity="0.25"/>
+  </g>
+
+  <!-- ======== BRAIN (3D front view) ======== -->
+  <!-- Left hemisphere (blue) -->
+  <g filter="url(#gl)">
+    <path d="M30,20 C28,14 19,11 13,18 C8,25 7,35 10,43
+             C13,50 22,56 28,56 C30,56 31,54 31,52 L31,20 Z"
+          fill="rgba(59,130,246,0.13)" stroke="url(#blG)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Cortical folds curving over surface -->
+    <path d="M12,25 C17,22 25,23 29,27" stroke="#60A5FA" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M10,34 C15,30 24,31 30,35" stroke="#60A5FA" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+    <path d="M12,43 C17,39 25,40 30,44" stroke="#60A5FA" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+    <!-- Highlight edge (3D depth cue) -->
+    <path d="M28,16 C24,13 18,13 14,17" stroke="#93C5FD" stroke-width="0.8" stroke-linecap="round" fill="none" opacity="0.5"/>
+  </g>
+
+  <!-- Right hemisphere (amber) -->
+  <g filter="url(#gl)">
+    <path d="M34,20 C36,14 45,11 51,18 C56,25 57,35 54,43
+             C51,50 42,56 36,56 C34,56 33,54 33,52 L33,20 Z"
+          fill="rgba(245,158,11,0.13)" stroke="url(#amG)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Cortical folds -->
+    <path d="M35,27 C39,23 47,22 52,25" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M34,35 C40,31 49,30 54,34" stroke="#FBBF24" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+    <path d="M34,44 C39,40 47,39 52,43" stroke="#FBBF24" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+    <!-- Highlight edge -->
+    <path d="M36,16 C40,13 46,13 50,17" stroke="#FDE68A" stroke-width="0.8" stroke-linecap="round" fill="none" opacity="0.5"/>
+  </g>
+
+  <!-- Medial fissure (gap between hemispheres) -->
+  <path d="M31,20 C31.5,16 32.5,16 33,20" stroke="#1E293B" stroke-width="1.5" fill="none"/>
+  <!-- Brain stem -->
+  <path d="M30,55 C31,59 33,59 34,55" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+  <!-- ======== CROWN FRONT ARC + TINES (in front of brain) ======== -->
+  <g transform="rotate(-5, 32, 24)" filter="url(#gl)">
+    <!-- Front arc — bottom semicircle, bold in front of brain -->
+    <path d="M12,24 A20,5.5 0 0,1 52,24" stroke="url(#pkG)" stroke-width="2.2" fill="none"/>
+    <!-- Second band line for thickness -->
+    <path d="M14,26 A18,4.5 0 0,1 50,26" stroke="#FF69B4" stroke-width="1" fill="none" opacity="0.4"/>
+
+    <!-- Front tines (3 visible, rising upward) -->
+    <polygon points="14,25 19,11 24,25" fill="rgba(255,20,147,0.18)"
+             stroke="url(#pkG)" stroke-width="1.5" stroke-linejoin="round"/>
+    <polygon points="25,27 32,5 39,27" fill="rgba(255,20,147,0.22)"
+             stroke="url(#pkG)" stroke-width="1.8" stroke-linejoin="round"/>
+    <polygon points="40,25 45,11 50,25" fill="rgba(255,20,147,0.18)"
+             stroke="url(#pkG)" stroke-width="1.5" stroke-linejoin="round"/>
+
+    <!-- Tip gems -->
+    <circle cx="19" cy="11" r="1.4" fill="#FF69B4"/>
+    <circle cx="32" cy="5" r="1.8" fill="#FFB6D9"/>
+    <circle cx="45" cy="11" r="1.4" fill="#FF69B4"/>
+  </g>
 </svg>

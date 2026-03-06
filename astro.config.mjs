@@ -9,7 +9,7 @@ export default defineConfig({
       title: 'Cerebrus Pulse',
       description: 'Real-time crypto intelligence via x402 micropayments and ACP agent commerce',
       logo: {
-        src: './src/assets/pulse-logo.svg',
+        src: './src/assets/pulse-logo.png',
         replacesTitle: false,
       },
       components: {
@@ -46,6 +46,7 @@ export default defineConfig({
             { label: 'x402 Payments', slug: 'guides/x402-payments' },
             { label: 'Python SDK', slug: 'guides/python-sdk' },
             { label: 'TypeScript SDK', slug: 'guides/typescript-sdk' },
+            { label: 'A2A Protocol', slug: 'guides/a2a-agents' },
             { label: 'ACP for Agents', slug: 'guides/acp-agents' },
           ],
         },
@@ -55,7 +56,7 @@ export default defineConfig({
             { label: 'Response Schemas', slug: 'reference/response-schemas' },
             { label: 'Supported Coins', slug: 'reference/coins-list' },
             { label: 'Rate Limits & Errors', slug: 'reference/rate-limits' },
-            { label: 'x402 vs ACP', slug: 'reference/x402-vs-acp' },
+            { label: 'x402 vs A2A vs ACP', slug: 'reference/x402-vs-acp' },
           ],
         },
       ],

@@ -7,7 +7,7 @@ interface Props {
 
 const {
   title = "Cerebrus Pulse — Real-time Crypto Intelligence API",
-  description = "Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. 9 x402 endpoints: market screener, technical analysis, sentiment, funding, open interest, spread/liquidity, correlation matrix, and bundles. Plus ACP AI synthesis via Virtuals Protocol. From $0.008/query. No API keys required.",
+  description = "Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. x402 micropayments, Google A2A agent-to-agent protocol, and ACP AI synthesis via Virtuals Protocol. From $0.008/query. No API keys required.",
   url = "https://cerebruspulse.xyz",
 } = Astro.props;
 
@@ -202,6 +202,7 @@ const webApplicationSchema = {
     "Market sentiment analysis",
     "50+ Hyperliquid perpetuals supported",
     "x402 micropayments on Base (USDC)",
+    "Google A2A agent-to-agent protocol with Agent Card discovery",
     "ACP agent commerce on Virtuals Protocol",
     "No API keys or subscriptions required",
     "Pay-per-query pricing from $0.008"
@@ -216,7 +217,7 @@ const techArticleSchema = {
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "Cerebrus Pulse API Documentation",
-  "description": "Complete API reference for Cerebrus Pulse: endpoints, response schemas, rate limits, code examples for x402 micropayments and ACP agent commerce integration.",
+  "description": "Complete API reference for Cerebrus Pulse: endpoints, response schemas, rate limits, code examples for x402 micropayments, A2A agent-to-agent protocol, and ACP agent commerce integration.",
   "url": url + "/overview",
   "about": {
     "@type": "WebApplication",
@@ -227,14 +228,14 @@ const techArticleSchema = {
     "name": "0xsl1m"
   },
   "proficiencyLevel": "Beginner",
-  "dependencies": "x402 SDK (Python or TypeScript) for micropayments, or ACP SDK for Virtuals Protocol agent integration"
+  "dependencies": "x402 SDK (Python or TypeScript) for micropayments, A2A JSON-RPC for agent-to-agent, or ACP SDK for Virtuals Protocol agent integration"
 };
 
 const productSchema = {
   "@context": "https://schema.org",
   "@type": "Product",
   "name": "Cerebrus Pulse",
-  "description": "Real-time crypto intelligence API for Hyperliquid perpetuals. Multi-timeframe technical analysis, sentiment, and funding data via x402 micropayments or ACP agent commerce.",
+  "description": "Real-time crypto intelligence API for Hyperliquid perpetuals. Multi-timeframe technical analysis, sentiment, and funding data via x402 micropayments, A2A protocol, or ACP agent commerce.",
   "brand": {
     "@type": "Brand",
     "name": "0xsl1m"

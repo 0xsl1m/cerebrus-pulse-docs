@@ -1,23 +1,25 @@
 ---
-title: x402 vs ACP
-description: Compare direct API access (x402) with agent-to-agent commerce (ACP) for Cerebrus services.
+title: x402 vs A2A vs ACP
+description: Compare direct API access (x402), agent-to-agent protocol (A2A), and autonomous agent commerce (ACP) for Cerebrus services.
 ---
 
-# x402 vs ACP
+# x402 vs A2A vs ACP
 
-Cerebrus services are available through two channels. Choose based on your use case.
+Cerebrus services are available through three protocols. Choose based on your use case.
 
 ## Comparison
 
-| | x402 (Direct API) | ACP (Virtuals Protocol) |
-|---|---|---|
-| **Target user** | Developers, bots, dashboards | Autonomous AI agents |
-| **Payment** | USDC micropayments on Base | VIRTUAL token escrow |
-| **Authentication** | Wallet signature (no API keys) | ACP SDK + agent wallet |
-| **Latency** | Low (~200–500ms) | Higher (negotiation + escrow + execution) |
-| **Pricing** | $0.01–$0.04 per query | $0.03–$2.00 per job |
-| **Settlement** | Instant (Base L2) | ACP escrow release |
-| **Protocol** | HTTP 402 (open standard) | Agent Commerce Protocol (Virtuals) |
+| | x402 (Direct API) | A2A (Agent-to-Agent) | ACP (Virtuals Protocol) |
+|---|---|---|---|
+| **Target user** | Developers, bots, dashboards | AI agent networks | Autonomous AI agents |
+| **Payment** | USDC micropayments on Base | USDC via x402 on Base | VIRTUAL token escrow |
+| **Authentication** | Wallet signature (no API keys) | None (open discovery) | ACP SDK + agent wallet |
+| **Discovery** | API docs | Agent Card (`.well-known`) | Virtuals marketplace |
+| **Transport** | HTTP REST | JSON-RPC 2.0 over HTTP | ACP SDK |
+| **Latency** | Low (~200–500ms) | Low (~200–500ms) | Higher (negotiation + escrow) |
+| **Pricing** | $0.008–$0.04 per query | $0.008–$0.04 per task | $0.03–$2.00 per job |
+| **Settlement** | Instant (Base L2) | Instant (Base L2) | ACP escrow release |
+| **Protocol** | HTTP 402 (open standard) | Google A2A (Linux Foundation) | Agent Commerce Protocol (Virtuals) |
 
 ## Available Services
 
@@ -29,6 +31,17 @@ Cerebrus services are available through two channels. Choose based on your use c
 | `/sentiment` | $0.01 | Market sentiment |
 | `/funding/{coin}` | $0.01 | Funding rate analysis |
 | `/bundle/{coin}` | $0.04 | All three combined |
+
+### Via A2A
+
+| Skill ID | Price | Data |
+|----------|-------|------|
+| `confluence-analysis` | $0.02 | Multi-timeframe confluence scoring |
+| `market-screener` | $0.04 | Screen 51 perpetuals by signal strength |
+| `open-interest-analysis` | $0.01 | OI deltas, divergence, percentiles |
+| `spread-analysis` | $0.008 | Bid-ask spread, slippage estimates |
+| `correlation-matrix` | $0.03 | BTC-alt correlation with regime |
+| `intelligence-bundle` | $0.04 | Complete package (17% discount) |
 
 ### Via ACP
 
@@ -47,6 +60,14 @@ Cerebrus services are available through two channels. Choose based on your use c
 - You want to **avoid the Virtuals ecosystem** and use standard HTTP
 - You need **high-frequency queries** (up to 1,000/day)
 
+## When to Use A2A
+
+- You're building an **AI agent** that needs to discover and consume services programmatically
+- You want **standardized agent discovery** via the Agent Card protocol
+- You need **JSON-RPC** task semantics (message/send, tasks/get)
+- You want to integrate with the **Google A2A ecosystem** (Linux Foundation standard)
+- You prefer **x402 USDC payments** over platform-specific tokens
+
 ## When to Use ACP
 
 - You're building an **autonomous AI agent** on Virtuals Protocol
@@ -55,15 +76,16 @@ Cerebrus services are available through two channels. Choose based on your use c
 - You need **complex, long-running analysis** (up to 5 minutes)
 - You want **agent-to-agent discovery** and negotiation
 
-## Can I Use Both?
+## Can I Use Multiple?
 
-Yes. Many teams use x402 for real-time data feeds and ACP for deeper analysis:
+Yes. Many teams combine protocols:
 
 1. **x402** `/pulse/BTC` → Get live technical indicators (200ms, $0.02)
-2. **ACP** `cerebrus_synthesis` → "Given these indicators, what's the medium-term outlook for BTC?" (45s, $0.50)
+2. **A2A** `message/send` → Agent discovers and consumes skills via JSON-RPC with x402 payment
+3. **ACP** `cerebrus_synthesis` → "What's the medium-term outlook for BTC?" (45s, $0.50)
 
-The data products are complementary — Pulse gives you structured numbers, Synthesis gives you AI-powered interpretation.
+x402 and A2A share the same USDC payment rails — A2A adds agent discovery and task semantics on top. ACP provides AI synthesis with multi-model reasoning.
 
 ## Migration
 
-Moving between x402 and ACP doesn't require account changes. Both use wallet-based authentication (different wallets and chains, but the same concept). There's no lock-in to either protocol.
+Moving between protocols doesn't require account changes. x402 and A2A both use wallet-based USDC payments on Base. ACP uses VIRTUAL tokens on Virtuals Protocol. There's no lock-in to any protocol.

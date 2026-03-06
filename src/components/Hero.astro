@@ -38,13 +38,20 @@ import Brain3D from './Brain3D.astro';
   </div>
 
   <div class="hero-text-backdrop relative z-10 w-full mx-auto max-w-5xl px-4 sm:px-6 py-12 sm:py-16 md:py-24 text-center box-border overflow-hidden" data-parallax="hero-text">
-    <!-- Dual protocol badges -->
+    <!-- Trinity protocol badges -->
     <div class="mb-6 sm:mb-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3 animate-slide-up">
       <span class="hero-badge-x402">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
         </svg>
         x402 on Base
+      </span>
+      <span class="text-[#475569] text-sm font-mono">+</span>
+      <span class="hero-badge-a2a">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+        </svg>
+        A2A Protocol
       </span>
       <span class="text-[#475569] text-sm font-mono">+</span>
       <span class="hero-badge-acp">
@@ -59,18 +66,18 @@ import Brain3D from './Brain3D.astro';
     <!-- Main headline -->
     <h1 class="hero-glitch-wrapper mb-4 sm:mb-6 text-3xl sm:text-4xl font-extrabold leading-tight md:text-7xl lg:text-8xl animate-slide-up-delay-1">
       <span class="hero-headline-wrap">
-        <span class="gradient-text hero-glitch" data-text="Cerebrus Pulse">Cerebrus Pulse</span>
+        <span class="gradient-text hero-glitch" data-text="Cerebrus"><span class="hero-glitch-text">Cerebrus</span></span> <img src="/images/pulse-logo.png" alt="" class="inline-block h-[1.7em] w-auto align-middle relative -top-[0.05em] -mx-5" /> <span class="gradient-text hero-glitch" data-text="Pulse"><span class="hero-glitch-text">Pulse</span></span>
         <span class="xyz-tag">.xyz</span>
       </span>
     </h1>
 
     <!-- Tagline -->
     <p class="mx-auto mb-3 sm:mb-4 max-w-2xl text-base sm:text-lg text-[#CBD5E1] md:text-2xl animate-slide-up-delay-1">
-      Two protocols. One intelligence layer. <span class="text-[#60A5FA] font-semibold">Pay per query.</span>
+      Three protocols. One intelligence layer. <span class="text-[#60A5FA] font-semibold">Pay per query.</span>
     </p>
     <p class="mx-auto mb-8 sm:mb-10 max-w-xl text-sm sm:text-base text-[#94A3B8] animate-slide-up-delay-2">
       Multi-timeframe technical analysis for 50+ Hyperliquid perpetuals.
-      <span class="text-[#60A5FA]">x402 micropayments</span> for developers. <span class="text-[#FBBF24]">ACP agent commerce</span> for autonomous AI.
+      <span class="text-[#60A5FA]">x402 micropayments</span> for developers. <span class="text-[#FF69B4]">A2A protocol</span> for agent networks. <span class="text-[#FBBF24]">ACP commerce</span> for autonomous AI.
     </p>
 
     <!-- CTA buttons -->
@@ -131,16 +138,19 @@ import Brain3D from './Brain3D.astro';
     function createParticles() {
       particles = [];
       for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const isAmber = Math.random() > 0.6;
+        const roll = Math.random();
+        let color;
+        if (roll > 0.7) color = { r: 245, g: 158, b: 11 };       // amber 30%
+        else if (roll > 0.4) color = { r: 59, g: 130, b: 246 };   // blue 30%
+        else if (roll > 0.15) color = { r: 255, g: 20, b: 147 };  // pink 25%
+        else color = { r: 167, g: 139, b: 250 };                  // violet 15%
         particles.push({
           x: Math.random() * width,
           y: Math.random() * height,
           vx: (Math.random() - 0.5) * 0.4,
           vy: (Math.random() - 0.5) * 0.3,
           r: Math.random() * 2 + 0.5,
-          color: isAmber
-            ? { r: 245, g: 158, b: 11 }
-            : { r: 59, g: 130, b: 246 },
+          color,
           alpha: Math.random() * 0.4 + 0.1,
         });
       }

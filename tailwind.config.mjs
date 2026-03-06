@@ -1,9 +1,10 @@
 import starlightPlugin from '@astrojs/starlight-tailwind';
 
-// Cerebrus Pulse — "Signal & Synthesis" Palette
-// x402 accent: #3B82F6 (electric blue) — structured data, HTTP, developer-facing
-// ACP accent:  #F59E0B (warm amber)    — AI synthesis, agent commerce, Virtuals
-// Background:  #0B0F1A (deep navy)     — refined dark, not pure black
+// Cerebrus Pulse — "Signal & Synthesis" Palette (Holy Trinity)
+// x402 accent: #3B82F6 (electric blue)  — structured data, HTTP, developer-facing
+// ACP accent:  #F59E0B (warm amber)     — AI synthesis, agent commerce, Virtuals
+// A2A accent:  #FF1493 (neon pink)      — agent-to-agent, Google A2A protocol
+// Background:  #0B0F1A (deep navy)      — refined dark, not pure black
 
 const accent = {
   200: '#93C5FD', // light blue (text on dark, 8.3:1)
@@ -47,6 +48,13 @@ export default {
           500: '#F59E0B',
           600: '#D97706',
         },
+        // A2A color family (neon pink)
+        a2a: {
+          300: '#FF69B4',
+          400: '#FF1493',
+          500: '#E0118A',
+          600: '#C20078',
+        },
         // Semantic colors
         surface: {
           DEFAULT: '#111827',
@@ -88,7 +96,9 @@ export default {
         'gradient-brand': 'linear-gradient(135deg, #3B82F6, #F59E0B)',
         'gradient-x402': 'linear-gradient(135deg, #3B82F6, #60A5FA)',
         'gradient-acp': 'linear-gradient(135deg, #F59E0B, #FBBF24)',
+        'gradient-a2a': 'linear-gradient(135deg, #FF1493, #FF69B4)',
         'gradient-dual': 'linear-gradient(135deg, #60A5FA, #FBBF24)',
+        'gradient-trinity': 'linear-gradient(135deg, #60A5FA, #A78BFA, #FF1493, #FBBF24)',
       },
     },
   },

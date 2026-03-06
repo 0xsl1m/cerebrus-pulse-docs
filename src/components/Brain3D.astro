@@ -774,15 +774,27 @@
       particlePositions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       particlePositions[i3 + 2] = r * Math.cos(phi);
 
-      const isAmber = Math.random() > 0.6;
-      if (isAmber) {
+      const roll = Math.random();
+      if (roll > 0.7) {
+        // Amber 30%
         particleColors[i3] = 0.96;
         particleColors[i3 + 1] = 0.62;
         particleColors[i3 + 2] = 0.04;
-      } else {
+      } else if (roll > 0.4) {
+        // Blue 30%
         particleColors[i3] = 0.23;
         particleColors[i3 + 1] = 0.51;
         particleColors[i3 + 2] = 0.96;
+      } else if (roll > 0.15) {
+        // Pink 25%
+        particleColors[i3] = 1.0;
+        particleColors[i3 + 1] = 0.08;
+        particleColors[i3 + 2] = 0.58;
+      } else {
+        // Violet 15%
+        particleColors[i3] = 0.65;
+        particleColors[i3 + 1] = 0.55;
+        particleColors[i3 + 2] = 0.98;
       }
       particleSpeeds.push(0.1 + Math.random() * 0.3);
     }
@@ -802,6 +814,323 @@
     });
     const particleField = new THREE.Points(particleGeo, particleMat);
     scene.add(particleField);
+
+    // ============================================================
+    // CROWN — Intricate Geometric Wireframe Crown (A2A Protocol)
+    // All vertices fully connected — no floating endpoints
+    // Triple-layer glow for visible, thick wireframe lines
+    // ============================================================
+
+    const PINK = new THREE.Color(0xFF1493);
+    const PINK_LIGHT = new THREE.Color(0xFF69B4);
+    const MAGENTA = new THREE.Color(0xFF00FF);
+    const CROWN_WHITE = new THREE.Color(0xFFE0F0);
+
+    const crownGroup = new THREE.Group();
+    brainGroup.add(crownGroup);
+    crownGroup.position.y = 0.75; // overlaps well into brain top
+
+    const CR = 1.75;        // crown radius — surrounds brain with slight clearance
+    const TINES = 7;
+    const SEGS = 42;        // ring segments (divisible by TINES)
+    const BAND_H = 0.12;    // band thickness
+    const TINE_H = 0.55;    // major tine peak height
+    const MINOR_H = TINE_H * 0.5; // minor tine height
+    const TINE_SEGS = SEGS / TINES; // 6 segments per tine section
+
+    // ---- Build crystalline crown wireframe ----
+    const crownVerts: number[] = [];
+
+    function cl(a: THREE.Vector3, b: THREE.Vector3) {
+      crownVerts.push(a.x, a.y, a.z, b.x, b.y, b.z);
+    }
+
+    // Precompute ring vertices
+    const lo: THREE.Vector3[] = [];
+    const up: THREE.Vector3[] = [];
+    for (let i = 0; i < SEGS; i++) {
+      const a = (i / SEGS) * Math.PI * 2;
+      lo.push(new THREE.Vector3(Math.cos(a) * CR, 0, Math.sin(a) * CR));
+      up.push(new THREE.Vector3(Math.cos(a) * (CR * 0.97), BAND_H, Math.sin(a) * (CR * 0.97)));
+    }
+
+    // ---- Band: both rings + zigzag lattice ----
+    for (let i = 0; i < SEGS; i++) {
+      const n = (i + 1) % SEGS;
+      cl(lo[i], lo[n]);
+      cl(up[i], up[n]);
+      if (i % 2 === 0) { cl(lo[i], up[n]); }
+      else { cl(up[i], lo[n]); }
+    }
+
+    // ---- Major tines (7) — crystalline faceted structure ----
+    // Each uses 4 base points + 2 shoulder vertices + tip = 7 vertices
+    const tineTips: THREE.Vector3[] = [];
+    const tineShoulderL: THREE.Vector3[] = [];
+    const tineShoulderR: THREE.Vector3[] = [];
+
+    for (let t = 0; t < TINES; t++) {
+      const ci = t * TINE_SEGS;
+      const oL = (ci - 3 + SEGS) % SEGS; // outer left base
+      const iL = (ci - 1 + SEGS) % SEGS; // inner left base
+      const iR = (ci + 1) % SEGS;        // inner right base
+      const oR = (ci + 3) % SEGS;        // outer right base
+      const tipAngle = (ci / SEGS) * Math.PI * 2;
+      const tipR = CR * 0.88;
+      const tip = new THREE.Vector3(
+        Math.cos(tipAngle) * tipR, BAND_H + TINE_H, Math.sin(tipAngle) * tipR
+      );
+      tineTips.push(tip);
+
+      // Shoulder vertices at 55% height between outer bases and tip
+      const sLa = ((ci - 2 + SEGS) % SEGS / SEGS) * Math.PI * 2;
+      const sRa = ((ci + 2) % SEGS / SEGS) * Math.PI * 2;
+      const sR_crown = CR * 0.93;
+      const sL = new THREE.Vector3(Math.cos(sLa) * sR_crown, BAND_H + TINE_H * 0.55, Math.sin(sLa) * sR_crown);
+      const sR = new THREE.Vector3(Math.cos(sRa) * sR_crown, BAND_H + TINE_H * 0.55, Math.sin(sRa) * sR_crown);
+      tineShoulderL.push(sL);
+      tineShoulderR.push(sR);
+
+      // Outer facets: outer base -> shoulder
+      cl(up[oL], sL);
+      cl(up[oR], sR);
+      // Inner facets: inner base -> shoulder
+      cl(up[iL], sL);
+      cl(up[iR], sR);
+      // Upper slopes: shoulder -> tip
+      cl(sL, tip);
+      cl(sR, tip);
+      // Shoulder brace
+      cl(sL, sR);
+      // Inner direct lines: inner base -> tip (creates diamond pattern)
+      cl(up[iL], tip);
+      cl(up[iR], tip);
+      // Cross diagonals through the crystal
+      cl(up[iL], sR);
+      cl(up[iR], sL);
+      // Center facet lines: center base -> shoulders
+      cl(up[ci], sL);
+      cl(up[ci], sR);
+    }
+
+    // ---- Minor tines (7) — diamond-shaped crystals between major tines ----
+    const minorTips: THREE.Vector3[] = [];
+    for (let t = 0; t < TINES; t++) {
+      const ci = t * TINE_SEGS + Math.round(TINE_SEGS / 2);
+      const li = (ci - 1 + SEGS) % SEGS;
+      const ri = (ci + 1) % SEGS;
+      const tipAngle = (ci / SEGS) * Math.PI * 2;
+      const tipR = CR * 0.93;
+      const mTip = new THREE.Vector3(
+        Math.cos(tipAngle) * tipR, BAND_H + MINOR_H, Math.sin(tipAngle) * tipR
+      );
+      minorTips.push(mTip);
+
+      // Diamond midpoints on each slope
+      const dmL = new THREE.Vector3().lerpVectors(up[li], mTip, 0.5);
+      const dmR = new THREE.Vector3().lerpVectors(up[ri], mTip, 0.5);
+
+      // Slopes split at midpoints
+      cl(up[li], dmL);
+      cl(dmL, mTip);
+      cl(up[ri], dmR);
+      cl(dmR, mTip);
+      // Diamond brace
+      cl(dmL, dmR);
+      // Center spine
+      cl(up[ci], mTip);
+      // Cross facets
+      cl(up[ci], dmL);
+      cl(up[ci], dmR);
+    }
+
+    // ---- Connecting web: shoulders <-> minor tips ----
+    for (let t = 0; t < TINES; t++) {
+      const nextT = (t + 1) % TINES;
+      cl(tineShoulderR[t], minorTips[t]);
+      cl(tineShoulderL[nextT], minorTips[t]);
+    }
+
+    // ---- Inner floating ring at mid-height ----
+    const INNER_R = CR * 0.62;
+    const INNER_Y = BAND_H + TINE_H * 0.38;
+    const innerRingVerts: number[] = [];
+    for (let i = 0; i < SEGS; i++) {
+      const a1 = (i / SEGS) * Math.PI * 2;
+      const a2 = ((i + 1) % SEGS / SEGS) * Math.PI * 2;
+      innerRingVerts.push(
+        Math.cos(a1) * INNER_R, INNER_Y, Math.sin(a1) * INNER_R,
+        Math.cos(a2) * INNER_R, INNER_Y, Math.sin(a2) * INNER_R
+      );
+    }
+
+    // ---- Create crown frame with triple-layer glow ----
+    const crownFrameGeo = new THREE.BufferGeometry();
+    crownFrameGeo.setAttribute('position', new THREE.Float32BufferAttribute(crownVerts, 3));
+
+    // Core lines (bright, fully opaque)
+    const crownFrameMat = new THREE.LineBasicMaterial({
+      color: PINK,
+      transparent: true,
+      opacity: 1.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const crownFrame = new THREE.LineSegments(crownFrameGeo, crownFrameMat);
+    crownGroup.add(crownFrame);
+
+    // Glow layer 1 — inner bloom
+    const crownGlow1Mat = new THREE.LineBasicMaterial({
+      color: PINK_LIGHT,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const crownGlow1 = new THREE.LineSegments(crownFrameGeo, crownGlow1Mat);
+    crownGlow1.scale.setScalar(1.012);
+    crownGroup.add(crownGlow1);
+
+    // Glow layer 2 — outer halo
+    const crownGlow2Mat = new THREE.LineBasicMaterial({
+      color: PINK,
+      transparent: true,
+      opacity: 0.18,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const crownGlow2 = new THREE.LineSegments(crownFrameGeo, crownGlow2Mat);
+    crownGlow2.scale.setScalar(1.028);
+    crownGroup.add(crownGlow2);
+
+    // ---- Crown fill mesh (translucent pink solid faces) ----
+    const fillVerts: number[] = [];
+    function tri(a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) {
+      fillVerts.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+    }
+
+    // Band fill
+    for (let i = 0; i < SEGS; i++) {
+      const n = (i + 1) % SEGS;
+      tri(lo[i], lo[n], up[n]);
+      tri(lo[i], up[n], up[i]);
+    }
+
+    // Major tine fills
+    for (let t = 0; t < TINES; t++) {
+      const ci = t * TINE_SEGS;
+      const oL = (ci - 3 + SEGS) % SEGS;
+      const iL = (ci - 1 + SEGS) % SEGS;
+      const iR = (ci + 1) % SEGS;
+      const oR = (ci + 3) % SEGS;
+      const tip = tineTips[t];
+      const sL = tineShoulderL[t];
+      const sR = tineShoulderR[t];
+      // Lower facets
+      tri(up[oL], up[iL], sL);
+      tri(up[iR], up[oR], sR);
+      tri(up[iL], up[ci], sL);
+      tri(up[ci], up[iR], sR);
+      // Upper facets
+      tri(sL, tip, sR);
+      tri(up[iL], sL, tip);
+      tri(up[iR], tip, sR);
+    }
+
+    // Minor tine fills
+    for (let t = 0; t < TINES; t++) {
+      const ci = t * TINE_SEGS + Math.round(TINE_SEGS / 2);
+      const li = (ci - 1 + SEGS) % SEGS;
+      const ri = (ci + 1) % SEGS;
+      tri(up[li], minorTips[t], up[ri]);
+    }
+
+    const crownFillGeo = new THREE.BufferGeometry();
+    crownFillGeo.setAttribute('position', new THREE.Float32BufferAttribute(fillVerts, 3));
+    crownFillGeo.computeVertexNormals();
+    const crownFillMat = new THREE.MeshBasicMaterial({
+      color: PINK,
+      transparent: true,
+      opacity: 0.18,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const crownFill = new THREE.Mesh(crownFillGeo, crownFillMat);
+    crownGroup.add(crownFill);
+
+    // ---- Inner ring (counter-rotating, dashed) ----
+    const innerRingGeo = new THREE.BufferGeometry();
+    innerRingGeo.setAttribute('position', new THREE.Float32BufferAttribute(innerRingVerts, 3));
+    const innerRingMat = new THREE.LineDashedMaterial({
+      color: MAGENTA,
+      transparent: true,
+      opacity: 0.55,
+      dashSize: 0.1,
+      gapSize: 0.08,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const innerRingLine = new THREE.LineSegments(innerRingGeo, innerRingMat);
+    innerRingLine.computeLineDistances();
+    crownGroup.add(innerRingLine);
+
+    // ---- Twinkling wireframe stars at each tine tip ----
+    const STAR_R = 0.055;
+    const starGeo = new THREE.BufferGeometry();
+    const starVerts = new Float32Array([
+      // 3 crossed lines through origin = 6-armed 3D star
+      -STAR_R, 0, 0,  STAR_R, 0, 0,
+      0, -STAR_R, 0,  0, STAR_R, 0,
+      0, 0, -STAR_R,  0, 0, STAR_R,
+    ]);
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
+
+    const starGroups: THREE.Group[] = [];
+    const starMats: THREE.LineBasicMaterial[] = [];
+    const starPhases = new Float32Array(TINES);
+    for (let t = 0; t < TINES; t++) {
+      starPhases[t] = Math.random() * Math.PI * 2;
+      const mat = new THREE.LineBasicMaterial({
+        color: CROWN_WHITE,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const star = new THREE.LineSegments(starGeo, mat);
+      const group = new THREE.Group();
+      group.position.copy(tineTips[t]);
+      group.add(star);
+      crownGroup.add(group);
+      starGroups.push(group);
+      starMats.push(mat);
+    }
+
+    // ---- Energy beam lines from tips ----
+    const BEAM_H = 0.45;
+    const beamGeo = new THREE.BufferGeometry();
+    const beamVerts: number[] = [];
+    for (let t = 0; t < TINES; t++) {
+      beamVerts.push(
+        tineTips[t].x, tineTips[t].y, tineTips[t].z,
+        tineTips[t].x * 0.85, tineTips[t].y + BEAM_H, tineTips[t].z * 0.85
+      );
+    }
+    beamGeo.setAttribute('position', new THREE.Float32BufferAttribute(beamVerts, 3));
+    const beamMat = new THREE.LineBasicMaterial({
+      color: CROWN_WHITE,
+      transparent: true,
+      opacity: 0.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const beamLines = new THREE.LineSegments(beamGeo, beamMat);
+    crownGroup.add(beamLines);
+
+    // ---- Point light for soft glow on brain surface ----
+    const crownLight = new THREE.PointLight(0xFF1493, 0.4, 3.0, 2);
+    crownLight.position.set(0, BAND_H + TINE_H * 0.3, 0);
+    crownGroup.add(crownLight);
 
     // ============================================================
     // MOUSE / TOUCH EVENT HANDLERS
@@ -1192,6 +1521,41 @@
         boltLines[i].visible = false;
       }
 
+      // ---- Crown animation ----
+      crownGroup.rotation.y = elapsed * 0.15;
+      innerRingLine.rotation.y = -elapsed * 0.4;
+      innerRingMat.dashOffset = elapsed * 1.2;
+
+      // Triple glow pulse
+      const glowPulse = Math.sin(elapsed * 1.5);
+      crownGlow1Mat.opacity = 0.35 + glowPulse * 0.1;
+      crownGlow2Mat.opacity = 0.15 + glowPulse * 0.06;
+
+      // Point light pulse
+      crownLight.intensity = 0.3 + Math.sin(elapsed * 2) * 0.15;
+
+      // Twinkling stars — rotate + shimmer
+      for (let i = 0; i < TINES; i++) {
+        const sp = starPhases[i];
+        starGroups[i].rotation.y = elapsed * (1.5 + i * 0.3);
+        starGroups[i].rotation.z = elapsed * (0.8 + i * 0.2);
+        // Twinkle: rapid brightness variation
+        const twinkle = Math.sin(elapsed * 6 + sp) * Math.sin(elapsed * 9.3 + sp * 2);
+        starMats[i].opacity = 0.4 + twinkle * 0.5;
+      }
+
+      // Energy beams — sequential firing
+      const beamCycle = (elapsed * 0.7) % TINES;
+      const activeBeam = Math.floor(beamCycle);
+      const beamIntensity = 1.0 - (beamCycle - activeBeam);
+      beamMat.opacity = beamIntensity * 0.5;
+      const bPos = beamGeo.getAttribute('position') as THREE.BufferAttribute;
+      for (let t = 0; t < TINES; t++) {
+        const vis = (t === activeBeam) ? 1 : (t === (activeBeam + TINES - 1) % TINES ? beamIntensity * 0.3 : 0);
+        bPos.setY(t * 2 + 1, tineTips[t].y + BEAM_H * vis);
+      }
+      bPos.needsUpdate = true;
+
       // ---- Rotate particle field ----
       particleField.rotation.y = elapsed * 0.02;
       particleField.rotation.x = Math.sin(elapsed * 0.05) * 0.1;
@@ -1230,6 +1594,11 @@
       renderer.dispose();
       nodeGeo.dispose();
       particleGeo.dispose();
+      crownFrameGeo.dispose();
+      crownFillGeo.dispose();
+      innerRingGeo.dispose();
+      starGeo.dispose();
+      beamGeo.dispose();
       for (const geo of boltGeometries) geo.dispose();
       for (const mat of boltMaterials) mat.dispose();
     });

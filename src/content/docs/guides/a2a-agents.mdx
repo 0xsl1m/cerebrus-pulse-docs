@@ -1,0 +1,151 @@
+---
+title: A2A Protocol
+description: Connect to Cerebrus Pulse using Google's Agent-to-Agent (A2A) protocol for agent discovery and task execution.
+---
+
+# Connecting via A2A Protocol
+
+Cerebrus Pulse implements [Google's A2A protocol](https://github.com/google/a2a-spec) (v0.3), an open standard for agent-to-agent communication governed by the Linux Foundation. Payments are handled via x402 USDC micropayments on Base.
+
+## Agent Card Discovery
+
+Your agent discovers Cerebrus Pulse by fetching the Agent Card:
+
+```bash
+curl https://api.cerebruspulse.xyz/.well-known/agent-card.json
+```
+
+The Agent Card describes all available skills, pricing, and the A2A endpoint URL. Compatible with any A2A-compliant agent framework.
+
+## Available Skills
+
+| Skill ID | Price (USDC) | Requires Coin | Description |
+|----------|-------------|---------------|-------------|
+| `confluence-analysis` | $0.02 | Yes | Multi-timeframe technical analysis with confluence scoring |
+| `market-screener` | $0.04 | No | Screen 51 perpetuals by signal strength |
+| `open-interest-analysis` | $0.01 | Yes | OI deltas, divergence detection, percentile ranking |
+| `spread-analysis` | $0.008 | Yes | Bid-ask spread, slippage estimates at various sizes |
+| `correlation-matrix` | $0.03 | No | BTC-alt correlation matrix with regime classification |
+| `intelligence-bundle` | $0.04 | Yes | Complete analytical package (17% discount vs individual) |
+
+## Sending a Task
+
+Send a JSON-RPC 2.0 `message/send` request to the A2A endpoint:
+
+```python
+import json
+import urllib.request
+
+body = json.dumps({
+    "jsonrpc": "2.0",
+    "method": "message/send",
+    "id": "my-task-1",
+    "params": {
+        "message": {
+            "role": "user",
+            "parts": [{"type": "text", "text": "Analyze BTC confluence"}]
+        }
+    }
+}).encode()
+
+req = urllib.request.Request(
+    "https://api.cerebruspulse.xyz/a2a",
+    data=body,
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+
+with urllib.request.urlopen(req, timeout=15) as resp:
+    result = json.loads(resp.read())
+    print(json.dumps(result, indent=2))
+```
+
+## Payment Flow
+
+1. **Send task** — Your agent sends a `message/send` request
+2. **Payment required** — Cerebrus Pulse extracts the intent, identifies the skill, and returns a `payment-required` response with x402 payment details
+3. **Pay** — Your agent signs a USDC micropayment on Base using the x402 SDK
+4. **Receive** — After payment verification, the intelligence is delivered as an A2A task artifact
+
+### Payment-Required Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "my-task-1",
+  "result": {
+    "id": "task-uuid",
+    "status": {
+      "state": "completed",
+      "message": {
+        "role": "agent",
+        "parts": [{"type": "text", "text": "Payment required for confluence-analysis"}]
+      }
+    },
+    "metadata": {
+      "x402": {
+        "status": "payment-required",
+        "skill_id": "confluence-analysis",
+        "amount": "0.02",
+        "currency": "USDC",
+        "network": "eip155:8453",
+        "recipient": "0x...",
+        "facilitator": "https://api.cdp.coinbase.com/platform/v2/x402"
+      }
+    }
+  }
+}
+```
+
+## Intent Extraction
+
+You can let Cerebrus Pulse extract the skill from natural language, or specify it explicitly:
+
+### Natural Language (Automatic)
+```json
+{
+  "message": {
+    "role": "user",
+    "parts": [{"type": "text", "text": "Show me the top 10 strongest setups"}]
+  }
+}
+```
+This automatically maps to `market-screener`.
+
+### Explicit Skill ID
+```json
+{
+  "message": {
+    "role": "user",
+    "parts": [{"type": "text", "text": "SOL data"}],
+    "metadata": {"skill_id": "spread-analysis"}
+  }
+}
+```
+
+## Coin Extraction
+
+For skills that require a coin, Cerebrus Pulse extracts it from the message text. Aliases like "ethereum" → ETH and "bitcoin" → BTC are supported. If a coin is required but not found, you'll receive an `input-required` response asking for clarification.
+
+## Task Retrieval
+
+Retrieve a previously created task:
+
+```python
+body = json.dumps({
+    "jsonrpc": "2.0",
+    "method": "tasks/get",
+    "id": "get-1",
+    "params": {"id": "task-uuid-from-previous-response"}
+}).encode()
+```
+
+## Rate Limits
+
+The A2A endpoint shares rate limits with the REST API: **12 requests per minute**. See [Rate Limits & Errors](/reference/rate-limits) for details.
+
+## See Also
+
+- [x402 vs A2A vs ACP](/reference/x402-vs-acp) — Protocol comparison
+- [x402 Payments](/guides/x402-payments) — x402 micropayment details
+- [ACP for Agents](/guides/acp-agents) — Alternative: Virtuals Protocol agent commerce

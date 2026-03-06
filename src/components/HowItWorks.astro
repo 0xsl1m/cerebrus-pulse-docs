@@ -6,15 +6,17 @@
   <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
     <div class="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[150px]"
          style="background: rgba(59, 130, 246, 0.04);"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-[140px]"
+         style="background: rgba(255, 20, 147, 0.03);"></div>
     <div class="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[130px]"
          style="background: rgba(245, 158, 11, 0.03);"></div>
   </div>
 
   <div class="mx-auto max-w-5xl relative z-10">
     <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
-      <span class="gradient-text">Two Paths to Intelligence</span>
+      <span class="gradient-text">Three Paths to Intelligence</span>
     </h2>
-    <p class="mb-8 sm:mb-16 text-center text-[#94A3B8] text-base sm:text-lg" data-reveal="slide-up">Choose x402 for direct queries or ACP for agent-to-agent commerce.</p>
+    <p class="mb-8 sm:mb-16 text-center text-[#94A3B8] text-base sm:text-lg" data-reveal="slide-up">Choose x402 for direct queries, A2A for agent-to-agent discovery, or ACP for autonomous commerce.</p>
 
     <!-- x402 Path -->
     <div class="mb-6">
@@ -60,7 +62,50 @@
       </div>
     </div>
 
-    <div class="duality-line my-12" data-reveal="grow"></div>
+    <div class="trinity-line my-12" data-reveal="grow"></div>
+
+    <!-- A2A Path -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-8">
+        <span class="hero-badge-a2a !text-xs">A2A</span>
+        <h3 class="text-lg font-semibold text-[#CBD5E1]">For AI agents using Google's Agent-to-Agent protocol</h3>
+      </div>
+      <div class="grid gap-8 md:grid-cols-3">
+        <div class="step-card group" data-reveal="stagger" style="border-color: rgba(255, 20, 147, 0.12);">
+          <div class="step-number mb-6" style="background: rgba(255, 20, 147, 0.12); color: #FF69B4; border-color: rgba(255, 20, 147, 0.25);">1</div>
+          <h3 class="mb-3 text-xl font-bold text-[#E8ECF4]">Discover</h3>
+          <p class="mb-4 text-[#94A3B8]">
+            Your agent fetches the Agent Card at the well-known URL to discover skills and pricing.
+          </p>
+          <code class="block rounded-lg bg-[#0B0F1A] p-3 text-sm text-[#FF69B4] font-mono border border-[rgba(255,20,147,0.15)]">GET /.well-known/agent-card.json</code>
+        </div>
+        <div class="step-card group" data-reveal="stagger" style="border-color: rgba(255, 20, 147, 0.12);">
+          <div class="step-number mb-6" style="background: rgba(255, 20, 147, 0.12); color: #FF69B4; border-color: rgba(255, 20, 147, 0.25);">2</div>
+          <h3 class="mb-3 text-xl font-bold text-[#E8ECF4]">Send Task</h3>
+          <p class="mb-4 text-[#94A3B8]">
+            Submit a JSON-RPC <code class="text-[#FF69B4] bg-[#1F0A1A] px-1.5 py-0.5 rounded text-xs">message/send</code> request. Intent is extracted and matched to a skill.
+          </p>
+          <div class="flex items-center gap-2">
+            <span class="price-badge" style="background: rgba(255, 20, 147, 0.1); color: #FF69B4; border-color: rgba(255, 20, 147, 0.25);">$0.008 – $0.04</span>
+            <span class="text-[#64748B] text-sm">USDC</span>
+          </div>
+        </div>
+        <div class="step-card group" data-reveal="stagger" style="border-color: rgba(255, 20, 147, 0.12);">
+          <div class="step-number mb-6" style="background: rgba(255, 20, 147, 0.12); color: #FF69B4; border-color: rgba(255, 20, 147, 0.25);">3</div>
+          <h3 class="mb-3 text-xl font-bold text-[#E8ECF4]">Receive</h3>
+          <p class="mb-4 text-[#94A3B8]">
+            x402 payment settles on Base. Full intelligence delivered as a structured A2A task artifact.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="coin-chip text-xs" style="border-color: rgba(255, 20, 147, 0.25);">6 Skills</span>
+            <span class="coin-chip text-xs" style="border-color: rgba(255, 20, 147, 0.25);">JSON-RPC</span>
+            <span class="coin-chip text-xs" style="border-color: rgba(255, 20, 147, 0.25);">Auto-pay</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trinity-line my-12" data-reveal="grow"></div>
 
     <!-- ACP Path -->
     <div>

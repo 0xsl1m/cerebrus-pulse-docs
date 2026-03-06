@@ -159,13 +159,14 @@ html, body {
   }
 }
 
-/* Layered ambient glow: blue top-left, amber top-right */
+/* Layered ambient glow: blue top-left, pink top-center, amber top-right */
 .landing-hero::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
     radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59, 130, 246, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 45% at 50% 8%, rgba(255, 20, 147, 0.08) 0%, transparent 55%),
     radial-gradient(ellipse 60% 50% at 80% 15%, rgba(245, 158, 11, 0.10) 0%, transparent 55%),
     radial-gradient(ellipse 50% 40% at 50% 90%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
   pointer-events: none;
@@ -574,9 +575,11 @@ html, body {
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   line-height: 1rem;
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(59, 130, 246, 0.35);
   color: #60A5FA;
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  backdrop-filter: blur(12px);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
   animation: glow-pulse-blue 3s ease-in-out infinite;
 }
 
@@ -586,20 +589,41 @@ html, body {
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   line-height: 1rem;
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.35);
   color: #FBBF24;
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  backdrop-filter: blur(12px);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
   animation: glow-pulse-amber 3s ease-in-out infinite;
 }
 
 @keyframes glow-pulse-blue {
-  0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.1); }
-  50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.25); }
+  0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.15), inset 0 0 8px rgba(0, 0, 0, 0.25); }
+  50% { box-shadow: 0 0 22px rgba(59, 130, 246, 0.35), inset 0 0 8px rgba(0, 0, 0, 0.25); }
 }
 
 @keyframes glow-pulse-amber {
-  0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.1); }
-  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.25); }
+  0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.15), inset 0 0 8px rgba(0, 0, 0, 0.25); }
+  50% { box-shadow: 0 0 22px rgba(245, 158, 11, 0.35), inset 0 0 8px rgba(0, 0, 0, 0.25); }
+}
+
+.hero-badge-a2a {
+  @apply inline-flex items-center rounded-full font-semibold;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  background: rgba(255, 20, 147, 0.35);
+  color: #FF69B4;
+  border: 1px solid rgba(255, 20, 147, 0.5);
+  backdrop-filter: blur(12px);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  animation: glow-pulse-pink 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse-pink {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 20, 147, 0.15), inset 0 0 8px rgba(0, 0, 0, 0.25); }
+  50% { box-shadow: 0 0 22px rgba(255, 20, 147, 0.35), inset 0 0 8px rgba(0, 0, 0, 0.25); }
 }
 
 /* ---- Ambient Orbs (hero background depth) ---- */
@@ -851,10 +875,11 @@ button:focus-visible {
   background: #334155;
 }
 
-/* ---- Duality indicator line ---- */
-.duality-line {
+/* ---- Trinity indicator line ---- */
+.duality-line,
+.trinity-line {
   height: 2px;
-  background: linear-gradient(90deg, #3B82F6, transparent 48%, transparent 52%, #F59E0B);
+  background: linear-gradient(90deg, #3B82F6 0%, #A78BFA 30%, #FF1493 50%, #A78BFA 70%, #F59E0B 100%);
   border-radius: 1px;
 }
 
@@ -1015,7 +1040,8 @@ button:focus-visible {
 /* Tablet+ : upscale badges and buttons */
 @media (min-width: 640px) {
   .hero-badge-x402,
-  .hero-badge-acp {
+  .hero-badge-acp,
+  .hero-badge-a2a {
     gap: 0.5rem;
     padding: 0.375rem 1rem;
     font-size: 0.875rem;
@@ -1356,15 +1382,14 @@ button:focus-visible {
 
 /* ---- Hero badge subtle float ---- */
 .hero-badge-x402,
-.hero-badge-acp {
+.hero-badge-acp,
+.hero-badge-a2a {
   transition: transform 0.3s ease;
 }
 
-.hero-badge-x402:hover {
-  transform: translateY(-2px);
-}
-
-.hero-badge-acp:hover {
+.hero-badge-x402:hover,
+.hero-badge-acp:hover,
+.hero-badge-a2a:hover {
   transform: translateY(-2px);
 }
 
@@ -1385,6 +1410,7 @@ h1, h2, h3, h4, h5, h6,
 .gradient-text,
 .hero-badge-x402,
 .hero-badge-acp,
+.hero-badge-a2a,
 .btn-primary,
 .btn-secondary,
 .metric-value,
@@ -1467,8 +1493,8 @@ h1, h2, h3, h4, h5, h6,
 }
 .xyz-tag {
   position: absolute;
-  bottom: -0.75em;
-  right: 0;
+  bottom: -0.1em;
+  right: -0.3em;
   font-size: 0.55em;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-weight: 700;
@@ -1574,7 +1600,8 @@ h1, h2, h3, h4, h5, h6,
 
 /* ---- Badges: Sora semibold, uppercase micro ---- */
 .hero-badge-x402,
-.hero-badge-acp {
+.hero-badge-acp,
+.hero-badge-a2a {
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: 0.04em;
