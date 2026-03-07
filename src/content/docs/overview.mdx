@@ -5,9 +5,9 @@ description: Cerebrus Pulse — real-time multi-timeframe technical analysis for
 
 # Cerebrus Pulse
 
-**Real-time multi-timeframe technical analysis for 50+ Hyperliquid perpetuals, paid via x402 micropayments on Base.**
+**Real-time multi-timeframe technical analysis for 50+ Hyperliquid perpetuals, paid via x402 micropayments on Base or Solana.**
 
-Cerebrus Pulse is an API that delivers institutional-grade technical indicators, derivatives data, market regime detection, and multi-signal confluence scoring — all accessible with a single HTTP request and a USDC micropayment.
+Cerebrus Pulse is an API that delivers institutional-grade technical indicators, derivatives data, market regime detection, cross-exchange divergence signals, and multi-signal confluence scoring — all accessible with a single HTTP request and a USDC micropayment.
 
 ## Key Features
 
@@ -15,8 +15,11 @@ Cerebrus Pulse is an API that delivers institutional-grade technical indicators,
 - **Multi-signal confluence** — Automated scoring (0.0–1.0) combining all indicators into a directional bias
 - **Derivatives data** — Funding rates, open interest, impact bid/ask, spread (bps)
 - **Market regime** — Current regime classification (RISK_ON, RISK_OFF, etc.)
+- **Market Stress Index** — Cross-chain arbitrage-derived stress signal (LOW/MODERATE/HIGH/EXTREME)
+- **CEX-DEX divergence** — Real-time price comparison across centralized and decentralized exchanges for 13 tokens
 - **6 timeframes** — 5-minute, 15-minute, 1-hour, 4-hour, daily, weekly analysis
 - **50+ coins** — Major Hyperliquid perpetuals (BTC, ETH, SOL, and more)
+- **Dual-chain payments** — Pay with USDC on Base or Solana via x402
 
 ## Payment Model
 
@@ -24,10 +27,10 @@ Pulse uses the [x402 protocol](https://www.x402.org/) for payments:
 
 1. You make a standard HTTP request
 2. The server responds with `402 Payment Required` and payment details
-3. The x402 SDK in your client automatically signs a USDC micropayment on Base
+3. The x402 SDK in your client automatically signs a USDC micropayment on **Base** or **Solana**
 4. The server verifies payment and returns the data
 
-**No API keys. No subscriptions. No accounts.** Your wallet is your identity.
+**No API keys. No subscriptions. No accounts.** Your wallet is your identity. Pay from whichever chain you prefer.
 
 ## Endpoints
 
@@ -40,6 +43,8 @@ Pulse uses the [x402 protocol](https://www.x402.org/) for payments:
 | `GET /oi/{coin}` | $0.01 USDC | Open interest: delta, percentile, trend, divergence |
 | `GET /spread/{coin}` | $0.008 USDC | Spread: slippage estimates, liquidity score |
 | `GET /correlation` | $0.03 USDC | BTC-alt correlation matrix with regime classification |
+| `GET /arb` | $0.02 USDC | Market Stress Index from cross-chain arbitrage signals |
+| `GET /cex-dex/{token}` | $0.01 USDC | CEX-DEX price divergence for a specific token |
 | `GET /bundle/{coin}` | $0.04 USDC | Pulse + Sentiment + Funding + Spread (17% discount) |
 | `GET /health` | Free | Gateway health status |
 | `GET /coins` | Free | List available coins |

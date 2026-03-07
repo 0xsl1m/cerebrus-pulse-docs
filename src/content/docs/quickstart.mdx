@@ -7,9 +7,19 @@ description: Make your first Cerebrus Pulse API call in under 5 minutes.
 
 Get real-time technical analysis data from Cerebrus Pulse in under 5 minutes.
 
+## Try the Free Demo First
+
+No wallet needed — the `/demo/{coin}` endpoint returns live 1h + 4h analysis for free (3 requests/min):
+
+```bash
+curl https://api.cerebruspulse.xyz/demo/BTC
+```
+
+Ready for full access with all 6 timeframes and higher rate limits? Set up x402 payments below.
+
 ## Prerequisites
 
-- A wallet with USDC on **Base** (mainnet, chain ID 8453)
+- A wallet with USDC on **Base** (chain ID 8453) or **Solana** (mainnet)
 - Python 3.10+ or Node.js 18+
 
 ## 1. Install the x402 SDK
@@ -19,12 +29,16 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 <Tabs>
   <TabItem label="Python">
     ```bash
+    # For Base (EVM):
     pip install "x402[evm]" httpx
+    # For Solana:
+    pip install "x402[svm]" httpx
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```bash
-    npm install x402 viem
+    npm install x402 viem     # For Base (EVM)
+    npm install x402 @solana/web3.js  # For Solana
     ```
   </TabItem>
 </Tabs>

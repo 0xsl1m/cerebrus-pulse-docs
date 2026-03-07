@@ -1,0 +1,88 @@
+---
+title: GET /cex-dex/{'{token}'}
+description: Real-time CEX-DEX price divergence for a specific token.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /cex-dex/{'{token}'}
+
+<Badge text="$0.01 USDC" variant="tip" />
+
+Compares the centralized exchange (Coinbase) price against decentralized exchange (Chainlink/DeFiLlama) prices for a specific token in real time. Returns the divergence in basis points with directional bias.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/cex-dex/{'{token}'}
+```
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `token` | string | Token symbol (e.g., `ETH`, `BTC`, `SOL`) |
+
+### Supported Tokens
+
+`ETH`, `BTC`, `LINK`, `UNI`, `AAVE`, `ARB`, `OP`, `SOL`, `AVAX`, `NEAR`, `SUI`, `DOGE`, `CRV`
+
+Aliases are supported: `WETH` → `ETH`, `WBTC` → `BTC`, `CHAINLINK` → `LINK`
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `token` | string | Normalized token symbol |
+| `cex_price` | number | Coinbase price (USD) |
+| `dex_price` | number | On-chain price (USD) |
+| `dex_source` | string | DEX price source (e.g., `chainlink`, `defillama`) |
+| `divergence_bps` | number | Price divergence in basis points |
+| `direction` | string | `cex_premium` or `dex_premium` |
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `data_age_seconds` | number | Age of underlying snapshot |
+| `meta` | object | Provider metadata |
+
+## Example
+
+```bash
+GET /cex-dex/ETH
+```
+
+```json
+{
+  "token": "ETH",
+  "cex_price": 3842.50,
+  "dex_price": 3839.20,
+  "dex_source": "chainlink",
+  "divergence_bps": 8.6,
+  "direction": "cex_premium",
+  "timestamp_iso": "2026-03-07T06:00:00Z",
+  "data_age_seconds": 95,
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 32
+  }
+}
+```
+
+:::tip[Divergence interpretation]
+- **< 10 bps**: Normal spread, markets well-aligned
+- **10–30 bps**: Mild divergence, may indicate directional flow
+- **30–100 bps**: Significant divergence, potential arb or stress signal
+- **> 100 bps**: Extreme divergence, likely market dislocation event
+:::
+
+:::note[Screener integration]
+The `/screener` endpoint now includes a `cex_dex_spread_bps` column for each token, giving you market-wide divergence data in a single call.
+:::
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 402 | Payment required (standard x402 flow) |
+| 404 | Token not supported |
+| 429 | Rate limit exceeded |
+| 503 | Data freshness guarantee exceeded |

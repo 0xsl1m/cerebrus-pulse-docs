@@ -10,17 +10,17 @@ Cerebrus Pulse uses the [x402 protocol](https://www.x402.org/) for payments — 
 ## How It Works
 
 ```
-Client                          Pulse Gateway                    Base Network
+Client                          Pulse Gateway               Base / Solana
   |                                  |                                |
   |  GET /pulse/BTC                  |                                |
   |--------------------------------->|                                |
   |                                  |                                |
   |  402 Payment Required            |                                |
-  |  + payment details (x-402-*)     |                                |
+  |  + payment options (Base+Solana) |                                |
   |<---------------------------------|                                |
   |                                  |                                |
   |  Sign USDC payment              |                                |
-  |  (x402 SDK handles this)        |                                |
+  |  (x402 SDK picks your chain)    |                                |
   |--------------------------------------------> USDC transfer        |
   |                                  |                                |
   |  Retry request + payment proof   |                                |
@@ -32,27 +32,37 @@ Client                          Pulse Gateway                    Base Network
   |<---------------------------------|                                |
 ```
 
-The x402 SDK in your HTTP client handles steps 2–4 automatically. From your perspective, it's just a normal HTTP request that costs $0.01–$0.04.
+The x402 SDK in your HTTP client handles steps 2–4 automatically. From your perspective, it's just a normal HTTP request that costs $0.01–$0.04. The 402 response includes payment options for **both Base and Solana** — your SDK picks whichever chain your wallet is configured for.
 
-## Network Details
+## Supported Networks
 
-| Property | Value |
-|----------|-------|
-| **Network** | Base mainnet (chain ID 8453) |
-| **Currency** | USDC |
-| **Scheme** | Exact EVM |
-| **Facilitator** | Coinbase CDP |
+Cerebrus Pulse accepts USDC payments on two chains. The 402 response includes payment options for both — your x402 SDK picks the right one based on your wallet.
+
+| Property | Base (EVM) | Solana |
+|----------|-----------|--------|
+| **Network ID** | `eip155:8453` | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` |
+| **Currency** | USDC | USDC |
+| **USDC Address** | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` |
+| **Scheme** | Exact EVM | Exact SVM |
+| **Facilitator** | Coinbase CDP | Coinbase CDP |
+| **Gas/Fees** | ~$0.001 ETH per tx | Gasless (CDP fee payer) |
 
 ## Payment Details by Endpoint
 
-| Endpoint | Price | Payment Type |
+| Endpoint | Price | Description |
 |----------|-------|-------------|
-| `/pulse/{coin}` | $0.02 USDC | Per request |
-| `/sentiment` | $0.01 USDC | Per request |
-| `/funding/{coin}` | $0.01 USDC | Per request |
-| `/bundle/{coin}` | $0.04 USDC | Per request |
-| `/health` | Free | No payment |
-| `/coins` | Free | No payment |
+| `/screener` | $0.04 USDC | Market-wide scan of 50+ coins |
+| `/pulse/{coin}` | $0.02 USDC | Multi-timeframe technical analysis |
+| `/sentiment` | $0.01 USDC | Market sentiment labels |
+| `/funding/{coin}` | $0.01 USDC | Funding rate analysis |
+| `/oi/{coin}` | $0.01 USDC | Open interest analysis |
+| `/spread/{coin}` | $0.008 USDC | Spread & liquidity analysis |
+| `/correlation` | $0.03 USDC | BTC-alt correlation matrix |
+| `/arb` | $0.02 USDC | Market Stress Index |
+| `/cex-dex/{token}` | $0.01 USDC | CEX-DEX price divergence |
+| `/bundle/{coin}` | $0.04 USDC | Combined bundle (17% discount) |
+| `/health` | Free | Gateway status |
+| `/coins` | Free | List available coins |
 
 ## Why x402?
 
@@ -64,27 +74,38 @@ The x402 SDK in your HTTP client handles steps 2–4 automatically. From your pe
 
 ## Wallet Requirements
 
-You need a wallet with:
+You need a wallet with USDC on **either** chain:
+
+### Option A: Base (EVM)
 1. **USDC on Base** — For payments (as little as $1 gets you 50+ pulse queries)
 2. **A small amount of ETH on Base** — For gas fees (typically < $0.001 per transaction)
 
-### Getting USDC on Base
-
+**Getting USDC on Base:**
 - Bridge from Ethereum mainnet via the [Base Bridge](https://bridge.base.org)
 - Purchase directly on exchanges that support Base withdrawals (Coinbase, Binance)
 - Use a cross-chain bridge (Across, Stargate)
+
+### Option B: Solana
+1. **USDC on Solana** — Same pricing, same endpoints
+2. **No SOL needed for gas** — The CDP facilitator sponsors transaction fees
+
+**Getting USDC on Solana:**
+- Purchase directly on exchanges that support Solana withdrawals (Coinbase, Phantom, Jupiter)
+- Swap on Jupiter or Raydium
 
 ## SDK Options
 
 ### Python
 ```bash
-pip install "x402[evm]" httpx
+pip install "x402[evm]" httpx    # For Base
+pip install "x402[svm]" httpx    # For Solana
 ```
 See the [Python SDK Guide](/guides/python-sdk) for full integration details.
 
 ### TypeScript / Node.js
 ```bash
-npm install x402 viem
+npm install x402 viem                # For Base
+npm install x402 @solana/web3.js     # For Solana
 ```
 See the [TypeScript SDK Guide](/guides/typescript-sdk) for full integration details.
 
@@ -101,7 +122,8 @@ At Pulse prices ($0.01–$0.04 per query), $10 of USDC gives you 250–1000 API 
 
 ## Security
 
-- Payments use EVM signatures — your private key never leaves your machine
-- The x402 facilitator (Coinbase CDP) verifies payments on-chain
+- Payments use EVM or SVM signatures — your private key never leaves your machine
+- The x402 facilitator (Coinbase CDP) verifies payments on-chain for both Base and Solana
 - Pulse never sees your private key — only the signed payment proof
 - All paid endpoints are rate-limited to prevent abuse
+- Solana transactions use CDP's fee payer — no SOL needed for gas

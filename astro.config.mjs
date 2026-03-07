@@ -35,6 +35,8 @@ export default defineConfig({
             { label: 'GET /oi/{coin}', slug: 'api/oi', badge: 'New' },
             { label: 'GET /spread/{coin}', slug: 'api/spread', badge: 'New' },
             { label: 'GET /correlation', slug: 'api/correlation', badge: 'New' },
+            { label: 'GET /arb', slug: 'api/arb', badge: 'New' },
+            { label: 'GET /cex-dex/{token}', slug: 'api/cex-dex', badge: 'New' },
             { label: 'GET /bundle/{coin}', slug: 'api/bundle' },
             { label: 'GET /health', slug: 'api/health', badge: 'Free' },
             { label: 'GET /coins', slug: 'api/coins', badge: 'Free' },

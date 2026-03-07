@@ -38,6 +38,8 @@ GET https://api.cerebruspulse.xyz/screener
 | `coins[].funding_bias` | string | Funding bias: `LONG_PAYING`, `SHORT_PAYING`, `NEUTRAL` |
 | `coins[].confluence_bias` | string | Confluence bias: `BULLISH`, `BEARISH`, `NEUTRAL` |
 | `coins[].oi_trend` | string | OI trend: `RISING`, `FALLING`, `FLAT` |
+| `coins[].cex_dex_spread_bps` | number | CEX-DEX price divergence in basis points (where available) |
+| `coins[].cex_dex_direction` | string | `cex_premium`, `dex_premium`, or `null` |
 | `meta` | object | Provider metadata |
 
 ## Example
@@ -59,7 +61,9 @@ GET /screener?top_n=5
       "vol_regime": "NORMAL",
       "funding_bias": "LONG_PAYING",
       "confluence_bias": "BULLISH",
-      "oi_trend": "RISING"
+      "oi_trend": "RISING",
+      "cex_dex_spread_bps": 5.2,
+      "cex_dex_direction": "cex_premium"
     },
     {
       "coin": "ETH",
@@ -69,7 +73,9 @@ GET /screener?top_n=5
       "vol_regime": "LOW",
       "funding_bias": "NEUTRAL",
       "confluence_bias": "NEUTRAL",
-      "oi_trend": "FLAT"
+      "oi_trend": "FLAT",
+      "cex_dex_spread_bps": 8.6,
+      "cex_dex_direction": "cex_premium"
     }
   ],
   "meta": {

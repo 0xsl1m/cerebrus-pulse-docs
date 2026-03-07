@@ -1,0 +1,77 @@
+---
+title: GET /arb
+description: Market Stress Index derived from cross-chain arbitrage signals.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /arb
+
+<Badge text="$0.02 USDC" variant="tip" />
+
+Returns a Market Stress Index derived from cross-chain price dislocations across decentralized exchanges. Higher stress levels indicate broader market dislocation, increased volatility risk, and potential mean-reversion opportunities.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/arb
+```
+
+No parameters required.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `stress_level` | string | `LOW`, `MODERATE`, `HIGH`, or `EXTREME` |
+| `stress_score` | number | Normalized stress score (0.0–1.0) |
+| `dislocations_count` | integer | Number of active cross-chain price dislocations |
+| `avg_dislocation_bps` | number | Average dislocation magnitude in basis points |
+| `max_dislocation_bps` | number | Maximum single dislocation in basis points |
+| `data_age_seconds` | number | Age of underlying arb scanner data |
+| `meta` | object | Provider metadata |
+
+### Stress Levels
+
+| Level | Score Range | Interpretation |
+|-------|-----------|----------------|
+| `LOW` | 0.0–0.25 | Normal market conditions, tight cross-venue pricing |
+| `MODERATE` | 0.25–0.50 | Mild stress, some price dislocations emerging |
+| `HIGH` | 0.50–0.75 | Significant stress, wide dislocations across venues |
+| `EXTREME` | 0.75–1.0 | Severe market stress, large cross-chain pricing gaps |
+
+## Example
+
+```bash
+GET /arb
+```
+
+```json
+{
+  "timestamp_iso": "2026-03-07T06:00:00Z",
+  "stress_level": "LOW",
+  "stress_score": 0.12,
+  "dislocations_count": 3,
+  "avg_dislocation_bps": 8.5,
+  "max_dislocation_bps": 22.1,
+  "data_age_seconds": 142,
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 45
+  }
+}
+```
+
+:::tip[Use case]
+Use the stress index as a leading indicator for volatility. When stress transitions from LOW to MODERATE or higher, it often precedes large price moves. Combine with `/correlation` to identify which sectors are most affected.
+:::
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Data freshness guarantee exceeded |

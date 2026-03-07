@@ -58,6 +58,22 @@ const x402Endpoints = [
   },
   {
     method: 'GET',
+    path: '/arb',
+    price: '$0.02',
+    description: 'Market Stress Index',
+    details: 'Cross-chain arbitrage-derived market stress signal. Aggregates price dislocations across DEXs into a single stress level: LOW, MODERATE, HIGH, or EXTREME.',
+    params: 'none',
+  },
+  {
+    method: 'GET',
+    path: '/cex-dex/{token}',
+    price: '$0.01',
+    description: 'CEX-DEX divergence',
+    details: 'Real-time price comparison between centralized (Coinbase) and decentralized exchanges for 13 tokens. Divergence in basis points with directional bias.',
+    params: 'none',
+  },
+  {
+    method: 'GET',
     path: '/bundle/{coin}',
     price: '$0.04',
     description: 'Complete analysis bundle',
@@ -109,7 +125,7 @@ const freeEndpoints = [
     <!-- x402 Pricing -->
     <div class="flex items-center gap-3 mb-6">
       <span class="hero-badge-x402 !text-xs">x402</span>
-      <h3 class="text-base font-semibold text-[#94A3B8]">USDC micropayments on Base</h3>
+      <h3 class="text-base font-semibold text-[#94A3B8]">USDC micropayments on Base + Solana</h3>
     </div>
     <div class="grid gap-5 md:grid-cols-2">
       {x402Endpoints.map((ep) => (
