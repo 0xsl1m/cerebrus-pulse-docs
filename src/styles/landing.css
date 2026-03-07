@@ -1555,17 +1555,7 @@ h1, h2, h3, h4, h5, h6,
 .hero-pulse-row .hero-glitch {
   font-size: 3rem;
 }
-/* Mobile: .xyz on its own centered line */
-.xyz-tag-desktop {
-  display: none;
-}
-.xyz-tag-mobile {
-  display: block;
-  position: static;
-  text-align: center;
-  font-size: 1.2rem;
-  margin-top: -0.15em;
-}
+/* .xyz-tag mobile/desktop toggle moved after base .xyz-tag rule */
 @media (min-width: 640px) {
   .hero-headline-stack > .hero-glitch:first-child {
     align-self: unset;
@@ -1582,13 +1572,7 @@ h1, h2, h3, h4, h5, h6,
     position: absolute;
     font-size: 0.55em;
   }
-  /* Desktop: show inline .xyz, hide mobile block */
-  .xyz-tag-desktop {
-    display: inline;
-  }
-  .xyz-tag-mobile {
-    display: none;
-  }
+  /* .xyz-tag desktop toggle moved after base .xyz-tag rule */
 }
 .hero-headline-logo {
   height: 7rem;
@@ -1624,6 +1608,27 @@ h1, h2, h3, h4, h5, h6,
   color: #60A5FA;
   opacity: 0.7;
   text-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+}
+/* Mobile: .xyz as its own centered line below Pulse */
+.xyz-tag.xyz-tag-desktop {
+  display: none;
+}
+.xyz-tag.xyz-tag-mobile {
+  display: block;
+  position: static;
+  text-align: center;
+  font-size: 1.2rem;
+  margin-top: -0.15em;
+  bottom: unset;
+  right: unset;
+}
+@media (min-width: 640px) {
+  .xyz-tag.xyz-tag-desktop {
+    display: inline;
+  }
+  .xyz-tag.xyz-tag-mobile {
+    display: none;
+  }
 }
 
 /* ============================================================
