@@ -508,8 +508,18 @@ import Brain3D from './Brain3D.astro';
     observer.observe(canvas);
 
     window.addEventListener('resize', () => {
+      const oldW = width, oldH = height;
       resize();
-      createParticles();
+      // Scale existing particles to new dimensions instead of randomizing
+      if (particles && oldW && oldH) {
+        const sx = width / oldW, sy = height / oldH;
+        for (const p of particles) {
+          p.x *= sx;
+          p.y *= sy;
+        }
+      } else {
+        createParticles();
+      }
     });
   })();
 </script>
