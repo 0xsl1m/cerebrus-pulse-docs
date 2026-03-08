@@ -307,7 +307,7 @@ import Brain3D from './Brain3D.astro';
 </script>
 
 <script>
-  // Lightweight Canvas2D Particle System — no Three.js dependency
+  // Reactive Particle Network — mouse-interactive depth layer
   (function () {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -317,8 +317,30 @@ import Brain3D from './Brain3D.astro';
     if (!ctx) return;
 
     let width, height, particles, animId;
-    const PARTICLE_COUNT = 90;
-    const CONNECTION_DIST = 150;
+    const PARTICLE_COUNT = 140;
+    const CONNECTION_DIST = 180;
+    const MOUSE_RADIUS = 250;       // glow influence radius
+    const MOUSE_REPEL = 120;        // repulsion radius
+    const MOUSE_REPEL_FORCE = 1.8;  // repulsion strength
+
+    let mouseX = -9999, mouseY = -9999;
+    let mouseActive = false;
+
+    // Track mouse over hero section
+    const hero = canvas.closest('.landing-hero');
+    if (hero) {
+      hero.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+        mouseActive = true;
+      });
+      hero.addEventListener('mouseleave', () => {
+        mouseActive = false;
+        mouseX = -9999;
+        mouseY = -9999;
+      });
+    }
 
     function resize() {
       width = canvas.width = canvas.offsetWidth;
@@ -337,41 +359,46 @@ import Brain3D from './Brain3D.astro';
         particles.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.3,
-          r: Math.random() * 2 + 0.5,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.4,
+          baseVx: (Math.random() - 0.5) * 0.5,
+          baseVy: (Math.random() - 0.5) * 0.4,
+          r: Math.random() * 2.5 + 0.8,
           color,
-          alpha: Math.random() * 0.4 + 0.1,
+          alpha: Math.random() * 0.5 + 0.15,
         });
       }
     }
 
     function draw() {
-      // Faint trails: semi-transparent clear instead of full clear
-      ctx.fillStyle = 'rgba(11, 15, 26, 0.15)';
+      // Faint trails
+      ctx.fillStyle = 'rgba(11, 15, 26, 0.18)';
       ctx.fillRect(0, 0, width, height);
 
-      // Draw connections
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
+      // Update particles — apply mouse repulsion
+      for (const p of particles) {
+        if (mouseActive) {
+          const dx = p.x - mouseX;
+          const dy = p.y - mouseY;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < CONNECTION_DIST) {
-            const opacity = (1 - dist / CONNECTION_DIST) * 0.12;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+          if (dist < MOUSE_REPEL && dist > 0) {
+            const force = (1 - dist / MOUSE_REPEL) * MOUSE_REPEL_FORCE;
+            p.vx += (dx / dist) * force;
+            p.vy += (dy / dist) * force;
           }
         }
-      }
 
-      // Draw particles
-      for (const p of particles) {
-        // Update position
+        // Dampen back toward base velocity
+        p.vx += (p.baseVx - p.vx) * 0.02;
+        p.vy += (p.baseVy - p.vy) * 0.02;
+
+        // Clamp speed
+        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        if (speed > 3) {
+          p.vx = (p.vx / speed) * 3;
+          p.vy = (p.vy / speed) * 3;
+        }
+
         p.x += p.vx;
         p.y += p.vy;
 
@@ -380,11 +407,80 @@ import Brain3D from './Brain3D.astro';
         if (p.x > width + 10) p.x = -10;
         if (p.y < -10) p.y = height + 10;
         if (p.y > height + 10) p.y = -10;
+      }
 
-        // Draw particle
+      // Draw connections — brighter near mouse
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < CONNECTION_DIST) {
+            const midX = (particles[i].x + particles[j].x) / 2;
+            const midY = (particles[i].y + particles[j].y) / 2;
+            const mouseDx = midX - mouseX;
+            const mouseDy = midY - mouseY;
+            const mouseDist = Math.sqrt(mouseDx * mouseDx + mouseDy * mouseDy);
+            const mouseBoost = mouseActive ? Math.max(0, 1 - mouseDist / MOUSE_RADIUS) : 0;
+
+            const baseOpacity = (1 - dist / CONNECTION_DIST) * 0.18;
+            const opacity = baseOpacity + mouseBoost * 0.25;
+            const lineW = 0.6 + mouseBoost * 1.2;
+
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
+            ctx.lineWidth = lineW;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw mouse-to-particle connections
+      if (mouseActive) {
+        for (const p of particles) {
+          const dx = p.x - mouseX;
+          const dy = p.y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < MOUSE_RADIUS * 0.7) {
+            const opacity = (1 - dist / (MOUSE_RADIUS * 0.7)) * 0.2;
+            ctx.beginPath();
+            ctx.moveTo(mouseX, mouseY);
+            ctx.lineTo(p.x, p.y);
+            ctx.strokeStyle = `rgba(147, 197, 253, ${opacity})`;
+            ctx.lineWidth = 0.4;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw particles — glow boost near mouse
+      for (const p of particles) {
+        const dx = p.x - mouseX;
+        const dy = p.y - mouseY;
+        const mouseDist = Math.sqrt(dx * dx + dy * dy);
+        const mouseProximity = mouseActive ? Math.max(0, 1 - mouseDist / MOUSE_RADIUS) : 0;
+
+        const alpha = p.alpha + mouseProximity * 0.45;
+        const radius = p.r + mouseProximity * 2;
+
+        // Glow halo near mouse
+        if (mouseProximity > 0.2) {
+          const haloR = radius * 3.5;
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, haloR);
+          grad.addColorStop(0, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${mouseProximity * 0.15})`);
+          grad.addColorStop(1, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, 0)`);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, haloR, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+        }
+
+        // Core dot
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha})`;
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${alpha})`;
         ctx.fill();
       }
 
