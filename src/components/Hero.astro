@@ -6,6 +6,9 @@ import Brain3D from './Brain3D.astro';
   <!-- CRT Scanline overlay -->
   <div class="hero-scanlines" aria-hidden="true"></div>
 
+  <!-- Reactive grid canvas — mouse-following glow on grid intersections -->
+  <canvas id="hero-grid" class="hero-grid-canvas" aria-hidden="true"></canvas>
+
   <!-- WebGL Particle Canvas — lightweight ambient depth layer -->
   <canvas id="hero-particles" class="hero-particle-canvas" aria-hidden="true"></canvas>
 
@@ -120,6 +123,188 @@ import Brain3D from './Brain3D.astro';
     </div>
   </div>
 </section>
+
+<script>
+  // Reactive Grid — mouse-following glow on grid intersections
+  (function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const canvas = document.getElementById('hero-grid');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const GRID = 60;
+    const INFLUENCE = 220;     // mouse glow radius in px
+    const RIPPLE_SPEED = 180;  // px per second
+    const RIPPLE_LIFE = 1.2;   // seconds
+    const MAX_RIPPLES = 6;
+
+    let width, height, animId;
+    let mouseX = -9999, mouseY = -9999;
+    let ripples = [];
+    let lastMoveTime = 0;
+
+    function resize() {
+      width = canvas.width = canvas.offsetWidth;
+      height = canvas.height = canvas.offsetHeight;
+    }
+
+    // Track mouse over entire hero section
+    const hero = canvas.closest('.landing-hero');
+    if (hero) {
+      hero.style.pointerEvents = 'auto';
+      hero.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+        // Spawn ripple on significant movement (throttled)
+        const now = performance.now();
+        if (now - lastMoveTime > 300 && ripples.length < MAX_RIPPLES) {
+          ripples.push({ x: mouseX, y: mouseY, t: 0 });
+          lastMoveTime = now;
+        }
+      });
+      hero.addEventListener('mouseleave', () => {
+        mouseX = -9999;
+        mouseY = -9999;
+      });
+    }
+
+    function draw(timestamp) {
+      ctx.clearRect(0, 0, width, height);
+      const dt = 1 / 60;
+      const cols = Math.ceil(width / GRID) + 1;
+      const rows = Math.ceil(height / GRID) + 1;
+
+      // Update ripples
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        ripples[i].t += dt;
+        if (ripples[i].t > RIPPLE_LIFE) ripples.splice(i, 1);
+      }
+
+      // Draw grid intersection dots + lines near mouse
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * GRID;
+          const y = row * GRID;
+
+          // Distance to mouse
+          const dx = x - mouseX;
+          const dy = y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          // Mouse proximity glow (0 to 1)
+          const mouseGlow = Math.max(0, 1 - dist / INFLUENCE);
+
+          // Ripple contribution
+          let rippleGlow = 0;
+          for (const rip of ripples) {
+            const rdx = x - rip.x;
+            const rdy = y - rip.y;
+            const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
+            const rippleRadius = rip.t * RIPPLE_SPEED;
+            const ringDist = Math.abs(rdist - rippleRadius);
+            const fade = 1 - rip.t / RIPPLE_LIFE;
+            if (ringDist < 40) {
+              rippleGlow += (1 - ringDist / 40) * fade * 0.6;
+            }
+          }
+
+          const totalGlow = Math.min(1, mouseGlow + rippleGlow);
+
+          // Ambient baseline — faint dots always visible
+          const baseAlpha = 0.04;
+          const alpha = baseAlpha + totalGlow * 0.55;
+          if (alpha < 0.01) continue;
+
+          // Draw intersection dot
+          const dotSize = 1.2 + totalGlow * 2.5;
+          ctx.beginPath();
+          ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(96, 165, 250, ${alpha})`;
+          ctx.fill();
+
+          // Draw cross-hair lines at glowing intersections
+          if (totalGlow > 0.1) {
+            const lineLen = 8 + totalGlow * 14;
+            const lineAlpha = totalGlow * 0.3;
+            ctx.strokeStyle = `rgba(96, 165, 250, ${lineAlpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(x - lineLen, y);
+            ctx.lineTo(x + lineLen, y);
+            ctx.moveTo(x, y - lineLen);
+            ctx.lineTo(x, y + lineLen);
+            ctx.stroke();
+          }
+
+          // Halo on strongly lit nodes
+          if (totalGlow > 0.4) {
+            const haloR = 6 + totalGlow * 12;
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, haloR);
+            grad.addColorStop(0, `rgba(96, 165, 250, ${totalGlow * 0.2})`);
+            grad.addColorStop(1, 'rgba(96, 165, 250, 0)');
+            ctx.beginPath();
+            ctx.arc(x, y, haloR, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+          }
+        }
+      }
+
+      // Draw faint grid lines connecting nearby glowing intersections
+      ctx.lineWidth = 0.6;
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * GRID;
+          const y = row * GRID;
+          const dx = x - mouseX;
+          const dy = y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const glow = Math.max(0, 1 - dist / INFLUENCE);
+          if (glow < 0.08) continue;
+
+          const lineAlpha = glow * 0.15;
+          ctx.strokeStyle = `rgba(96, 165, 250, ${lineAlpha})`;
+
+          // Right neighbor
+          if (col < cols - 1) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + GRID, y);
+            ctx.stroke();
+          }
+          // Bottom neighbor
+          if (row < rows - 1) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + GRID);
+            ctx.stroke();
+          }
+        }
+      }
+
+      animId = requestAnimationFrame(draw);
+    }
+
+    // Pause when off-screen
+    const gridObserver = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        if (!animId) animId = requestAnimationFrame(draw);
+      } else {
+        if (animId) {
+          cancelAnimationFrame(animId);
+          animId = null;
+        }
+      }
+    }, { threshold: 0 });
+
+    resize();
+    gridObserver.observe(canvas);
+    window.addEventListener('resize', resize);
+  })();
+</script>
 
 <script>
   // Lightweight Canvas2D Particle System — no Three.js dependency
