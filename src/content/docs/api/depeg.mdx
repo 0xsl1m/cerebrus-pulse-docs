@@ -1,0 +1,94 @@
+---
+title: GET /depeg
+description: USDC collateral health monitor via Chainlink oracle on Arbitrum.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /depeg
+
+<Badge text="$0.008 USDC" variant="tip" /> <Badge text="Powered by Chainlink" variant="note" />
+
+Real-time USDC peg health monitoring via Chainlink's USDC/USD price feed on Arbitrum. Reports deviation from the $1.00 peg, risk classification, and Arbitrum L2 sequencer status.
+
+**Why it matters:** USDC is the margin currency for Hyperliquid perpetuals. A depeg event directly impacts the real value of all positions, margin, and PnL. This endpoint provides an early warning system for stablecoin risk.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/depeg
+```
+
+No parameters required.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `usdc.price_usd` | number | Current USDC price from Chainlink (8 decimal precision) |
+| `usdc.deviation_bps` | number | Absolute deviation from $1.00 in basis points |
+| `usdc.deviation_pct` | number | Deviation as percentage |
+| `usdc.peg_status` | string | `HEALTHY`, `ELEVATED`, `WARNING`, or `CRITICAL` |
+| `usdc.risk_level` | string | `low`, `medium`, `high`, or `critical` |
+| `usdc.interpretation` | string | Human-readable risk assessment |
+| `infrastructure.arbitrum_sequencer` | string | `up`, `down`, or `unknown` |
+| `infrastructure.chainlink_feeds_active` | integer | Number of active Chainlink feeds |
+| `meta` | object | Provider metadata |
+
+### Peg Status Levels
+
+| Status | Deviation | Risk | Action |
+|--------|----------|------|--------|
+| `HEALTHY` | < 10 bps | Low | Normal conditions |
+| `ELEVATED` | 10–50 bps | Medium | Monitor closely |
+| `WARNING` | 50–200 bps | High | Consider reducing USDC exposure |
+| `CRITICAL` | > 200 bps | Critical | Major depeg event in progress |
+
+## Example
+
+```bash
+GET /depeg
+```
+
+```json
+{
+  "endpoint": "depeg",
+  "timestamp_iso": "2026-03-08T01:51:11Z",
+  "usdc": {
+    "price_usd": 1.0000406,
+    "deviation_bps": 0.41,
+    "deviation_pct": 0.0041,
+    "peg_status": "HEALTHY",
+    "risk_level": "low",
+    "interpretation": "USDC trading within 10bps of peg — normal conditions"
+  },
+  "infrastructure": {
+    "arbitrum_sequencer": "up",
+    "chainlink_feeds_active": 12
+  },
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "pulse_depeg",
+    "execution_ms": 0.1,
+    "chainlink_data_age_seconds": 42.5,
+    "oracle_network": "arbitrum",
+    "feed_address": "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3"
+  }
+}
+```
+
+:::caution[Sequencer dependency]
+If `arbitrum_sequencer` shows `down`, Chainlink price feeds on Arbitrum may be stale. The sequencer uptime is verified via Chainlink's L2 Sequencer Uptime Feed before serving data. If the sequencer is down, all Chainlink-dependent endpoints (`/basis`, `/depeg`) should be treated as potentially stale.
+:::
+
+:::tip[Risk management integration]
+Use `/depeg` as a circuit breaker input for automated trading systems. Poll every 60 seconds and trigger position reduction when `peg_status` transitions to `WARNING` or `CRITICAL`. Combine with `/arb` stress index for a comprehensive risk dashboard.
+:::
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Chainlink data temporarily unavailable |

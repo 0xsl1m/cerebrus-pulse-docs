@@ -1,0 +1,104 @@
+---
+title: GET /basis/{'{coin}'}
+description: Chainlink basis analysis — HL perpetual oracle vs aggregated spot price.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /basis/{'{coin}'}
+
+<Badge text="$0.015 USDC" variant="tip" /> <Badge text="Powered by Chainlink" variant="note" />
+
+Compares the Hyperliquid perpetual oracle price against Chainlink's aggregated spot price on Arbitrum to measure exchange-level premium or discount. Returns the basis in basis points with signal interpretation.
+
+**Why it matters:** The basis between a perpetual exchange's oracle and the global Chainlink spot price reveals localized funding pressure, deleveraging events, and mean-reversion opportunities that single-venue data cannot show.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/basis/{'{coin}'}
+```
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `coin` | string | Token symbol (e.g., `BTC`, `ETH`, `SOL`) |
+
+### Supported Coins
+
+Coins with Chainlink Data Feeds on Arbitrum:
+
+`ETH`, `BTC`, `SOL`, `LINK`, `ARB`, `DOGE`, `AVAX`, `NEAR`, `AAVE`, `UNI`, `OP`, `PEPE`
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coin` | string | Token symbol |
+| `hl_oracle_px` | number | Hyperliquid oracle price (USD) |
+| `chainlink_spot_px` | number | Chainlink aggregated spot price (USD) |
+| `basis_bps` | number | Basis in basis points. Positive = HL premium, negative = HL discount |
+| `basis_pct` | number | Basis as percentage |
+| `direction` | string | `hl_premium`, `hl_discount`, or `aligned` |
+| `signal` | string | Trading signal interpretation |
+| `interpretation` | string | Human-readable explanation |
+| `meta` | object | Provider metadata including Chainlink data age |
+
+### Signal Values
+
+| Signal | Basis Range | Meaning |
+|--------|------------|---------|
+| `neutral` | -5 to +5 bps | Prices aligned, no significant basis |
+| `mildly_bullish` | +10 to +50 bps | Moderate HL premium, longs paying shorts |
+| `mildly_bearish` | -10 to -50 bps | Moderate HL discount, bearish pressure |
+| `bearish_contrarian` | > +50 bps | Strong HL premium, potential mean-reversion short |
+| `bullish_contrarian` | < -50 bps | Strong HL discount, potential capitulation buy |
+
+## Example
+
+```bash
+GET /basis/BTC
+```
+
+```json
+{
+  "endpoint": "basis",
+  "coin": "BTC",
+  "timestamp_iso": "2026-03-08T01:50:56Z",
+  "basis": {
+    "hl_oracle_px": 67331.0,
+    "chainlink_spot_px": 67337.53,
+    "basis_bps": -0.97,
+    "basis_pct": -0.0097,
+    "direction": "hl_discount",
+    "signal": "neutral",
+    "interpretation": "Prices aligned — no significant basis"
+  },
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "pulse_basis",
+    "execution_ms": 0.4,
+    "chainlink_data_age_seconds": 45.2,
+    "chainlink_feed_network": "arbitrum",
+    "hl_source": "oracle"
+  }
+}
+```
+
+:::tip[Use case: Funding pressure detection]
+When `/basis/ETH` shows `basis_bps > 30` consistently, it means Hyperliquid longs are aggressive relative to global spot — funding rates are likely elevated and a correction is more probable. Combine with `/funding/ETH` to confirm.
+:::
+
+:::note[Data source]
+Chainlink prices are fetched via `latestRoundData()` on Arbitrum One (L2) with sequencer uptime verification. Data refreshes every 60 seconds. The Chainlink Data Feeds used are the official proxy contracts with 8-decimal precision.
+:::
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 402 | Payment required (standard x402 flow) |
+| 404 | Coin not supported by Chainlink on Arbitrum |
+| 429 | Rate limit exceeded |
+| 503 | Chainlink data temporarily unavailable |

@@ -1,37 +1,6 @@
 ---
-// Interactive API demo — shows a live response from /coins (free) and a sample /pulse response
+// Interactive API demo — fetches live data from the free /demo endpoint
 const sampleCoins = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'AVAX', 'LINK'];
-
-const sampleResponse = `{
-  <span class="text-[#93C5FD]">"coin"</span>: <span class="text-[#FBBF24]">"BTC"</span>,
-  <span class="text-[#93C5FD]">"price"</span>: { <span class="text-[#93C5FD]">"current"</span>: <span class="text-[#60A5FA]">98765.43</span> },
-  <span class="text-[#93C5FD]">"timeframes"</span>: {
-    <span class="text-[#93C5FD]">"1h"</span>: {
-      <span class="text-[#93C5FD]">"indicators"</span>: {
-        <span class="text-[#93C5FD]">"rsi_14"</span>: <span class="text-[#60A5FA]">62.4</span>,
-        <span class="text-[#93C5FD]">"rsi_zone"</span>: <span class="text-[#FBBF24]">"bullish"</span>,
-        <span class="text-[#93C5FD]">"atr_pct"</span>: <span class="text-[#60A5FA]">0.82</span>,
-        <span class="text-[#93C5FD]">"ema_20"</span>: <span class="text-[#60A5FA]">98420.15</span>,
-        <span class="text-[#93C5FD]">"ema_50"</span>: <span class="text-[#60A5FA]">97890.30</span>,
-        <span class="text-[#93C5FD]">"ema_200"</span>: <span class="text-[#60A5FA]">95120.80</span>,
-        <span class="text-[#93C5FD]">"bollinger"</span>: {
-          <span class="text-[#93C5FD]">"position_pct"</span>: <span class="text-[#60A5FA]">0.68</span>,
-          <span class="text-[#93C5FD]">"width_pct"</span>: <span class="text-[#60A5FA]">2.45</span>
-        },
-        <span class="text-[#93C5FD]">"trend"</span>: {
-          <span class="text-[#93C5FD]">"label"</span>: <span class="text-[#FBBF24]">"bullish"</span>,
-          <span class="text-[#93C5FD]">"ema_stack"</span>: <span class="text-[#FBBF24]">"bull_aligned"</span>
-        }
-      }
-    }
-  },
-  <span class="text-[#93C5FD]">"confluence"</span>: {
-    <span class="text-[#93C5FD]">"score"</span>: <span class="text-[#60A5FA]">0.75</span>,
-    <span class="text-[#93C5FD]">"bias"</span>: <span class="text-[#FBBF24]">"bullish"</span>
-  },
-  <span class="text-[#93C5FD]">"regime"</span>: { <span class="text-[#93C5FD]">"current"</span>: <span class="text-[#FBBF24]">"RISK_ON"</span> },
-  <span class="text-[#93C5FD]">"meta"</span>: { <span class="text-[#93C5FD]">"execution_ms"</span>: <span class="text-[#60A5FA]">189</span> }
-}`;
 ---
 
 <div class="section-divider"></div>
@@ -41,7 +10,7 @@ const sampleResponse = `{
       <span class="gradient-text">Try It Live</span>
     </h2>
     <p class="mb-8 sm:mb-12 text-center text-[#94A3B8] text-base sm:text-lg" data-reveal="slide-up">
-      See what a Pulse response looks like. No wallet needed to preview.
+      Live data from the free demo endpoint. No wallet needed.
     </p>
 
     <div class="mx-auto max-w-3xl" data-reveal="slide-up">
@@ -56,6 +25,9 @@ const sampleResponse = `{
             {coin}
           </button>
         ))}
+        <button class="demo-run-btn ml-auto" id="demo-run-btn">
+          Run
+        </button>
       </div>
 
       <!-- Request display -->
@@ -65,30 +37,30 @@ const sampleResponse = `{
             <div class="h-3 w-3 rounded-full" style="background: rgba(239, 68, 68, 0.6);"></div>
             <div class="h-3 w-3 rounded-full" style="background: rgba(245, 158, 11, 0.6);"></div>
             <div class="h-3 w-3 rounded-full" style="background: rgba(34, 197, 94, 0.6);"></div>
-            <span class="ml-2 text-xs text-[#64748B] font-mono">response preview</span>
+            <span class="ml-2 text-xs text-[#64748B] font-mono" id="demo-status">click Run to fetch live data</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="price-badge" style="font-size: 0.75rem; padding: 0.125rem 0.5rem;">$0.02 USDC</span>
+            <span class="price-badge" style="font-size: 0.75rem; padding: 0.125rem 0.5rem; background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3); color: #22C55E;">FREE</span>
           </div>
         </div>
 
         <!-- Request line -->
         <div class="border-b px-4 py-2 text-xs font-mono" style="border-color: rgba(30, 41, 59, 0.5);">
           <span class="text-[#22C55E]">GET</span>
-          <span class="text-[#94A3B8]"> https://api.cerebruspulse.xyz/pulse/</span><span class="text-[#FBBF24] demo-coin-display">BTC</span><span class="text-[#94A3B8]">?timeframes=1h</span>
+          <span class="text-[#94A3B8]"> https://api.cerebruspulse.xyz/demo/</span><span class="text-[#FBBF24] demo-coin-display">BTC</span>
         </div>
 
         <!-- Response body -->
-        <pre class="p-4 text-xs sm:text-sm leading-relaxed overflow-x-auto overflow-y-auto" style="max-height: 400px;" id="demo-response"><code class="text-[#CBD5E1]" set:html={sampleResponse} /></pre>
+        <pre class="p-4 text-xs sm:text-sm leading-relaxed overflow-x-auto overflow-y-auto" style="max-height: 400px;" id="demo-response"><code class="text-[#CBD5E1]" id="demo-response-code">// Select a coin and click Run to see live analysis data</code></pre>
       </div>
 
       <!-- Bottom CTA -->
       <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p class="text-sm text-[#64748B]">
-          Response includes <span class="text-[#60A5FA]">12+ indicators</span>, <span class="text-[#FBBF24]">confluence scoring</span>, and <span class="text-[#22C55E]">regime detection</span> per timeframe.
+          Demo returns <span class="text-[#60A5FA]">1h + 4h timeframes</span>. Paid endpoints unlock <span class="text-[#FBBF24]">all 6 timeframes</span> and <span class="text-[#22C55E]">higher rate limits</span>.
         </p>
         <a href="/api/pulse" class="btn-primary whitespace-nowrap" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
-          Full Schema
+          Full API Docs
         </a>
       </div>
     </div>
@@ -96,21 +68,66 @@ const sampleResponse = `{
 </section>
 
 <script>
-  // Simple coin selector interaction
   (function() {
     const buttons = document.querySelectorAll('.demo-coin-btn');
     const displays = document.querySelectorAll('.demo-coin-display');
+    const runBtn = document.getElementById('demo-run-btn');
+    const responseCode = document.getElementById('demo-response-code');
+    const status = document.getElementById('demo-status');
+    let selectedCoin = 'BTC';
+    let loading = false;
+
+    function syntaxHighlight(json) {
+      const str = JSON.stringify(json, null, 2);
+      return str.replace(/("(?:\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*")(\s*:)?|(\b(?:true|false|null)\b)|(-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+        function (match, key, colon, bool, num) {
+          if (key && colon) return `<span class="text-[#93C5FD]">${key}</span>:`;
+          if (key) return `<span class="text-[#FBBF24]">${key}</span>`;
+          if (bool) return `<span class="text-[#F472B6]">${match}</span>`;
+          if (num) return `<span class="text-[#60A5FA]">${match}</span>`;
+          return match;
+        }
+      );
+    }
+
+    async function fetchDemo() {
+      if (loading) return;
+      loading = true;
+      runBtn.textContent = '...';
+      runBtn.disabled = true;
+      status.textContent = 'fetching...';
+      responseCode.textContent = '// Loading...';
+
+      try {
+        const resp = await fetch(`https://api.cerebruspulse.xyz/demo/${selectedCoin}`);
+        if (!resp.ok) {
+          const err = await resp.text();
+          responseCode.textContent = `// Error ${resp.status}: ${err}`;
+          status.textContent = `error ${resp.status}`;
+          return;
+        }
+        const data = await resp.json();
+        responseCode.innerHTML = syntaxHighlight(data);
+        status.textContent = `live response — ${new Date().toLocaleTimeString()}`;
+      } catch (e) {
+        responseCode.textContent = `// Network error: ${e.message}`;
+        status.textContent = 'error';
+      } finally {
+        loading = false;
+        runBtn.textContent = 'Run';
+        runBtn.disabled = false;
+      }
+    }
 
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
-        // Update active state
         buttons.forEach(b => b.classList.remove('demo-coin-active'));
         btn.classList.add('demo-coin-active');
-
-        // Update coin display in request line
-        const coin = btn.dataset.coin;
-        displays.forEach(d => d.textContent = coin);
+        selectedCoin = btn.dataset.coin;
+        displays.forEach(d => d.textContent = selectedCoin);
       });
     });
+
+    runBtn.addEventListener('click', fetchDemo);
   })();
 </script>

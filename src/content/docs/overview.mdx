@@ -15,6 +15,8 @@ Cerebrus Pulse is an API that delivers institutional-grade technical indicators,
 - **Multi-signal confluence** — Automated scoring (0.0–1.0) combining all indicators into a directional bias
 - **Derivatives data** — Funding rates, open interest, impact bid/ask, spread (bps)
 - **Market regime** — Current regime classification (RISK_ON, RISK_OFF, etc.)
+- **Chainlink basis analysis** — HL perpetual oracle vs Chainlink aggregated spot price, measuring exchange premium/discount
+- **USDC collateral health** — Real-time depeg monitoring via Chainlink oracle with risk classification
 - **Market Stress Index** — Cross-chain arbitrage-derived stress signal (LOW/MODERATE/HIGH/EXTREME)
 - **CEX-DEX divergence** — Real-time price comparison across centralized and decentralized exchanges for 13 tokens
 - **6 timeframes** — 5-minute, 15-minute, 1-hour, 4-hour, daily, weekly analysis
@@ -43,8 +45,10 @@ Pulse uses the [x402 protocol](https://www.x402.org/) for payments:
 | `GET /oi/{coin}` | $0.01 USDC | Open interest: delta, percentile, trend, divergence |
 | `GET /spread/{coin}` | $0.008 USDC | Spread: slippage estimates, liquidity score |
 | `GET /correlation` | $0.03 USDC | BTC-alt correlation matrix with regime classification |
+| `GET /basis/{coin}` | $0.015 USDC | Chainlink basis: HL oracle vs Chainlink spot |
+| `GET /depeg` | $0.008 USDC | USDC collateral health via Chainlink oracle |
 | `GET /arb` | $0.02 USDC | Market Stress Index from cross-chain arbitrage signals |
-| `GET /cex-dex/{token}` | $0.01 USDC | CEX-DEX price divergence for a specific token |
+| `GET /cex-dex/{token}` | $0.015 USDC | CEX-DEX price divergence for a specific token |
 | `GET /bundle/{coin}` | $0.04 USDC | Pulse + Sentiment + Funding + Spread (17% discount) |
 | `GET /health` | Free | Gateway health status |
 | `GET /coins` | Free | List available coins |

@@ -744,6 +744,17 @@ html, body {
   border-color: rgba(245, 158, 11, 0.6);
 }
 
+.tech-pill-chainlink {
+  color: #375BD2;
+  border-color: rgba(55, 91, 210, 0.3);
+  background: rgba(55, 91, 210, 0.08);
+}
+
+.tech-pill-chainlink:hover {
+  color: #5A7FE8;
+  border-color: rgba(55, 91, 210, 0.6);
+}
+
 /* ---- Metric Cards (social proof) ---- */
 .metric-card {
   @apply relative rounded-xl p-6 text-center transition-all duration-300;

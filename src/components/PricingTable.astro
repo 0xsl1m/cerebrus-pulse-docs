@@ -66,11 +66,29 @@ const x402Endpoints = [
   },
   {
     method: 'GET',
+    path: '/basis/{coin}',
+    price: '$0.015',
+    description: 'Chainlink basis analysis',
+    details: 'HL perpetual oracle vs Chainlink aggregated spot price. Measures exchange-level premium or discount in basis points. Identifies funding pressure, deleveraging, and mean-reversion signals.',
+    params: 'none',
+    tag: 'Chainlink',
+  },
+  {
+    method: 'GET',
     path: '/cex-dex/{token}',
-    price: '$0.01',
+    price: '$0.015',
     description: 'CEX-DEX divergence',
     details: 'Real-time price comparison between centralized (Coinbase) and decentralized exchanges for 13 tokens. Divergence in basis points with directional bias.',
     params: 'none',
+  },
+  {
+    method: 'GET',
+    path: '/depeg',
+    price: '$0.008',
+    description: 'USDC collateral health',
+    details: 'Real-time USDC peg status via Chainlink oracle on Arbitrum. Monitors stablecoin deviation from $1.00 with risk levels and Arbitrum sequencer health.',
+    params: 'none',
+    tag: 'Chainlink',
   },
   {
     method: 'GET',
@@ -142,6 +160,17 @@ const freeEndpoints = [
           {ep.params !== 'none' && (
             <div class="text-xs text-[#64748B]">
               Params: <code class="text-[#94A3B8]">{ep.params}</code>
+            </div>
+          )}
+          {ep.tag === 'Chainlink' && (
+            <div class="mt-3">
+              <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                    style="background: rgba(55, 91, 210, 0.1); color: #375BD2; border: 1px solid rgba(55, 91, 210, 0.2);">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 37.9 43.6" fill="currentColor">
+                  <path d="M18.9 0l-4 2.3L4 8.6 0 10.9v21.8l4 2.3 10.9 6.3 4 2.3 4-2.3L33.8 34.9l4-2.3V10.9l-4-2.3L22.9 2.3 18.9 0zm0 5.5l10.2 5.9v11.8L18.9 29.1 8.7 23.2V11.4L18.9 5.5z"/>
+                </svg>
+                Powered by Chainlink
+              </span>
             </div>
           )}
           {ep.highlight && (

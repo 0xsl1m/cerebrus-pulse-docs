@@ -29,6 +29,10 @@ Latency: Low (single HTTP request)
 - GET /oi/{coin} — $0.01 USDC — Open interest analysis: current OI, 1h/4h/24h deltas, percentile rank, trend, price-OI divergence signals
 - GET /spread/{coin} — $0.008 USDC — Spread and liquidity: bid-ask spread (bps), slippage estimates at $10k-$500k notional, liquidity score (1-10)
 - GET /correlation — $0.03 USDC — BTC-alt correlation matrix for top 15 coins with regime classification (CORRELATED/MIXED/DECORRELATED) and sector averages
+- GET /basis/{coin} — $0.015 USDC — Chainlink basis: HL perpetual oracle vs Chainlink aggregated spot price. Basis in bps with signal interpretation (neutral, bullish/bearish contrarian)
+- GET /depeg — $0.008 USDC — USDC collateral health via Chainlink oracle on Arbitrum. Peg status (HEALTHY/ELEVATED/WARNING/CRITICAL), deviation bps, sequencer health
+- GET /arb — $0.02 USDC — Market Stress Index derived from cross-chain arbitrage signals. Stress level (LOW/MODERATE/HIGH/EXTREME) with score 0.0-1.0
+- GET /cex-dex/{token} — $0.015 USDC — CEX-DEX price divergence: Coinbase vs DEX/Chainlink prices for 13 tokens. Spread in bps with directional bias
 - GET /bundle/{coin}?timeframes=1h,4h — $0.04 USDC — Complete bundle: pulse + sentiment + funding + spread combined (17% discount vs individual)
 
 ### Free Endpoints
@@ -123,6 +127,10 @@ Plus cross-timeframe:
 - API Reference — OI: https://cerebruspulse.xyz/api/oi
 - API Reference — Spread: https://cerebruspulse.xyz/api/spread
 - API Reference — Correlation: https://cerebruspulse.xyz/api/correlation
+- API Reference — Basis (Chainlink): https://cerebruspulse.xyz/api/basis
+- API Reference — Depeg (Chainlink): https://cerebruspulse.xyz/api/depeg
+- API Reference — Arb (Stress Index): https://cerebruspulse.xyz/api/arb
+- API Reference — CEX-DEX: https://cerebruspulse.xyz/api/cex-dex
 - API Reference — Bundle: https://cerebruspulse.xyz/api/bundle
 - Quickstart: https://cerebruspulse.xyz/quickstart
 - x402 Payments Guide: https://cerebruspulse.xyz/guides/x402-payments
