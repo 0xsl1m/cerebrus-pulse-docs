@@ -7,7 +7,7 @@ import { Badge } from '@astrojs/starlight/components';
 
 # GET /screener
 
-<Badge text="$0.04 USDC" variant="tip" />
+<Badge text="$0.06 USDC" variant="tip" />
 
 Scans all available Hyperliquid perpetuals and returns a compact summary for each coin — signal strength, RSI zone, trend direction, volatility regime, funding bias, confluence, and open interest trend. Ideal for market-wide scanning before drilling into individual coins.
 
@@ -87,7 +87,7 @@ GET /screener?top_n=5
 ```
 
 :::tip[Value proposition]
-One `/screener` call at $0.04 replaces 50+ individual `/pulse` calls at $0.02 each ($1.00+ total) — a 96% saving for market-wide scanning.
+One `/screener` call at $0.06 replaces 50+ individual `/pulse` calls at $0.025 each ($1.25+ total) — a 95% saving for market-wide scanning.
 :::
 
 ## Errors

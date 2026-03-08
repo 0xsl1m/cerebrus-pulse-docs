@@ -3,7 +3,7 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/screener',
-    price: '$0.04',
+    price: '$0.06',
     description: 'Market screener',
     details: 'Scan 50+ coins at once: signal strength, RSI zone, trend direction, vol regime, funding bias, confluence, OI trend. The entry point for market-wide analysis.',
     params: 'top_n=50',
@@ -11,7 +11,7 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/pulse/{coin}',
-    price: '$0.02',
+    price: '$0.025',
     description: 'Multi-timeframe technical analysis',
     details: 'RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score, trend detection, confluence scoring, derivatives data, market regime',
     params: 'timeframes=1h,4h',
@@ -35,7 +35,7 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/oi/{coin}',
-    price: '$0.01',
+    price: '$0.015',
     description: 'Open interest analysis',
     details: 'Current OI, delta over 1h/4h/24h, percentile rank, trend direction, and price-OI divergence signals',
     params: 'none',
@@ -43,7 +43,7 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/spread/{coin}',
-    price: '$0.008',
+    price: '$0.015',
     description: 'Spread & liquidity analysis',
     details: 'Bid-ask spread, slippage estimates at $10k-$500k notional, and liquidity scoring. Critical for execution-focused agents.',
     params: 'none',
@@ -51,7 +51,7 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/correlation',
-    price: '$0.03',
+    price: '$0.05',
     description: 'Correlation matrix',
     details: 'BTC-alt correlation matrix across top 15 coins, 30-day rolling correlation, regime classification, and sector clustering',
     params: 'none',
@@ -67,7 +67,7 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/basis/{coin}',
-    price: '$0.015',
+    price: '$0.02',
     description: 'Chainlink basis analysis',
     details: 'HL perpetual oracle vs Chainlink aggregated spot price. Measures exchange-level premium or discount in basis points. Identifies funding pressure, deleveraging, and mean-reversion signals.',
     params: 'none',
@@ -76,7 +76,7 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/cex-dex/{token}',
-    price: '$0.015',
+    price: '$0.02',
     description: 'CEX-DEX divergence',
     details: 'Real-time price comparison between centralized (Coinbase) and decentralized exchanges for 13 tokens. Divergence in basis points with directional bias.',
     params: 'none',
@@ -84,7 +84,7 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/depeg',
-    price: '$0.008',
+    price: '$0.01',
     description: 'USDC collateral health',
     details: 'Real-time USDC peg status via Chainlink oracle on Arbitrum. Monitors stablecoin deviation from $1.00 with risk levels and Arbitrum sequencer health.',
     params: 'none',
@@ -93,9 +93,9 @@ const x402Endpoints = [
   {
     method: 'GET',
     path: '/bundle/{coin}',
-    price: '$0.04',
+    price: '$0.05',
     description: 'Complete analysis bundle',
-    details: 'Pulse + Sentiment + Funding + Spread combined in one response. 17% discount vs buying individually.',
+    details: 'Pulse + Sentiment + Funding + Spread combined in one response. 9% discount vs buying individually.',
     params: 'timeframes=1h,4h',
     highlight: true,
   },
@@ -104,20 +104,20 @@ const x402Endpoints = [
 const acpTiers = [
   {
     tier: 'Lite',
-    price: '$0.10',
+    price: '$0.25',
     description: 'Quick market snapshot',
     details: 'Summary of current conditions with a directional bias. Ideal for fast decision loops.',
   },
   {
     tier: 'Standard',
-    price: '$0.50',
+    price: '$0.75',
     description: 'Full synthesis report',
     details: 'Multi-timeframe analysis with narrative context, trade ideas, and risk scoring.',
     highlight: true,
   },
   {
     tier: 'Premium',
-    price: '$2.00',
+    price: '$2.50',
     description: 'Deep research analysis',
     details: 'Comprehensive cross-asset analysis with correlation mapping, regime context, and portfolio-level recommendations.',
   },
@@ -180,7 +180,7 @@ const freeEndpoints = [
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
                 </svg>
-                Best Value -- 17% Discount
+                Best Value -- 9% Discount
               </span>
             </div>
           )}
