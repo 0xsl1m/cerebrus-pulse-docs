@@ -1966,4 +1966,173 @@ footer ul li a {
     background-image: none !important;
   }
   /* (Old SVG brain animation overrides removed — Three.js handles reduced motion internally) */
+  .social-orb-ring { animation: none !important; }
+}
+
+/* ---- Social Orbs — Reactive animated social links ---- */
+.social-orb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(96, 165, 250, 0.15), rgba(96, 165, 250, 0.03));
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  text-decoration: none;
+}
+.social-orb:hover {
+  color: #60A5FA;
+  border-color: rgba(96, 165, 250, 0.6);
+  background: radial-gradient(circle at 40% 35%, rgba(96, 165, 250, 0.25), rgba(96, 165, 250, 0.08));
+  box-shadow:
+    0 0 20px rgba(96, 165, 250, 0.3),
+    0 0 40px rgba(96, 165, 250, 0.15),
+    inset 0 0 15px rgba(96, 165, 250, 0.1);
+  transform: translateY(-3px) scale(1.1);
+}
+.social-orb:active {
+  transform: translateY(-1px) scale(1.05);
+}
+
+/* Purple variant (GitHub) */
+.social-orb-purple {
+  background: radial-gradient(circle at 40% 35%, rgba(167, 139, 250, 0.15), rgba(167, 139, 250, 0.03));
+  border-color: rgba(167, 139, 250, 0.2);
+}
+.social-orb-purple:hover {
+  color: #A78BFA;
+  border-color: rgba(167, 139, 250, 0.6);
+  background: radial-gradient(circle at 40% 35%, rgba(167, 139, 250, 0.25), rgba(167, 139, 250, 0.08));
+  box-shadow:
+    0 0 20px rgba(167, 139, 250, 0.3),
+    0 0 40px rgba(167, 139, 250, 0.15),
+    inset 0 0 15px rgba(167, 139, 250, 0.1);
+}
+
+/* Amber variant (PyPI) */
+.social-orb-amber {
+  background: radial-gradient(circle at 40% 35%, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.03));
+  border-color: rgba(251, 191, 36, 0.2);
+}
+.social-orb-amber:hover {
+  color: #FBBF24;
+  border-color: rgba(251, 191, 36, 0.6);
+  background: radial-gradient(circle at 40% 35%, rgba(251, 191, 36, 0.25), rgba(251, 191, 36, 0.08));
+  box-shadow:
+    0 0 20px rgba(251, 191, 36, 0.3),
+    0 0 40px rgba(251, 191, 36, 0.15),
+    inset 0 0 15px rgba(251, 191, 36, 0.1);
+}
+
+/* Icon inside orb */
+.social-orb-icon {
+  width: 22px;
+  height: 22px;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.social-orb:hover .social-orb-icon {
+  transform: scale(1.15);
+}
+
+/* Pulsing rings */
+.social-orb-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  animation: social-ring-pulse 3s ease-in-out infinite;
+}
+.social-orb-ring-2 {
+  inset: -9px;
+  border-color: rgba(96, 165, 250, 0.08);
+  animation-delay: 1.5s;
+}
+.social-orb-purple .social-orb-ring {
+  border-color: rgba(167, 139, 250, 0.15);
+}
+.social-orb-purple .social-orb-ring-2 {
+  border-color: rgba(167, 139, 250, 0.08);
+}
+.social-orb-amber .social-orb-ring {
+  border-color: rgba(251, 191, 36, 0.15);
+}
+.social-orb-amber .social-orb-ring-2 {
+  border-color: rgba(251, 191, 36, 0.08);
+}
+
+/* Hover: rings expand and brighten */
+.social-orb:hover .social-orb-ring {
+  animation: social-ring-hover 1.2s ease-out infinite;
+  border-color: rgba(96, 165, 250, 0.35);
+}
+.social-orb:hover .social-orb-ring-2 {
+  animation: social-ring-hover 1.2s ease-out 0.4s infinite;
+  border-color: rgba(96, 165, 250, 0.2);
+}
+.social-orb-purple:hover .social-orb-ring {
+  border-color: rgba(167, 139, 250, 0.35);
+}
+.social-orb-purple:hover .social-orb-ring-2 {
+  border-color: rgba(167, 139, 250, 0.2);
+}
+.social-orb-amber:hover .social-orb-ring {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+.social-orb-amber:hover .social-orb-ring-2 {
+  border-color: rgba(251, 191, 36, 0.2);
+}
+
+@keyframes social-ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.5; }
+}
+@keyframes social-ring-hover {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* ---- Footer social links ---- */
+.footer-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #94A3B8;
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  background: rgba(96, 165, 250, 0.05);
+  transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+  text-decoration: none;
+}
+.footer-social-link:hover {
+  color: #60A5FA;
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 0 16px rgba(96, 165, 250, 0.25);
+  transform: translateY(-2px);
+}
+.footer-social-purple {
+  border-color: rgba(167, 139, 250, 0.15);
+  background: rgba(167, 139, 250, 0.05);
+}
+.footer-social-purple:hover {
+  color: #A78BFA;
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 0 16px rgba(167, 139, 250, 0.25);
+}
+.footer-social-amber {
+  border-color: rgba(251, 191, 36, 0.15);
+  background: rgba(251, 191, 36, 0.05);
+}
+.footer-social-amber:hover {
+  color: #FBBF24;
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.25);
 }
