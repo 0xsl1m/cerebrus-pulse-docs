@@ -1,6 +1,6 @@
 ---
 title: GET /pulse/{coin}
-description: Multi-timeframe technical analysis for a specific coin.
+description: Crypto technical analysis API — get RSI, EMA, Bollinger Bands, ATR, VWAP, regime detection, and confluence scoring across 6 timeframes for any Hyperliquid perpetual.
 ---
 
 import { Badge } from '@astrojs/starlight/components';
@@ -175,6 +175,14 @@ GET /pulse/ETH?timeframes=1h
   }
 }
 ```
+
+## Next Steps
+
+- **[GET /screener](/api/screener)** — Scan all 50+ coins at once before drilling into individual assets
+- **[Python SDK Guide](/guides/python-sdk)** — Complete Python integration with code examples
+- **[TypeScript SDK Guide](/guides/typescript-sdk)** — Complete TypeScript/Node.js integration
+- **[Response Schemas](/reference/response-schemas)** — Detailed field descriptions and value ranges
+- **[x402 Payments](/guides/x402-payments)** — Deep dive into the micropayment flow
 
 ## Errors
 

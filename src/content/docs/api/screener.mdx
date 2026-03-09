@@ -1,6 +1,6 @@
 ---
 title: GET /screener
-description: Scan 50+ coins for signals, trends, and trading opportunities.
+description: Crypto screener API endpoint — scan 50+ Hyperliquid perpetuals for RSI signals, trend direction, volatility regime, confluence bias, and CEX-DEX divergence in one call.
 ---
 
 import { Badge } from '@astrojs/starlight/components';
@@ -89,6 +89,13 @@ GET /screener?top_n=5
 :::tip[Value proposition]
 One `/screener` call at $0.06 replaces 50+ individual `/pulse` calls at $0.025 each ($1.25+ total) — a 95% saving for market-wide scanning.
 :::
+
+## Next Steps
+
+- **[GET /pulse/\{coin\}](/api/pulse)** — Drill into a specific coin with full multi-timeframe analysis
+- **[Python SDK Guide](/guides/python-sdk)** — Build a screener integration in Python
+- **[TypeScript SDK Guide](/guides/typescript-sdk)** — Build a screener integration in TypeScript
+- **[x402 Payments](/guides/x402-payments)** — Understand the payment flow
 
 ## Errors
 

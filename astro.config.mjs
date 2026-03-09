@@ -16,7 +16,10 @@ export default defineConfig({
         Head: './src/components/StarlightHead.astro',
       },
       customCss: ['./src/styles/landing.css'],
-      social: [],
+      social: [
+        { icon: 'x.com', label: 'X/Twitter', href: 'https://x.com/CerebrusPulse' },
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/0xsl1m/cerebrus-pulse-mcp' },
+      ],
       sidebar: [
         {
           label: 'Getting Started',

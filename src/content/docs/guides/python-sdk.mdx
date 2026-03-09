@@ -162,3 +162,11 @@ async def scan_all_coins():
 - **Use `/bundle`** instead of calling `/pulse` + `/sentiment` + `/funding` separately — it's cheaper
 - **Check `/health`** before batch operations to avoid wasting payments on a degraded gateway
 - **Handle stale data** — check `meta.warning` for `"stale_data"` which means the underlying market data is >2 hours old
+
+## Related
+
+- **[Quickstart](/quickstart)** — Make your first API call in 5 minutes
+- **[x402 Payments Guide](/guides/x402-payments)** — How micropayments work, wallet setup, and supported chains
+- **[GET /pulse/\{coin\}](/api/pulse)** — Full endpoint reference for the pulse endpoint
+- **[GET /screener](/api/screener)** — Market-wide scanning endpoint reference
+- **[Response Schemas](/reference/response-schemas)** — Detailed field descriptions and value ranges
