@@ -1978,9 +1978,9 @@ footer ul li a {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, rgba(96, 165, 250, 0.15), rgba(96, 165, 250, 0.03));
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  color: #94A3B8;
+  background: radial-gradient(circle at 40% 35%, rgba(96, 165, 250, 0.35), rgba(96, 165, 250, 0.1));
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  color: #CBD5E1;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   text-decoration: none;
@@ -2001,8 +2001,8 @@ footer ul li a {
 
 /* Purple variant (GitHub) */
 .social-orb-purple {
-  background: radial-gradient(circle at 40% 35%, rgba(167, 139, 250, 0.15), rgba(167, 139, 250, 0.03));
-  border-color: rgba(167, 139, 250, 0.2);
+  background: radial-gradient(circle at 40% 35%, rgba(167, 139, 250, 0.35), rgba(167, 139, 250, 0.1));
+  border-color: rgba(167, 139, 250, 0.45);
 }
 .social-orb-purple:hover {
   color: #A78BFA;
@@ -2016,8 +2016,8 @@ footer ul li a {
 
 /* Amber variant (PyPI) */
 .social-orb-amber {
-  background: radial-gradient(circle at 40% 35%, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.03));
-  border-color: rgba(251, 191, 36, 0.2);
+  background: radial-gradient(circle at 40% 35%, rgba(251, 191, 36, 0.35), rgba(251, 191, 36, 0.1));
+  border-color: rgba(251, 191, 36, 0.45);
 }
 .social-orb-amber:hover {
   color: #FBBF24;
@@ -2106,9 +2106,9 @@ footer ul li a {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  color: #94A3B8;
-  border: 1px solid rgba(96, 165, 250, 0.15);
-  background: rgba(96, 165, 250, 0.05);
+  color: #CBD5E1;
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  background: rgba(96, 165, 250, 0.12);
   transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
   text-decoration: none;
 }
@@ -2119,8 +2119,8 @@ footer ul li a {
   transform: translateY(-2px);
 }
 .footer-social-purple {
-  border-color: rgba(167, 139, 250, 0.15);
-  background: rgba(167, 139, 250, 0.05);
+  border-color: rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.12);
 }
 .footer-social-purple:hover {
   color: #A78BFA;
@@ -2128,8 +2128,8 @@ footer ul li a {
   box-shadow: 0 0 16px rgba(167, 139, 250, 0.25);
 }
 .footer-social-amber {
-  border-color: rgba(251, 191, 36, 0.15);
-  background: rgba(251, 191, 36, 0.05);
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.12);
 }
 .footer-social-amber:hover {
   color: #FBBF24;
