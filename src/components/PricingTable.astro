@@ -92,6 +92,15 @@ const x402Endpoints = [
   },
   {
     method: 'GET',
+    path: '/liquidations/{coin}',
+    price: '$0.03',
+    description: 'Liquidation heatmap',
+    details: 'Estimated liquidation zones across 5 leverage tiers (3x-50x) for longs and shorts. Cascade risk scoring, long/short ratio from funding skew, and nearest cluster alert.',
+    params: 'none',
+    hot: true,
+  },
+  {
+    method: 'GET',
     path: '/bundle/{coin}',
     price: '$0.05',
     description: 'Complete analysis bundle',
