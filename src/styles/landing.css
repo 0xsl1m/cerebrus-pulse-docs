@@ -965,7 +965,7 @@ button:focus-visible {
 /* ---- Brain Container: shifted up in hero ---- */
 .brain-container {
   position: absolute;
-  top: -10%;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -1038,7 +1038,7 @@ button:focus-visible {
     height: 350px;
   }
   .brain-container {
-    top: -12%;
+    top: 0;
   }
   .hero-bg-img {
     opacity: 0.2;
