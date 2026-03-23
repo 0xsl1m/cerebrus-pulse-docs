@@ -145,7 +145,8 @@ html, body {
 .landing-hero {
   @apply relative text-white;
   background: #0B0F1A;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
