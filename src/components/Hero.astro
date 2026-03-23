@@ -41,8 +41,15 @@ import Brain3D from './Brain3D.astro';
   </div>
 
   <div class="hero-text-backdrop relative z-10 w-full mx-auto max-w-5xl px-4 sm:px-6 py-12 sm:py-16 md:py-24 text-center box-border overflow-hidden" data-parallax="hero-text">
-    <!-- Trinity protocol badges -->
+    <!-- Version badge (auto-fetched from PyPI) + Trinity protocol badges -->
     <div class="mb-6 sm:mb-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3 animate-slide-up">
+      <span id="version-badge" class="hero-badge-version" style="display:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+        </svg>
+        <span id="version-text"></span>
+      </span>
+      <span class="text-[#475569] text-sm font-mono" id="version-separator" style="display:none;">+</span>
       <span class="hero-badge-x402">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
@@ -550,5 +557,27 @@ import Brain3D from './Brain3D.astro';
         createParticles();
       }
     });
+  })();
+</script>
+
+<script>
+  // Fetch latest version from PyPI
+  (async function () {
+    try {
+      const res = await fetch('https://pypi.org/pypi/cerebrus-pulse-mcp/json');
+      if (!res.ok) return;
+      const data = await res.json();
+      const version = data.info?.version;
+      if (version) {
+        const badge = document.getElementById('version-badge');
+        const text = document.getElementById('version-text');
+        const sep = document.getElementById('version-separator');
+        if (badge && text && sep) {
+          text.textContent = 'v' + version;
+          badge.style.display = '';
+          sep.style.display = '';
+        }
+      }
+    } catch (e) { /* silent fail — version badge just won't show */ }
   })();
 </script>
