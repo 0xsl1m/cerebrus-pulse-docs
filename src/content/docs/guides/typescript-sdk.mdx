@@ -9,33 +9,64 @@ Complete guide to consuming Cerebrus Pulse from TypeScript/Node.js using the x40
 
 ## Installation
 
-```bash
-npm install x402 viem
-```
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Tabs>
+  <TabItem label="Base (EVM)">
+    ```bash
+    npm install x402 viem
+    ```
+  </TabItem>
+  <TabItem label="Solana (SVM)">
+    ```bash
+    npm install x402 @solana/web3.js
+    ```
+  </TabItem>
+</Tabs>
 
 ## Setup
 
-```typescript
-import { createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
-import { withX402Payment } from "x402";
+<Tabs>
+  <TabItem label="Base (EVM)">
+    ```typescript
+    import { createWalletClient, http } from "viem";
+    import { privateKeyToAccount } from "viem/accounts";
+    import { base } from "viem/chains";
+    import { withX402Payment } from "x402";
 
-// Load your private key securely (env var, config, etc.)
-const PRIVATE_KEY = process.env.BASE_WALLET_PRIVATE_KEY as `0x${string}`;
+    // Load your private key securely (env var, config, etc.)
+    const PRIVATE_KEY = process.env.BASE_WALLET_PRIVATE_KEY as `0x${string}`;
 
-const account = privateKeyToAccount(PRIVATE_KEY);
-const wallet = createWalletClient({
-  account,
-  chain: base,
-  transport: http(),
-});
+    const account = privateKeyToAccount(PRIVATE_KEY);
+    const wallet = createWalletClient({
+      account,
+      chain: base,
+      transport: http(),
+    });
 
-// Create an x402-enabled fetch function
-const fetchWithPayment = withX402Payment(wallet);
+    // Create an x402-enabled fetch function
+    const fetchWithPayment = withX402Payment(wallet);
 
-const BASE_URL = "https://api.cerebruspulse.xyz";
-```
+    const BASE_URL = "https://api.cerebruspulse.xyz";
+    ```
+  </TabItem>
+  <TabItem label="Solana (SVM)">
+    ```typescript
+    import { Keypair } from "@solana/web3.js";
+    import { withX402Payment } from "x402";
+    import bs58 from "bs58";
+
+    // Load your Solana private key (base58-encoded)
+    const SECRET_KEY = bs58.decode(process.env.SOLANA_WALLET_PRIVATE_KEY!);
+    const keypair = Keypair.fromSecretKey(SECRET_KEY);
+
+    // Create an x402-enabled fetch function for Solana
+    const fetchWithPayment = withX402Payment(keypair);
+
+    const BASE_URL = "https://api.cerebruspulse.xyz";
+    ```
+  </TabItem>
+</Tabs>
 
 ## Making Requests
 

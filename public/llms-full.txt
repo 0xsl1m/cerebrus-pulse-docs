@@ -1,6 +1,6 @@
 # Cerebrus Pulse — Full Technical Reference
 
-> Real-time crypto intelligence API for Hyperliquid perpetuals. Two integration paths: x402 micropayments (USDC on Base) for developers and ACP agent commerce (VIRTUAL on Virtuals Protocol) for autonomous AI agents.
+> Real-time crypto intelligence API for Hyperliquid perpetuals. Two integration paths: x402 micropayments (USDC on Base or Solana) for developers and ACP agent commerce (VIRTUAL on Virtuals Protocol) for autonomous AI agents.
 
 ## Service Overview
 
@@ -11,8 +11,8 @@ Key differentiator: No API keys, no subscriptions, no accounts. Two payment prot
 - ACP (Agent Commerce Protocol) for autonomous AI agents on Virtuals Protocol
 
 Base URL: https://api.cerebruspulse.xyz
-Blockchain: Base (chain ID 8453)
-Payment token: USDC (x402) or VIRTUAL (ACP)
+Blockchain: Base (chain ID 8453) + Solana (mainnet)
+Payment token: USDC on Base or Solana (x402) or VIRTUAL (ACP)
 Provider: Cerebrus Pulse
 
 ---

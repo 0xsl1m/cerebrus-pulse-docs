@@ -12,13 +12,13 @@ Cerebrus services are available through three protocols. Choose based on your us
 | | x402 (Direct API) | A2A (Agent-to-Agent) | ACP (Virtuals Protocol) |
 |---|---|---|---|
 | **Target user** | Developers, bots, dashboards | AI agent networks | Autonomous AI agents |
-| **Payment** | USDC micropayments on Base | USDC via x402 on Base | VIRTUAL token escrow |
+| **Payment** | USDC micropayments on Base or Solana | USDC via x402 on Base or Solana | VIRTUAL token escrow |
 | **Authentication** | Wallet signature (no API keys) | None (open discovery) | ACP SDK + agent wallet |
 | **Discovery** | API docs | Agent Card (`.well-known`) | Virtuals marketplace |
 | **Transport** | HTTP REST | JSON-RPC 2.0 over HTTP | ACP SDK |
 | **Latency** | Low (~200–500ms) | Low (~200–500ms) | Higher (negotiation + escrow) |
 | **Pricing** | $0.008–$0.04 per query | $0.008–$0.04 per task | $0.03–$2.00 per job |
-| **Settlement** | Instant (Base L2) | Instant (Base L2) | ACP escrow release |
+| **Settlement** | Instant (Base L2 or Solana) | Instant (Base L2 or Solana) | ACP escrow release |
 | **Protocol** | HTTP 402 (open standard) | Google A2A (Linux Foundation) | Agent Commerce Protocol (Virtuals) |
 
 ## Available Services
@@ -84,8 +84,8 @@ Yes. Many teams combine protocols:
 2. **A2A** `message/send` → Agent discovers and consumes skills via JSON-RPC with x402 payment
 3. **ACP** `cerebrus_synthesis` → "What's the medium-term outlook for BTC?" (45s, $0.50)
 
-x402 and A2A share the same USDC payment rails — A2A adds agent discovery and task semantics on top. ACP provides AI synthesis with multi-model reasoning.
+x402 and A2A share the same dual-chain USDC payment rails (Base + Solana) — A2A adds agent discovery and task semantics on top. ACP provides AI synthesis with multi-model reasoning.
 
 ## Migration
 
-Moving between protocols doesn't require account changes. x402 and A2A both use wallet-based USDC payments on Base. ACP uses VIRTUAL tokens on Virtuals Protocol. There's no lock-in to any protocol.
+Moving between protocols doesn't require account changes. x402 and A2A both use wallet-based USDC payments on Base or Solana. ACP uses VIRTUAL tokens on Virtuals Protocol. There's no lock-in to any protocol.

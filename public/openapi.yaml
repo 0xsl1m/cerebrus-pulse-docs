@@ -6,12 +6,12 @@ info:
     Real-time crypto intelligence API for 50+ Hyperliquid perpetuals.
     Multi-timeframe technical analysis, market sentiment, funding rates, and confluence scoring.
 
-    **Payment:** x402 micropayments (USDC on Base). No API keys or subscriptions — your wallet is your identity.
+    **Payment:** x402 micropayments (USDC on Base or Solana). No API keys or subscriptions — your wallet is your identity.
 
     **How x402 works:**
     1. Send a standard HTTP GET request
-    2. Server responds with `402 Payment Required` + payment details
-    3. x402 SDK auto-signs a USDC micropayment on Base (chain ID 8453)
+    2. Server responds with `402 Payment Required` + payment options for Base and Solana
+    3. x402 SDK auto-signs a USDC micropayment on your preferred chain
     4. Server verifies payment and returns JSON data
 
     **Also available via ACP** (Agent Commerce Protocol) on Virtuals Protocol for autonomous AI agents.

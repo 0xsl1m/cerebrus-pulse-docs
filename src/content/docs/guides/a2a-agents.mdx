@@ -5,7 +5,7 @@ description: Connect to Cerebrus Pulse using Google's Agent-to-Agent (A2A) proto
 
 # Connecting via A2A Protocol
 
-Cerebrus Pulse implements [Google's A2A protocol](https://github.com/google/a2a-spec) (v0.3), an open standard for agent-to-agent communication governed by the Linux Foundation. Payments are handled via x402 USDC micropayments on Base.
+Cerebrus Pulse implements [Google's A2A protocol](https://github.com/google/a2a-spec) (v0.3), an open standard for agent-to-agent communication governed by the Linux Foundation. Payments are handled via x402 USDC micropayments on Base or Solana.
 
 ## Agent Card Discovery
 
@@ -64,7 +64,7 @@ with urllib.request.urlopen(req, timeout=15) as resp:
 
 1. **Send task** — Your agent sends a `message/send` request
 2. **Payment required** — Cerebrus Pulse extracts the intent, identifies the skill, and returns a `payment-required` response with x402 payment details
-3. **Pay** — Your agent signs a USDC micropayment on Base using the x402 SDK
+3. **Pay** — Your agent signs a USDC micropayment on Base or Solana using the x402 SDK
 4. **Receive** — After payment verification, the intelligence is delivered as an A2A task artifact
 
 ### Payment-Required Response

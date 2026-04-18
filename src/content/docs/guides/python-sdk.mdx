@@ -9,53 +9,122 @@ Complete guide to consuming Cerebrus Pulse from Python using the x402 SDK.
 
 ## Installation
 
-```bash
-pip install "x402[evm]" httpx eth-account
-```
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Tabs>
+  <TabItem label="Base (EVM)">
+    ```bash
+    pip install "x402[evm]" httpx eth-account
+    ```
+  </TabItem>
+  <TabItem label="Solana (SVM)">
+    ```bash
+    pip install "x402[svm]" httpx
+    ```
+  </TabItem>
+</Tabs>
 
 ## Setup
 
-```python
-from eth_account import Account
-from x402.clients.httpx import x402HttpxClient
-from x402.types.evm import ExactEvmSigner, register_exact_evm_client
+<Tabs>
+  <TabItem label="Base (EVM)">
+    ```python
+    from eth_account import Account
+    from x402.clients.httpx import x402HttpxClient
+    from x402.mechanisms.evm.exact import register_exact_evm_client
 
-# Load your private key securely (env var, keyfile, etc.)
-import os
-PRIVATE_KEY = os.environ["BASE_WALLET_PRIVATE_KEY"]
+    # Load your private key securely (env var, keyfile, etc.)
+    import os
+    PRIVATE_KEY = os.environ["BASE_WALLET_PRIVATE_KEY"]
 
-# Create the EVM signer
-signer = ExactEvmSigner(Account.from_key(PRIVATE_KEY))
-```
+    # Create the EVM signer
+    signer = Account.from_key(PRIVATE_KEY)
+    ```
+  </TabItem>
+  <TabItem label="Solana (SVM)">
+    ```python
+    from x402.clients.httpx import x402HttpxClient
+    from x402.mechanisms.svm.exact import register_exact_svm_client
+    from x402.mechanisms.svm.signer import ClientSvmSigner
+
+    # Load your Solana private key (base58 or bytes)
+    import os
+    PRIVATE_KEY = os.environ["SOLANA_WALLET_PRIVATE_KEY"]
+
+    # Create the SVM signer
+    signer = ClientSvmSigner.from_base58(PRIVATE_KEY)
+    ```
+  </TabItem>
+</Tabs>
 
 ## Async Usage (Recommended)
 
+The setup is the same for both chains — only the registration function differs. All examples below show the EVM version; replace `register_exact_evm_client` with `register_exact_svm_client` for Solana.
+
+<Tabs>
+  <TabItem label="Base (EVM)">
+    ```python
+    import asyncio
+    from x402.mechanisms.evm.exact import register_exact_evm_client
+
+    BASE_URL = "https://api.cerebruspulse.xyz"
+
+    async def get_pulse(coin: str, timeframes: str = "1h,4h") -> dict:
+        async with x402HttpxClient() as client:
+            register_exact_evm_client(client, signer)
+            resp = await client.get(
+                f"{BASE_URL}/pulse/{coin}",
+                params={"timeframes": timeframes}
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def main():
+        data = await get_pulse("BTC")
+        print(f"BTC: {data['confluence']['bias']} (score: {data['confluence']['score']})")
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+  <TabItem label="Solana (SVM)">
+    ```python
+    import asyncio
+    from x402.mechanisms.svm.exact import register_exact_svm_client
+
+    BASE_URL = "https://api.cerebruspulse.xyz"
+
+    async def get_pulse(coin: str, timeframes: str = "1h,4h") -> dict:
+        async with x402HttpxClient() as client:
+            register_exact_svm_client(client, signer)
+            resp = await client.get(
+                f"{BASE_URL}/pulse/{coin}",
+                params={"timeframes": timeframes}
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def main():
+        data = await get_pulse("BTC")
+        print(f"BTC: {data['confluence']['bias']} (score: {data['confluence']['score']})")
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+</Tabs>
+
+### Helper Functions
+
 ```python
-import asyncio
-
-BASE_URL = "https://api.cerebruspulse.xyz"
-
-async def get_pulse(coin: str, timeframes: str = "1h,4h") -> dict:
-    async with x402HttpxClient() as client:
-        register_exact_evm_client(client, signer)
-
-        resp = await client.get(
-            f"{BASE_URL}/pulse/{coin}",
-            params={"timeframes": timeframes}
-        )
-        resp.raise_for_status()
-        return resp.json()
-
 async def get_sentiment() -> dict:
     async with x402HttpxClient() as client:
-        register_exact_evm_client(client, signer)
+        register_exact_evm_client(client, signer)  # or register_exact_svm_client
         resp = await client.get(f"{BASE_URL}/sentiment")
         resp.raise_for_status()
         return resp.json()
 
 async def get_funding(coin: str, lookback_hours: int = 24) -> dict:
     async with x402HttpxClient() as client:
-        register_exact_evm_client(client, signer)
+        register_exact_evm_client(client, signer)  # or register_exact_svm_client
         resp = await client.get(
             f"{BASE_URL}/funding/{coin}",
             params={"lookback_hours": lookback_hours}
@@ -65,20 +134,13 @@ async def get_funding(coin: str, lookback_hours: int = 24) -> dict:
 
 async def get_bundle(coin: str, timeframes: str = "1h,4h") -> dict:
     async with x402HttpxClient() as client:
-        register_exact_evm_client(client, signer)
+        register_exact_evm_client(client, signer)  # or register_exact_svm_client
         resp = await client.get(
             f"{BASE_URL}/bundle/{coin}",
             params={"timeframes": timeframes}
         )
         resp.raise_for_status()
         return resp.json()
-
-# Usage
-async def main():
-    data = await get_pulse("BTC")
-    print(f"BTC: {data['confluence']['bias']} (score: {data['confluence']['score']})")
-
-asyncio.run(main())
 ```
 
 ## Working with the Response

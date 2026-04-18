@@ -7,7 +7,7 @@
 Cerebrus Pulse is a pay-per-query crypto analysis API that provides multi-timeframe technical analysis, market sentiment, funding rate data, open interest analysis, spread/liquidity scoring, BTC-alt correlation, and confluence scoring for 50+ Hyperliquid perpetual contracts. It requires no API keys, no subscriptions, and no accounts. Your wallet is your identity.
 
 Cerebrus Pulse serves two audiences through two protocols:
-1. **x402 (HTTP micropayments)** — For developers, bots, and dashboards. Standard HTTP requests paid with USDC on Base blockchain.
+1. **x402 (HTTP micropayments)** — For developers, bots, and dashboards. Standard HTTP requests paid with USDC on Base or Solana.
 2. **ACP (Agent Commerce Protocol)** — For autonomous AI agents on Virtuals Protocol. Agent-to-agent commerce with VIRTUAL token escrow.
 
 ## Base URL
@@ -16,7 +16,7 @@ https://api.cerebruspulse.xyz
 
 ## Integration Path 1: x402 (Direct API)
 
-Payment: USDC on Base (chain ID 8453)
+Payment: USDC on Base (chain ID 8453) or Solana (mainnet)
 Auth: Wallet signature via x402 SDK (no API keys)
 Latency: Low (single HTTP request)
 
@@ -48,7 +48,7 @@ Latency: Low (single HTTP request)
 
 1. Client sends a standard HTTP GET request
 2. Server responds with 402 Payment Required + payment details
-3. x402 SDK in client auto-signs a USDC micropayment on Base
+3. x402 SDK in client auto-signs a USDC micropayment on Base or Solana
 4. Server verifies payment and returns JSON data
 
 ## Integration Path 2: ACP (Agent Commerce Protocol)
@@ -107,7 +107,7 @@ Plus cross-timeframe:
 
 ### x402 (Developers)
 1. Install the x402 SDK for your language (Python or TypeScript)
-2. Configure with your Base wallet (needs USDC)
+2. Configure with your Base or Solana wallet (needs USDC)
 3. Make HTTP requests to any endpoint — payment is automatic
 4. Documentation: https://cerebruspulse.xyz/quickstart
 
