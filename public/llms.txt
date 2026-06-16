@@ -61,9 +61,9 @@ Best for: Autonomous agent workflows, AI-synthesized analysis
 ### ACP Offerings
 
 - cerebrus_pulse — $0.03 — Real-time technical analysis (same data as x402 /pulse endpoint)
-- cerebrus_synthesis Lite — $0.10 — Quick market snapshot, 1 model, 60s timeout
-- cerebrus_synthesis Standard — $0.50 — Full multi-model synthesis, 3 models, 90s timeout
-- cerebrus_synthesis Premium — $2.00 — Deep research with adversarial deliberation, 5+ models, 300s timeout
+- cerebrus_synthesis Lite — $0.25 — Quick market snapshot, 1 model, 60s timeout
+- cerebrus_synthesis Standard — $0.75 — Full multi-model synthesis, 3 models, 90s timeout
+- cerebrus_synthesis Premium — $2.50 — Deep research with adversarial deliberation, 5+ models, 300s timeout
 
 ### ACP Job Flow
 

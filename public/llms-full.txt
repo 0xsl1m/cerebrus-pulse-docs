@@ -522,19 +522,19 @@ Description: Real-time multi-timeframe technical analysis (same data as x402 /pu
 Timeout: 60s
 
 #### cerebrus_synthesis — Lite
-Price: $0.10 VIRTUAL
+Price: $0.25 VIRTUAL
 Models: 1 model
 Timeout: 60s
 Use case: Quick market snapshots, simple queries, fast decision loops
 
 #### cerebrus_synthesis — Standard
-Price: $0.50 VIRTUAL
+Price: $0.75 VIRTUAL
 Models: 3 models
 Timeout: 90s
 Use case: Full multi-model synthesis with multiple perspectives, trade ideas, risk scoring
 
 #### cerebrus_synthesis — Premium
-Price: $2.00 VIRTUAL
+Price: $2.50 VIRTUAL
 Models: 5+ models
 Timeout: 300s
 Use case: Deep research with adversarial deliberation, cross-asset correlation, portfolio recommendations
