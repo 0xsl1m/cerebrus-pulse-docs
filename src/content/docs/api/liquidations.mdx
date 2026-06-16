@@ -1,0 +1,110 @@
+---
+title: GET /liquidations/{coin}
+description: Liquidation heatmap API — estimated liquidation zones, cascade risk scoring, and long/short ratio for Hyperliquid perpetuals.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+# GET /liquidations/\{coin\}
+
+<Badge text="$0.03 USDC" variant="tip" /> <Badge text="New" variant="note" />
+
+Returns estimated liquidation zones across 5 leverage tiers (3x, 5x, 10x, 25x, 50x) for both longs and shorts. Includes cascade risk scoring, long/short ratio derived from funding skew, and nearest cluster alerts.
+
+**Why it matters:** Liquidation clusters act as magnets for price action. When price approaches a dense zone, forced liquidations can trigger cascading moves. This endpoint maps those zones so agents and traders can anticipate volatility events.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/liquidations/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`, `SOL`). Case-insensitive. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coin` | string | Coin ticker |
+| `timestamp_iso` | string | ISO 8601 timestamp |
+| `price` | number | Current mid price (USD) |
+| `zones` | object | Liquidation zones grouped by side |
+| `zones.longs` | array | Long liquidation zones (descending by estimated notional) |
+| `zones.shorts` | array | Short liquidation zones (ascending by estimated notional) |
+| `zones.longs[].price` | number | Estimated liquidation price |
+| `zones.longs[].leverage` | string | Leverage tier (e.g., `"10x"`) |
+| `zones.longs[].estimated_notional` | number | Estimated notional at risk (USD) |
+| `cascade_risk` | object | Cascade risk assessment |
+| `cascade_risk.score` | number | Cascade risk score (0.0–1.0) |
+| `cascade_risk.level` | string | `LOW`, `MODERATE`, `HIGH`, `EXTREME` |
+| `cascade_risk.nearest_cluster` | object | Nearest significant liquidation cluster |
+| `cascade_risk.nearest_cluster.side` | string | `long` or `short` |
+| `cascade_risk.nearest_cluster.price` | number | Cluster price level |
+| `cascade_risk.nearest_cluster.distance_pct` | number | Distance from current price (%) |
+| `long_short_ratio` | number | Estimated long/short ratio from funding skew |
+| `meta` | object | Provider metadata |
+
+## Example
+
+```bash
+GET /liquidations/BTC
+```
+
+```json
+{
+  "coin": "BTC",
+  "timestamp_iso": "2026-03-20T10:00:00Z",
+  "price": 87250.00,
+  "zones": {
+    "longs": [
+      { "price": 85000.00, "leverage": "10x", "estimated_notional": 45000000 },
+      { "price": 82500.00, "leverage": "5x", "estimated_notional": 28000000 },
+      { "price": 80000.00, "leverage": "3x", "estimated_notional": 12000000 }
+    ],
+    "shorts": [
+      { "price": 89500.00, "leverage": "10x", "estimated_notional": 38000000 },
+      { "price": 92000.00, "leverage": "5x", "estimated_notional": 22000000 },
+      { "price": 95000.00, "leverage": "3x", "estimated_notional": 9000000 }
+    ]
+  },
+  "cascade_risk": {
+    "score": 0.62,
+    "level": "MODERATE",
+    "nearest_cluster": {
+      "side": "long",
+      "price": 85000.00,
+      "distance_pct": 2.58
+    }
+  },
+  "long_short_ratio": 1.35,
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "cerebrus_pulse",
+    "execution_ms": 210
+  }
+}
+```
+
+:::tip[Usage]
+Pair `/liquidations` with `/oi` for a complete picture of positioning risk. Rising OI + dense nearby liquidation clusters = elevated cascade probability.
+:::
+
+## Next Steps
+
+- **[GET /oi/\{coin\}](/api/oi)** — Open interest analysis to complement liquidation data
+- **[GET /pulse/\{coin\}](/api/pulse)** — Full technical analysis with regime detection
+- **[GET /screener](/api/screener)** — Scan all coins for the strongest setups
+- **[x402 Payments](/guides/x402-payments)** — Understand the payment flow
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | Invalid coin |
+| 402 | Payment required (standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Data freshness guarantee exceeded |

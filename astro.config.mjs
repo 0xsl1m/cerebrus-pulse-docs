@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://cerebruspulse.xyz',
@@ -17,7 +18,11 @@ export default defineConfig({
       },
       customCss: ['./src/styles/landing.css'],
       social: [
-        { icon: 'x.com', label: 'X/Twitter', href: 'https://x.com/CerebrusPulse' },
+        // NOTE (SEO/trust): @CerebrusPulse on X was suspended twice and is likely
+        // permanently dead (see .claude/rules/social-platform-safety.md). A dead/suspended
+        // social link is a negative trust signal and a JSON-LD sameAs liability.
+        // Commented out pending a decision on a live replacement profile — DO NOT guess a URL.
+        // { icon: 'x.com', label: 'X/Twitter', href: 'https://x.com/CerebrusPulse' },
         { icon: 'github', label: 'GitHub', href: 'https://github.com/0xsl1m/cerebrus-pulse-mcp' },
       ],
       sidebar: [
@@ -42,6 +47,7 @@ export default defineConfig({
             { label: 'GET /depeg', slug: 'api/depeg', badge: { text: 'Chainlink', variant: 'tip' } },
             { label: 'GET /arb', slug: 'api/arb' },
             { label: 'GET /cex-dex/{token}', slug: 'api/cex-dex' },
+            { label: 'GET /liquidations/{coin}', slug: 'api/liquidations', badge: 'New' },
             { label: 'GET /bundle/{coin}', slug: 'api/bundle' },
             { label: 'GET /health', slug: 'api/health', badge: 'Free' },
             { label: 'GET /coins', slug: 'api/coins', badge: 'Free' },
@@ -70,5 +76,6 @@ export default defineConfig({
       editLink: undefined,
     }),
     tailwind({ applyBaseStyles: false }),
+    sitemap(),
   ],
 });

@@ -21,7 +21,7 @@ Provider: Cerebrus Pulse
 
 ### GET /pulse/{coin}
 
-Price: $0.02 USDC
+Price: $0.025 USDC
 Description: Multi-timeframe technical analysis for a specific Hyperliquid perpetual.
 
 Path Parameters:
@@ -236,7 +236,7 @@ Errors: 400 (invalid coin or lookback_hours out of range), 402 (payment required
 
 ### GET /bundle/{coin}
 
-Price: $0.04 USDC (17% discount vs calling /pulse + /sentiment + /funding individually)
+Price: $0.05 USDC (20% discount vs calling /pulse + /sentiment + /funding + /spread individually)
 Description: Complete analysis bundle combining pulse technical analysis, sentiment, and funding data in one response.
 
 Path Parameters:
@@ -289,7 +289,7 @@ Errors: 400 (invalid coin), 402 (payment required), 429 (rate limited), 504 (eng
 
 ### GET /screener
 
-Price: $0.04 USDC
+Price: $0.06 USDC
 Description: Market screener — scans all available coins and returns a compact summary for each. 60-second cache.
 
 Query Parameters:
@@ -345,7 +345,7 @@ Errors: 402 (payment required), 429 (rate limited)
 
 ### GET /oi/{coin}
 
-Price: $0.01 USDC
+Price: $0.015 USDC
 Description: Open interest analysis with delta tracking, percentile ranking, and price-OI divergence detection.
 
 Path Parameters:
@@ -389,7 +389,7 @@ Errors: 400 (invalid coin), 402 (payment required), 429 (rate limited)
 
 ### GET /spread/{coin}
 
-Price: $0.008 USDC
+Price: $0.015 USDC
 Description: Spread analysis with slippage estimates at multiple notional sizes and liquidity scoring.
 
 Path Parameters:
@@ -436,7 +436,7 @@ Errors: 400 (invalid coin or no spread data), 402 (payment required), 429 (rate 
 
 ### GET /correlation
 
-Price: $0.03 USDC
+Price: $0.05 USDC
 Description: BTC-alt correlation matrix for top 15 coins with regime classification and sector clustering.
 
 No parameters required.
@@ -722,7 +722,7 @@ Error response format (all errors):
 6. Use GET /bundle for multi-data needs — 1 request instead of 4, 17% cheaper, fewer rate limit slots consumed
 7. Use GET /coins to validate coin tickers before making paid requests
 8. Cache results appropriately — crypto data updates on candle close intervals (5m/15m/1h/4h/1d/1w)
-9. Use GET /screener for market-wide scanning — 1 call at $0.04 vs 50+ individual /pulse calls at $0.02 each
+9. Use GET /screener for market-wide scanning — 1 call at $0.06 vs 50+ individual /pulse calls at $0.025 each
 
 ---
 

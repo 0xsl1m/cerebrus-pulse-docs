@@ -7,7 +7,7 @@ interface Props {
 
 const {
   title = "Cerebrus Pulse — Real-time Crypto Intelligence API",
-  description = "Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. x402 micropayments, Google A2A agent-to-agent protocol, and ACP AI synthesis via Virtuals Protocol. From $0.008/query. No API keys required.",
+  description = "Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. x402 micropayments, Google A2A agent-to-agent protocol, and ACP AI synthesis via Virtuals Protocol. From $0.01/query. No API keys required.",
   url = "https://cerebruspulse.xyz",
 } = Astro.props;
 
@@ -38,11 +38,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Pulse — Multi-timeframe Technical Analysis",
       "description": "RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score, trend detection, confluence scoring, derivatives data, and market regime for any Hyperliquid perpetual.",
-      "price": "0.02",
+      "price": "0.025",
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.02",
+        "price": "0.025",
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -80,11 +80,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Screener — Market Screener",
       "description": "Scan 50+ coins at once for signal strength, RSI zone, trend direction, volatility regime, funding bias, confluence, and OI trend.",
-      "price": "0.04",
+      "price": "0.06",
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.04",
+        "price": "0.06",
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -94,11 +94,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Open Interest — OI Analysis",
       "description": "Current OI, delta over 1h/4h/24h, percentile rank, trend direction, and price-OI divergence signals.",
-      "price": "0.01",
+      "price": "0.015",
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.01",
+        "price": "0.015",
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -108,11 +108,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Spread — Liquidity Analysis",
       "description": "Bid-ask spread, slippage estimates at various notional sizes, and liquidity scoring for Hyperliquid perpetuals.",
-      "price": "0.008",
+      "price": "0.015",
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.008",
+        "price": "0.015",
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -122,11 +122,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Correlation — BTC-Alt Correlation Matrix",
       "description": "BTC-alt correlation matrix across top 15 coins with 30-day rolling correlation, regime classification, and sector clustering.",
-      "price": "0.03",
+      "price": "0.05",
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.03",
+        "price": "0.05",
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -135,12 +135,12 @@ const webApplicationSchema = {
     {
       "@type": "Offer",
       "name": "Bundle — Complete Analysis Bundle",
-      "description": "Pulse + Sentiment + Funding + Spread combined in one response. 17% discount versus calling endpoints individually.",
-      "price": "0.04",
+      "description": "Pulse + Sentiment + Funding + Spread combined in one response. 20% discount versus calling endpoints individually.",
+      "price": "0.05",
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.04",
+        "price": "0.05",
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -205,7 +205,7 @@ const webApplicationSchema = {
     "Google A2A agent-to-agent protocol with Agent Card discovery",
     "ACP agent commerce on Virtuals Protocol",
     "No API keys or subscriptions required",
-    "Pay-per-query pricing from $0.008"
+    "Pay-per-query pricing from $0.01"
   ],
   "creator": {
     "@type": "Organization",
@@ -244,7 +244,7 @@ const productSchema = {
   "url": url,
   "offers": {
     "@type": "AggregateOffer",
-    "lowPrice": "0.008",
+    "lowPrice": "0.01",
     "highPrice": "2.00",
     "priceCurrency": "USD",
     "offerCount": 11

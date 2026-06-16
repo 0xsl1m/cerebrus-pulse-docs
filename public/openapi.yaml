@@ -1,17 +1,19 @@
 openapi: 3.1.0
 info:
   title: Cerebrus Pulse
-  version: 1.0.0
+  version: 1.1.0
   description: |
     Real-time crypto intelligence API for 50+ Hyperliquid perpetuals.
-    Multi-timeframe technical analysis, market sentiment, funding rates, and confluence scoring.
+    Multi-timeframe technical analysis, market sentiment, funding rates, open interest,
+    spread/liquidity, BTC-alt correlation, Chainlink basis/depeg, market-stress index,
+    CEX-DEX divergence, liquidation heatmaps, and confluence scoring.
 
-    **Payment:** x402 micropayments (USDC on Base or Solana). No API keys or subscriptions — your wallet is your identity.
+    **Payment:** x402 micropayments (USDC on Base). No API keys or subscriptions — your wallet is your identity.
 
     **How x402 works:**
     1. Send a standard HTTP GET request
-    2. Server responds with `402 Payment Required` + payment options for Base and Solana
-    3. x402 SDK auto-signs a USDC micropayment on your preferred chain
+    2. Server responds with `402 Payment Required` + payment details
+    3. x402 SDK auto-signs a USDC micropayment on Base (chain ID 8453)
     4. Server verifies payment and returns JSON data
 
     **Also available via ACP** (Agent Commerce Protocol) on Virtuals Protocol for autonomous AI agents.
@@ -30,6 +32,8 @@ servers:
 tags:
   - name: Analysis
     description: Paid technical analysis endpoints (x402 payment required)
+  - name: Chainlink
+    description: Chainlink-oracle-backed endpoints (x402 payment required)
   - name: Free
     description: Free endpoints (no payment required)
 
@@ -42,20 +46,20 @@ paths:
         Returns comprehensive multi-timeframe technical analysis for a Hyperliquid perpetual.
         Includes RSI, EMAs, ATR, Bollinger Bands, VWAP, Z-score, trend detection,
         confluence scoring, derivatives data, and market regime.
-        **Cost: $0.02 USDC per query.**
+        **Cost: $0.025 USDC per query.**
       tags: [Analysis]
       parameters:
         - name: coin
           in: path
           required: true
-          description: Coin ticker (case-insensitive). Examples: BTC, ETH, SOL
+          description: "Coin ticker (case-insensitive). Examples: BTC, ETH, SOL"
           schema:
             type: string
             example: BTC
         - name: timeframes
           in: query
           required: false
-          description: Comma-separated timeframes. Valid values: 5m, 15m, 1h, 4h, 1d, 1w
+          description: "Comma-separated timeframes. Valid values: 5m, 15m, 1h, 4h, 1d, 1w"
           schema:
             type: string
             default: "1h,4h"
@@ -144,77 +148,6 @@ paths:
         "429":
           description: Rate limit exceeded
 
-  /bundle/{coin}:
-    get:
-      operationId: getBundle
-      summary: Complete analysis bundle
-      description: |
-        Returns pulse + sentiment + funding + spread combined in one response.
-        17% discount versus calling endpoints individually.
-        **Cost: $0.04 USDC per query.**
-      tags: [Analysis]
-      parameters:
-        - name: coin
-          in: path
-          required: true
-          description: Coin ticker (case-insensitive)
-          schema:
-            type: string
-            example: BTC
-        - name: timeframes
-          in: query
-          required: false
-          description: Comma-separated timeframes. Valid values: 5m, 15m, 1h, 4h, 1d, 1w
-          schema:
-            type: string
-            default: "1h,4h"
-      responses:
-        "200":
-          description: Complete analysis bundle
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BundleResponse"
-        "400":
-          description: Invalid coin
-        "402":
-          description: Payment required
-        "429":
-          description: Rate limit exceeded
-        "504":
-          description: Engine timeout
-
-  /screener:
-    get:
-      operationId: getScreener
-      summary: Market screener
-      description: |
-        Scans all available coins and returns a compact summary for each — signal strength,
-        RSI zone, trend, volatility regime, funding bias, confluence, and OI trend. 60-second cache.
-        **Cost: $0.04 USDC per query.**
-      tags: [Analysis]
-      parameters:
-        - name: top_n
-          in: query
-          required: false
-          description: Maximum coins to return, sorted by signal strength (1-50)
-          schema:
-            type: integer
-            default: 50
-            minimum: 1
-            maximum: 50
-      responses:
-        "200":
-          description: Screener results
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ScreenerResponse"
-        "402":
-          description: Payment required
-        "429":
-          description: Rate limit exceeded
-
   /oi/{coin}:
     get:
       operationId: getOI
@@ -222,7 +155,7 @@ paths:
       description: |
         Returns open interest analysis — current OI, delta over 1h/4h/24h, percentile rank,
         trend direction, and price-OI divergence signals.
-        **Cost: $0.01 USDC per query.**
+        **Cost: $0.015 USDC per query.**
       tags: [Analysis]
       parameters:
         - name: coin
@@ -253,7 +186,7 @@ paths:
       description: |
         Returns bid-ask spread, slippage estimates at multiple notional sizes ($10k-$500k),
         and a liquidity score (1-10).
-        **Cost: $0.008 USDC per query.**
+        **Cost: $0.015 USDC per query.**
       tags: [Analysis]
       parameters:
         - name: coin
@@ -284,7 +217,7 @@ paths:
       description: |
         Returns BTC-alt correlation matrix for top 15 coins with regime classification
         (CORRELATED/MIXED/DECORRELATED) and per-sector averages.
-        **Cost: $0.03 USDC per query.**
+        **Cost: $0.05 USDC per query.**
       tags: [Analysis]
       responses:
         "200":
@@ -299,6 +232,230 @@ paths:
           description: Rate limit exceeded
         "500":
           description: Insufficient candle data for correlation
+
+  /screener:
+    get:
+      operationId: getScreener
+      summary: Market screener
+      description: |
+        Scans all available coins and returns a compact summary for each — signal strength,
+        RSI zone, trend, volatility regime, funding bias, confluence, OI trend, and CEX-DEX
+        divergence (where available). 60-second cache.
+        **Cost: $0.06 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: top_n
+          in: query
+          required: false
+          description: Maximum coins to return, sorted by signal strength (1-50)
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 50
+      responses:
+        "200":
+          description: Screener results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScreenerResponse"
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+
+  /basis/{coin}:
+    get:
+      operationId: getBasis
+      summary: Chainlink basis (HL oracle vs spot)
+      description: |
+        Compares the Hyperliquid perpetual oracle price against Chainlink's aggregated spot price
+        on Arbitrum to measure exchange-level premium or discount. Returns the basis in basis points
+        with signal interpretation. Supported coins (Chainlink Data Feeds on Arbitrum):
+        ETH, BTC, SOL, LINK, ARB, DOGE, AVAX, NEAR, AAVE, UNI, OP, PEPE.
+        **Cost: $0.02 USDC per query.**
+      tags: [Chainlink]
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Token symbol with a Chainlink feed on Arbitrum (case-insensitive)
+          schema:
+            type: string
+            example: BTC
+      responses:
+        "200":
+          description: Basis data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasisResponse"
+        "402":
+          description: Payment required
+        "404":
+          description: Coin not supported by Chainlink on Arbitrum
+        "429":
+          description: Rate limit exceeded
+        "503":
+          description: Chainlink data temporarily unavailable
+
+  /depeg:
+    get:
+      operationId: getDepeg
+      summary: USDC peg health (Chainlink)
+      description: |
+        Real-time USDC peg health monitoring via Chainlink's USDC/USD price feed on Arbitrum.
+        Reports deviation from the $1.00 peg, risk classification, and Arbitrum L2 sequencer status.
+        No parameters required.
+        **Cost: $0.01 USDC per query.**
+      tags: [Chainlink]
+      responses:
+        "200":
+          description: USDC peg health data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DepegResponse"
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+        "503":
+          description: Chainlink data temporarily unavailable
+
+  /arb:
+    get:
+      operationId: getArb
+      summary: Market Stress Index
+      description: |
+        Returns a Market Stress Index derived from cross-chain price dislocations across
+        decentralized exchanges. Higher stress levels indicate broader market dislocation.
+        No parameters required.
+        **Cost: $0.02 USDC per query.**
+      tags: [Analysis]
+      responses:
+        "200":
+          description: Market stress index data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbResponse"
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+        "503":
+          description: Data freshness guarantee exceeded
+
+  /cex-dex/{token}:
+    get:
+      operationId: getCexDex
+      summary: CEX-DEX price divergence
+      description: |
+        Compares the centralized exchange (Coinbase) price against decentralized exchange
+        (Chainlink/DeFiLlama) prices for a token in real time. Returns the divergence in basis
+        points with directional bias. Supported tokens: ETH, BTC, LINK, UNI, AAVE, ARB, OP, SOL,
+        AVAX, NEAR, SUI, DOGE, CRV (aliases WETH/WBTC/CHAINLINK supported).
+        **Cost: $0.02 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: Token symbol (case-insensitive). Aliases WETH/WBTC/CHAINLINK accepted.
+          schema:
+            type: string
+            example: ETH
+      responses:
+        "200":
+          description: CEX-DEX divergence data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CexDexResponse"
+        "402":
+          description: Payment required
+        "404":
+          description: Token not supported
+        "429":
+          description: Rate limit exceeded
+        "503":
+          description: Data freshness guarantee exceeded
+
+  /liquidations/{coin}:
+    get:
+      operationId: getLiquidations
+      summary: Liquidation heatmap
+      description: |
+        Returns estimated liquidation zones across 5 leverage tiers (3x, 5x, 10x, 25x, 50x) for
+        both longs and shorts. Includes cascade risk scoring, long/short ratio from funding skew,
+        and nearest-cluster alerts.
+        **Cost: $0.03 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Coin ticker (case-insensitive)
+          schema:
+            type: string
+            example: BTC
+      responses:
+        "200":
+          description: Liquidation heatmap data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiquidationsResponse"
+        "400":
+          description: Invalid coin
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+        "503":
+          description: Data freshness guarantee exceeded
+
+  /bundle/{coin}:
+    get:
+      operationId: getBundle
+      summary: Complete analysis bundle
+      description: |
+        Returns pulse + sentiment + funding + spread combined in one response — a discount versus
+        calling the endpoints individually.
+        **Cost: $0.05 USDC per query.**
+      tags: [Analysis]
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Coin ticker (case-insensitive)
+          schema:
+            type: string
+            example: BTC
+        - name: timeframes
+          in: query
+          required: false
+          description: "Comma-separated timeframes. Valid values: 5m, 15m, 1h, 4h, 1d, 1w"
+          schema:
+            type: string
+            default: "1h,4h"
+      responses:
+        "200":
+          description: Complete analysis bundle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BundleResponse"
+        "400":
+          description: Invalid coin
+        "402":
+          description: Payment required
+        "429":
+          description: Rate limit exceeded
+        "504":
+          description: Engine timeout
 
   /health:
     get:
@@ -500,11 +657,6 @@ components:
           type: number
         coins_available:
           type: integer
-        data_age_seconds:
-          type: number
-        warning:
-          type: string
-          description: "Optional. 'stale_data' if data older than 2 hours."
 
     SentimentResponse:
       type: object
@@ -569,113 +721,29 @@ components:
         meta:
           $ref: "#/components/schemas/Meta"
 
-    BundleResponse:
-      type: object
-      properties:
-        coin:
-          type: string
-        timestamp_iso:
-          type: string
-          format: date-time
-        pulse:
-          description: Same schema as PulseResponse (minus top-level coin/timestamp)
-          type: object
-        sentiment:
-          description: Same schema as SentimentResponse.sentiment
-          type: object
-        funding:
-          description: Same schema as FundingResponse.funding
-          type: object
-        meta:
-          allOf:
-            - $ref: "#/components/schemas/Meta"
-            - type: object
-              properties:
-                bundle:
-                  type: boolean
-                  example: true
-                discount_pct:
-                  type: integer
-                  example: 17
-
-    Error:
-      type: object
-      properties:
-        detail:
-          type: string
-          example: "Coin 'XYZ' not available. Use coin='list' to see available coins."
-
-    ScreenerResponse:
-      type: object
-      properties:
-        endpoint:
-          type: string
-          example: screener
-        coins_scanned:
-          type: integer
-        top_n:
-          type: integer
-        results:
-          type: array
-          items:
-            type: object
-            properties:
-              coin:
-                type: string
-              signal_strength:
-                type: number
-              rsi_14:
-                type: number
-              rsi_zone:
-                type: string
-                enum: [overbought, bullish, neutral, bearish, oversold]
-              trend:
-                type: string
-              vol_regime:
-                type: string
-                enum: [LOW, NORMAL, HIGH, EXTREME]
-              funding_bias:
-                type: string
-                enum: [long_pays, short_pays, neutral]
-              confluence_bias:
-                type: string
-                enum: [bullish, neutral, bearish]
-              confluence_score:
-                type: number
-              oi_trend:
-                type: string
-                enum: [RISING, FALLING, FLAT]
-              price:
-                type: number
-        meta:
-          $ref: "#/components/schemas/Meta"
-
     OIResponse:
       type: object
       properties:
-        endpoint:
-          type: string
-          example: oi
         coin:
           type: string
         timestamp_iso:
           type: string
           format: date-time
-        open_interest:
+        oi:
           type: object
           properties:
             current:
               type: number
-              description: Current OI in USD notional
+              description: Current OI (raw, exchange units)
             delta_1h:
               type: number
-              description: OI change over 1 hour (fraction)
+              description: OI change over 1 hour (percent)
             delta_4h:
               type: number
-              description: OI change over 4 hours (fraction)
+              description: OI change over 4 hours (percent)
             delta_24h:
               type: number
-              description: OI change over 24 hours (fraction)
+              description: OI change over 24 hours (percent)
             percentile:
               type: number
               description: OI percentile rank (0-100)
@@ -693,9 +761,6 @@ components:
     SpreadResponse:
       type: object
       properties:
-        endpoint:
-          type: string
-          example: spread
         coin:
           type: string
         timestamp_iso:
@@ -704,20 +769,21 @@ components:
         spread:
           type: object
           properties:
-            bid_ask_spread_bps:
+            bid_ask_bps:
               type: number
               description: Bid-ask spread in basis points
-            impact_bid:
+            slippage_10k_bps:
               type: number
-            impact_ask:
+              description: Estimated slippage at $10k notional (bps)
+            slippage_50k_bps:
               type: number
-            mid_price:
+              description: Estimated slippage at $50k notional (bps)
+            slippage_100k_bps:
               type: number
-            estimated_slippage_bps:
-              type: object
-              description: Slippage estimates at $10k, $50k, $100k, $500k notional
-              additionalProperties:
-                type: number
+              description: Estimated slippage at $100k notional (bps)
+            slippage_500k_bps:
+              type: number
+              description: Estimated slippage at $500k notional (bps)
             liquidity_score:
               type: integer
               minimum: 1
@@ -726,26 +792,70 @@ components:
         meta:
           $ref: "#/components/schemas/Meta"
 
-    CorrelationResponse:
+    ScreenerResponse:
       type: object
       properties:
-        endpoint:
-          type: string
-          example: correlation
         timestamp_iso:
           type: string
           format: date-time
-        btc_correlation:
+        coins_scanned:
+          type: integer
+        coins:
+          type: array
+          items:
+            type: object
+            properties:
+              coin:
+                type: string
+              signal_strength:
+                type: number
+              rsi_zone:
+                type: string
+                enum: [OVERBOUGHT, BULLISH, NEUTRAL, BEARISH, OVERSOLD]
+              trend:
+                type: string
+                enum: [BULLISH, NEUTRAL, BEARISH]
+              vol_regime:
+                type: string
+                enum: [LOW, NORMAL, HIGH, EXTREME]
+              funding_bias:
+                type: string
+                enum: [LONG_PAYING, SHORT_PAYING, NEUTRAL]
+              confluence_bias:
+                type: string
+                enum: [BULLISH, NEUTRAL, BEARISH]
+              oi_trend:
+                type: string
+                enum: [RISING, FALLING, FLAT]
+              cex_dex_spread_bps:
+                type: number
+                description: CEX-DEX price divergence in basis points (where available)
+              cex_dex_direction:
+                type: string
+                enum: [cex_premium, dex_premium]
+                description: Divergence direction (where available)
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    CorrelationResponse:
+      type: object
+      properties:
+        timestamp_iso:
+          type: string
+          format: date-time
+        coins_analyzed:
+          type: integer
+        avg_correlation:
+          type: number
+        regime:
+          type: string
+          enum: [CORRELATED, MIXED, DECORRELATED]
+          description: "CORRELATED (avg >0.7), MIXED (0.3-0.7), DECORRELATED (<0.3)"
+        correlations:
           type: object
           description: Per-coin correlation coefficient with BTC (-1.0 to 1.0)
           additionalProperties:
             type: number
-        average_correlation:
-          type: number
-        regime:
-          type: string
-          enum: [CORRELATED, MIXED, DECORRELATED, UNKNOWN]
-          description: "CORRELATED (avg >0.7), MIXED (0.3-0.7), DECORRELATED (<0.3)"
         sector_averages:
           type: object
           description: Per-sector average correlation (L1, L2, DeFi, Meme)
@@ -753,6 +863,275 @@ components:
             type: number
         meta:
           $ref: "#/components/schemas/Meta"
+
+    BasisResponse:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          example: basis
+        coin:
+          type: string
+        timestamp_iso:
+          type: string
+          format: date-time
+        basis:
+          type: object
+          properties:
+            hl_oracle_px:
+              type: number
+              description: Hyperliquid oracle price (USD)
+            chainlink_spot_px:
+              type: number
+              description: Chainlink aggregated spot price (USD)
+            basis_bps:
+              type: number
+              description: Basis in basis points. Positive = HL premium, negative = HL discount
+            basis_pct:
+              type: number
+              description: Basis as percentage
+            direction:
+              type: string
+              enum: [hl_premium, hl_discount, aligned]
+            signal:
+              type: string
+              enum: [neutral, mildly_bullish, mildly_bearish, bearish_contrarian, bullish_contrarian]
+            interpretation:
+              type: string
+              description: Human-readable explanation
+        meta:
+          allOf:
+            - $ref: "#/components/schemas/Meta"
+            - type: object
+              properties:
+                chainlink_data_age_seconds:
+                  type: number
+                chainlink_feed_network:
+                  type: string
+                  example: arbitrum
+                hl_source:
+                  type: string
+                  example: oracle
+
+    DepegResponse:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          example: depeg
+        timestamp_iso:
+          type: string
+          format: date-time
+        usdc:
+          type: object
+          properties:
+            price_usd:
+              type: number
+              description: Current USDC price from Chainlink (8 decimal precision)
+            deviation_bps:
+              type: number
+              description: Absolute deviation from $1.00 in basis points
+            deviation_pct:
+              type: number
+              description: Deviation as percentage
+            peg_status:
+              type: string
+              enum: [HEALTHY, ELEVATED, WARNING, CRITICAL]
+            risk_level:
+              type: string
+              enum: [low, medium, high, critical]
+            interpretation:
+              type: string
+              description: Human-readable risk assessment
+        infrastructure:
+          type: object
+          properties:
+            arbitrum_sequencer:
+              type: string
+              enum: [up, down, unknown]
+            chainlink_feeds_active:
+              type: integer
+        meta:
+          allOf:
+            - $ref: "#/components/schemas/Meta"
+            - type: object
+              properties:
+                chainlink_data_age_seconds:
+                  type: number
+                oracle_network:
+                  type: string
+                  example: arbitrum
+                feed_address:
+                  type: string
+
+    ArbResponse:
+      type: object
+      properties:
+        timestamp_iso:
+          type: string
+          format: date-time
+        stress_level:
+          type: string
+          enum: [LOW, MODERATE, HIGH, EXTREME]
+        stress_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Normalized stress score (0.0-1.0)
+        dislocations_count:
+          type: integer
+          description: Number of active cross-chain price dislocations
+        avg_dislocation_bps:
+          type: number
+          description: Average dislocation magnitude in basis points
+        max_dislocation_bps:
+          type: number
+          description: Maximum single dislocation in basis points
+        data_age_seconds:
+          type: number
+          description: Age of underlying arb scanner data
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    CexDexResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Normalized token symbol
+        cex_price:
+          type: number
+          description: Coinbase price (USD)
+        dex_price:
+          type: number
+          description: On-chain price (USD)
+        dex_source:
+          type: string
+          description: DEX price source (e.g., chainlink, defillama)
+        divergence_bps:
+          type: number
+          description: Price divergence in basis points
+        direction:
+          type: string
+          enum: [cex_premium, dex_premium]
+        timestamp_iso:
+          type: string
+          format: date-time
+        data_age_seconds:
+          type: number
+          description: Age of underlying snapshot
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    LiquidationsResponse:
+      type: object
+      properties:
+        coin:
+          type: string
+        timestamp_iso:
+          type: string
+          format: date-time
+        price:
+          type: number
+          description: Current mid price (USD)
+        zones:
+          type: object
+          properties:
+            longs:
+              type: array
+              description: Long liquidation zones (descending by estimated notional)
+              items:
+                $ref: "#/components/schemas/LiquidationZone"
+            shorts:
+              type: array
+              description: Short liquidation zones (ascending by estimated notional)
+              items:
+                $ref: "#/components/schemas/LiquidationZone"
+        cascade_risk:
+          type: object
+          properties:
+            score:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Cascade risk score (0.0-1.0)
+            level:
+              type: string
+              enum: [LOW, MODERATE, HIGH, EXTREME]
+            nearest_cluster:
+              type: object
+              properties:
+                side:
+                  type: string
+                  enum: [long, short]
+                price:
+                  type: number
+                  description: Cluster price level
+                distance_pct:
+                  type: number
+                  description: Distance from current price (%)
+        long_short_ratio:
+          type: number
+          description: Estimated long/short ratio from funding skew
+        meta:
+          $ref: "#/components/schemas/Meta"
+
+    LiquidationZone:
+      type: object
+      properties:
+        price:
+          type: number
+          description: Estimated liquidation price
+        leverage:
+          type: string
+          description: Leverage tier (e.g., "10x")
+          example: "10x"
+        estimated_notional:
+          type: number
+          description: Estimated notional at risk (USD)
+
+    BundleResponse:
+      type: object
+      description: |
+        Combines pulse + sentiment + funding + spread. The pulse/sentiment/funding/spread
+        members mirror the corresponding standalone response bodies (minus their top-level
+        coin/timestamp keys).
+      properties:
+        coin:
+          type: string
+        timestamp_iso:
+          type: string
+          format: date-time
+        pulse:
+          type: object
+          description: Same shape as PulseResponse (minus top-level coin/timestamp)
+        sentiment:
+          type: object
+          description: Same shape as SentimentResponse.sentiment
+        funding:
+          type: object
+          description: Same shape as FundingResponse.funding
+        spread:
+          type: object
+          description: Same shape as SpreadResponse.spread
+        meta:
+          allOf:
+            - $ref: "#/components/schemas/Meta"
+            - type: object
+              properties:
+                bundle:
+                  type: boolean
+                  example: true
+                discount_pct:
+                  type: integer
+                  example: 20
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Coin 'XYZ' not available. Use coin='list' to see available coins."
 
     RateLimitError:
       type: object
