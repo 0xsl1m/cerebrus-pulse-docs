@@ -1,0 +1,165 @@
+{
+  "name": "Cerebrus Pulse",
+  "description": "Institutional-grade crypto derivatives intelligence. Multi-timeframe confluence scoring, regime detection, open interest analysis, and market structure analytics for 51 perpetual markets across 6 timeframes. Quantitative models with battle-tested analytics.",
+  "url": "https://api.cerebruspulse.xyz/a2a",
+  "version": "1.0.0",
+  "protocolVersion": "0.3",
+  "provider": {
+    "organization": "Cerebrus Pulse",
+    "url": "https://cerebruspulse.xyz"
+  },
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": ["application/json", "text/plain"],
+  "defaultOutputModes": ["application/json"],
+  "skills": [
+    {
+      "id": "confluence-analysis",
+      "name": "Multi-Timeframe Confluence Analysis",
+      "description": "Comprehensive technical analysis across 6 timeframes (5m, 15m, 1h, 4h, 1d, 1W) with confluence scoring, trend detection, RSI, MACD, Bollinger Bands, and regime classification for any of 51 perpetual markets.",
+      "tags": ["crypto", "derivatives", "perpetuals", "technical-analysis", "confluence", "multi-timeframe", "regime-detection"],
+      "examples": [
+        "Analyze BTC confluence across all timeframes",
+        "What is ETH's regime and confluence score?",
+        "Give me SOL technical analysis"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "market-screener",
+      "name": "Derivatives Market Screener",
+      "description": "Screen 51 perpetual markets by confluence score, regime, trend strength, volatility, and momentum. Identify strongest bullish or bearish setups across the entire derivatives universe.",
+      "tags": ["crypto", "screener", "derivatives", "market-scan", "perpetuals", "signal-detection", "ranking"],
+      "examples": [
+        "Show top 10 strongest bullish setups",
+        "Screen for risk-off regime coins",
+        "Which coins have the highest confluence scores?"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "open-interest-analysis",
+      "name": "Open Interest Analysis",
+      "description": "Real-time open interest data with delta calculations, percentile ranking, and price-OI divergence detection for perpetual futures.",
+      "tags": ["crypto", "open-interest", "futures", "positioning", "funding-rate", "derivatives", "divergence"],
+      "examples": [
+        "What is BTC open interest trend?",
+        "Show SOL OI divergence analysis",
+        "Is ETH OI rising or falling?"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "spread-analysis",
+      "name": "Spread & Liquidity Analysis",
+      "description": "Bid-ask spread analysis with slippage estimates at $10k, $50k, $100k, and $500k notional sizes plus liquidity scoring for perpetual markets.",
+      "tags": ["crypto", "spread", "liquidity", "slippage", "market-microstructure", "derivatives"],
+      "examples": [
+        "What is the ETH spread and slippage?",
+        "Show BTC liquidity depth",
+        "Compare spread for SOL vs DOGE"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "correlation-matrix",
+      "name": "Cross-Asset Correlation Analysis",
+      "description": "BTC-alt correlation matrix with regime classification and sector averages across perpetual markets. Useful for portfolio diversification and risk assessment.",
+      "tags": ["crypto", "correlation", "portfolio", "risk", "diversification", "derivatives", "regime"],
+      "examples": [
+        "Show correlation matrix for top coins",
+        "How correlated is SOL with BTC?",
+        "Which coins are least correlated with BTC?"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "intelligence-bundle",
+      "name": "Full Intelligence Bundle",
+      "description": "Complete analytical package combining confluence analysis, open interest, funding rates, spread analysis, and regime detection for a single asset. 17% discount vs individual calls.",
+      "tags": ["crypto", "bundle", "comprehensive", "derivatives", "intelligence", "all-in-one"],
+      "examples": [
+        "Give me the full intelligence bundle for SOL",
+        "Complete analysis of BTC",
+        "Full report on ETH"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "basis-analysis",
+      "name": "Chainlink Basis Analysis",
+      "description": "Compares Hyperliquid perpetual oracle price vs Chainlink aggregated spot price to measure exchange-level premium or discount. Identifies funding pressure, deleveraging events, and mean-reversion signals.",
+      "tags": ["crypto", "chainlink", "basis", "oracle", "perpetuals", "premium", "discount", "funding-pressure"],
+      "examples": [
+        "What is the BTC basis between HL and Chainlink?",
+        "Is ETH trading at a premium on Hyperliquid?",
+        "Show SOL perp premium vs spot"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "cex-dex-divergence",
+      "name": "CEX-DEX Price Divergence",
+      "description": "Cross-venue price comparison between Coinbase (CEX) and DEX/Chainlink oracle prices. Detects venue-specific dislocations, arbitrage opportunities, and market stress signals.",
+      "tags": ["crypto", "cex", "dex", "divergence", "arbitrage", "cross-venue", "coinbase", "chainlink"],
+      "examples": [
+        "Compare ETH price on Coinbase vs DEX",
+        "Show CEX-DEX divergence for LINK",
+        "Is there a price gap between exchanges for BTC?"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "collateral-health",
+      "name": "USDC Collateral Health Monitor",
+      "description": "Real-time USDC peg status via Chainlink oracle on Arbitrum. Monitors stablecoin deviation from $1.00 peg, Arbitrum sequencer health, and provides risk assessment for USDC-margined positions.",
+      "tags": ["crypto", "usdc", "stablecoin", "depeg", "collateral", "risk", "chainlink", "health"],
+      "examples": [
+        "Is USDC currently pegged?",
+        "Check USDC collateral health",
+        "What is the stablecoin risk level?"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    }
+  ],
+  "extensions": {
+    "x402": {
+      "networks": [
+        {
+          "network": "eip155:8453",
+          "currency": "USDC",
+          "label": "Base"
+        },
+        {
+          "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+          "currency": "USDC",
+          "label": "Solana"
+        }
+      ],
+      "pricing": {
+        "confluence-analysis": "0.02",
+        "market-screener": "0.04",
+        "open-interest-analysis": "0.01",
+        "spread-analysis": "0.008",
+        "correlation-matrix": "0.03",
+        "intelligence-bundle": "0.04",
+        "stress-index": "0.02",
+        "basis-analysis": "0.015",
+        "cex-dex-divergence": "0.015",
+        "collateral-health": "0.008"
+      },
+      "facilitator": "https://api.cdp.coinbase.com/platform/v2/x402"
+    }
+  }
+}
