@@ -23,6 +23,10 @@ import Footer from '../components/Footer.astro';
   <!-- CTA Banner -->
   <div class="section-divider"></div>
   <section class="landing-section landing-section-dark relative overflow-hidden cta-final">
+    <!-- Pulse-band key art backdrop -->
+    <div class="section-keyart section-keyart-band" aria-hidden="true">
+      <img src="/images/pulse-band.png" alt="" loading="lazy" decoding="async" />
+    </div>
     <!-- Trinity ambient glows -->
     <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
       <div class="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[250px] rounded-full blur-[140px] cta-glow-blue"
@@ -37,6 +41,7 @@ import Footer from '../components/Footer.astro';
     </div>
 
     <div class="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 text-center">
+      <div class="section-eyebrow" data-reveal="slide-up">06 · Launch</div>
       <h2 class="mb-4 text-2xl sm:text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
         <span class="gradient-text">Start Building</span>
       </h2>

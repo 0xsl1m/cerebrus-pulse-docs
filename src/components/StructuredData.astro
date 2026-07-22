@@ -14,13 +14,14 @@ const {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "0xsl1m",
-  "url": "https://github.com/0xsl1m",
+  "name": "Archon Digital LLC",
+  "url": "https://archondigital.xyz",
+  "sameAs": ["https://github.com/0xsl1m"],
   "brand": {
     "@type": "Brand",
     "name": "Cerebrus Pulse"
   },
-  "description": "Cerebrus Pulse is a real-time crypto intelligence API for Hyperliquid perpetuals, built by 0xsl1m."
+  "description": "Cerebrus Pulse is a real-time crypto intelligence API for Hyperliquid perpetuals, a product of Archon Digital LLC."
 };
 
 const webApplicationSchema = {
@@ -209,7 +210,8 @@ const webApplicationSchema = {
   ],
   "creator": {
     "@type": "Organization",
-    "name": "0xsl1m"
+    "name": "Archon Digital LLC",
+    "url": "https://archondigital.xyz"
   }
 };
 
@@ -225,7 +227,8 @@ const techArticleSchema = {
   },
   "author": {
     "@type": "Organization",
-    "name": "0xsl1m"
+    "name": "Archon Digital LLC",
+    "url": "https://archondigital.xyz"
   },
   "proficiencyLevel": "Beginner",
   "dependencies": "x402 SDK (Python or TypeScript) for micropayments, A2A JSON-RPC for agent-to-agent, or ACP SDK for Virtuals Protocol agent integration"
@@ -238,7 +241,12 @@ const productSchema = {
   "description": "Real-time crypto intelligence API for Hyperliquid perpetuals. Multi-timeframe technical analysis, sentiment, and funding data via x402 micropayments, A2A protocol, or ACP agent commerce.",
   "brand": {
     "@type": "Brand",
-    "name": "0xsl1m"
+    "name": "Cerebrus Pulse"
+  },
+  "manufacturer": {
+    "@type": "Organization",
+    "name": "Archon Digital LLC",
+    "url": "https://archondigital.xyz"
   },
   "category": "Cryptocurrency Analysis API",
   "url": url,

@@ -8,31 +8,120 @@ const coins = [
 ];
 
 const timeframes = ['5m', '15m', '1h', '4h', '1d', '1w'];
+
+// Split into two ticker rows; each row is duplicated in markup for a seamless loop
+const rowA = coins.filter((_, i) => i % 2 === 0);
+const rowB = coins.filter((_, i) => i % 2 === 1);
 ---
 
 <div class="section-divider"></div>
 <section class="landing-section landing-section-alt" id="coins">
   <div class="mx-auto max-w-5xl">
+    <div class="section-eyebrow" data-reveal="slide-up">03 · Coverage</div>
     <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
       <span class="gradient-text">50+ Hyperliquid Perpetuals</span>
     </h2>
     <p class="mb-6 text-center text-[#94A3B8] text-lg" data-reveal="slide-up">Real-time data across six timeframes</p>
 
-    <div class="mb-10 flex items-center justify-center gap-3">
+    <div class="mb-10 flex items-center justify-center gap-3" data-reveal="slide-up">
       {timeframes.map((tf) => (
         <span class="tf-pill">{tf}</span>
       ))}
     </div>
+  </div>
 
-    <div class="flex flex-wrap justify-center gap-2.5">
-      {coins.map((coin, i) => (
-        <span class="coin-chip" data-reveal="wave" style={`transition-delay: ${i * 40}ms`}>{coin}</span>
-      ))}
-      <span class="coin-chip text-[#64748B]" data-reveal="wave" style={`transition-delay: ${coins.length * 40}ms`}>51 total</span>
+  <!-- Ticker: full-bleed dual marquee, counter-scrolling, pauses on hover -->
+  <div class="coin-ticker" data-reveal="slide-up" aria-label="Supported coins ticker">
+    <div class="coin-ticker-row">
+      <div class="coin-ticker-track coin-ticker-left">
+        {rowA.map((coin) => (
+          <span class="coin-chip">{coin}</span>
+        ))}
+        {rowA.map((coin) => (
+          <span class="coin-chip coin-chip-dup" aria-hidden="true">{coin}</span>
+        ))}
+      </div>
     </div>
+    <div class="coin-ticker-row">
+      <div class="coin-ticker-track coin-ticker-right">
+        {rowB.map((coin) => (
+          <span class="coin-chip">{coin}</span>
+        ))}
+        {rowB.map((coin) => (
+          <span class="coin-chip coin-chip-dup" aria-hidden="true">{coin}</span>
+        ))}
+      </div>
+    </div>
+  </div>
 
+  <div class="mx-auto max-w-5xl">
     <p class="mt-8 text-center text-sm text-[#64748B]">
+      <span class="text-[#94A3B8]">51 markets.</span>
       Use <code class="text-[#60A5FA] bg-[#0F1D35] px-1.5 py-0.5 rounded text-xs">GET /coins</code> for the live list. It's free.
     </p>
   </div>
 </section>
+
+<style>
+  .coin-ticker {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+    mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  }
+
+  .coin-ticker-row {
+    overflow: hidden;
+  }
+
+  .coin-ticker-track {
+    display: flex;
+    gap: 0.625rem;
+    width: max-content;
+  }
+
+  .coin-ticker-track :global(.coin-chip) {
+    flex-shrink: 0;
+  }
+
+  .coin-ticker-left {
+    animation: ticker-left 48s linear infinite;
+  }
+
+  .coin-ticker-right {
+    animation: ticker-right 56s linear infinite;
+  }
+
+  .coin-ticker:hover .coin-ticker-track {
+    animation-play-state: paused;
+  }
+
+  @keyframes ticker-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  @keyframes ticker-right {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .coin-ticker-track {
+      animation: none;
+      flex-wrap: wrap;
+      width: auto;
+      justify-content: center;
+    }
+    .coin-ticker-track :global(.coin-chip-dup) {
+      display: none;
+    }
+    .coin-ticker {
+      mask-image: none;
+      -webkit-mask-image: none;
+    }
+  }
+</style>
