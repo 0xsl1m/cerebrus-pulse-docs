@@ -32,7 +32,7 @@ Client                          Pulse Gateway               Base / Solana
   |<---------------------------------|                                |
 ```
 
-The x402 SDK in your HTTP client handles steps 2–4 automatically. From your perspective, it's just a normal HTTP request that costs $0.01–$0.04. The 402 response includes payment options for **both Base and Solana** — your SDK picks whichever chain your wallet is configured for.
+The x402 SDK in your HTTP client handles steps 2–4 automatically. From your perspective, it's just a normal HTTP request that costs $0.01-$0.06. The 402 response includes payment options for **both Base and Solana** — your SDK picks whichever chain your wallet is configured for.
 
 ## Supported Networks
 
@@ -51,16 +51,19 @@ Cerebrus Pulse accepts USDC payments on two chains. The 402 response includes pa
 
 | Endpoint | Price | Description |
 |----------|-------|-------------|
-| `/screener` | $0.04 USDC | Market-wide scan of 50+ coins |
-| `/pulse/{coin}` | $0.02 USDC | Multi-timeframe technical analysis |
-| `/sentiment` | $0.01 USDC | Market sentiment labels |
-| `/funding/{coin}` | $0.01 USDC | Funding rate analysis |
-| `/oi/{coin}` | $0.01 USDC | Open interest analysis |
-| `/spread/{coin}` | $0.008 USDC | Spread & liquidity analysis |
-| `/correlation` | $0.03 USDC | BTC-alt correlation matrix |
+| `/screener` | $0.06 USDC | Market-wide scan of 50+ coins |
+| `/bundle/{coin}` | $0.05 USDC | Combined bundle (17% discount) |
+| `/correlation` | $0.05 USDC | BTC-alt correlation matrix |
+| `/liquidations/{coin}` | $0.03 USDC | Liquidation heatmap by leverage tier |
+| `/pulse/{coin}` | $0.025 USDC | Multi-timeframe technical analysis |
 | `/arb` | $0.02 USDC | Market Stress Index |
-| `/cex-dex/{token}` | $0.01 USDC | CEX-DEX price divergence |
-| `/bundle/{coin}` | $0.04 USDC | Combined bundle (17% discount) |
+| `/basis/{coin}` | $0.02 USDC | Hyperliquid vs Chainlink basis |
+| `/cex-dex/{token}` | $0.02 USDC | CEX-DEX price divergence |
+| `/oi/{coin}` | $0.015 USDC | Open interest analysis |
+| `/spread/{coin}` | $0.015 USDC | Spread & liquidity analysis |
+| `/depeg` | $0.01 USDC | USDC collateral health monitor |
+| `/funding/{coin}` | $0.01 USDC | Funding rate analysis |
+| `/sentiment` | $0.01 USDC | Market sentiment labels |
 | `/health` | Free | Gateway status |
 | `/coins` | Free | List available coins |
 
@@ -104,8 +107,7 @@ See the [Python SDK Guide](/guides/python-sdk) for full integration details.
 
 ### TypeScript / Node.js
 ```bash
-npm install x402 viem                # For Base
-npm install x402 @solana/web3.js     # For Solana
+npm install x402-fetch               # Base and Solana
 ```
 See the [TypeScript SDK Guide](/guides/typescript-sdk) for full integration details.
 
@@ -118,7 +120,7 @@ The x402 SDKs support budget limits to prevent accidental overspending:
 # Configure in your client setup
 ```
 
-At Pulse prices ($0.01–$0.04 per query), $10 of USDC gives you 250–1000 API calls.
+At Pulse prices ($0.01-$0.06 per query), $10 of USDC gives you roughly 166-1000 API calls.
 
 ## Security
 
