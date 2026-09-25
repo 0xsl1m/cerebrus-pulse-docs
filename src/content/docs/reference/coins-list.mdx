@@ -70,8 +70,8 @@ The coin list is dynamic. Use `GET /coins` (free) for the live, up-to-date list.
 ## Notes
 
 - **Case-insensitive**: `btc`, `BTC`, and `Btc` all work.
-- **Hyperliquid naming**: Some tickers differ from other exchanges. For example, Hyperliquid uses `kPEPE` internally — the API normalizes this automatically, so you can use `PEPE`.
-- **New coins**: As Hyperliquid adds new perpetuals and sufficient candle history accumulates, they become available on Pulse automatically.
+- **1000-token markets**: Hyperliquid lists PEPE only as `kPEPE`, a market in units of 1000 PEPE. Use `PEPE` or `kPEPE`; responses give prices per 1000 PEPE and say so in `market_symbol` and `price_unit`.
+- **The list is curated**: coins are added to the API's allowlist by hand, not automatically when Hyperliquid lists a market.
 
 ## Programmatic Discovery
 

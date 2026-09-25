@@ -1,144 +1,113 @@
 # Cerebrus Pulse
 
-> Real-time crypto intelligence API for Hyperliquid perpetuals. Two integration paths: x402 micropayments for developers and ACP agent commerce for autonomous AI agents.
+> Pay-per-call crypto market data for AI agents: multi-timeframe technical analysis, hourly funding, open
+> interest, liquidation models and more for 51 Hyperliquid perpetuals. No account or API key: each call
+> costs $0.01–$0.06 in USDC, paid over the x402 protocol (v2) on Base or Solana. Informational
+> only, not financial advice.
 
-## What is Cerebrus Pulse?
+## Try it free
 
-Cerebrus Pulse is a pay-per-query crypto analysis API that provides multi-timeframe technical analysis, market sentiment, funding rate data, open interest analysis, spread/liquidity scoring, BTC-alt correlation, and confluence scoring for 50+ Hyperliquid perpetual contracts. It requires no API keys, no subscriptions, and no accounts. Your wallet is your identity.
+- [Free demo](https://api.cerebruspulse.xyz/demo/BTC): `GET /demo/{coin}` returns the live /pulse analysis (1h, 4h), cached 60 s, 3 requests a minute, no wallet.
+- [Coin list](https://api.cerebruspulse.xyz/coins): `GET /coins`, free.
+- [Health](https://api.cerebruspulse.xyz/health): `GET /health`, free.
 
-Cerebrus Pulse serves two audiences through two protocols:
-1. **x402 (HTTP micropayments)** — For developers, bots, and dashboards. Standard HTTP requests paid with USDC on Base or Solana.
-2. **ACP (Agent Commerce Protocol)** — For autonomous AI agents on Virtuals Protocol. Agent-to-agent commerce with VIRTUAL token escrow.
+## How payment works
 
-## Base URL
+An unpaid request to a paid endpoint returns HTTP 402 with the x402 v2 terms in the base64 `PAYMENT-REQUIRED`
+header. An x402 v2 client (Python `x402`, TypeScript `@x402/fetch`) signs a USDC payment and retries with the
+`PAYMENT-SIGNATURE` header; the receipt comes back in `PAYMENT-RESPONSE`. The payer needs USDC only, no ETH
+or SOL for gas. x402 v1 clients (`x402-fetch` 1.x, the `X-PAYMENT` header) are not accepted. A request refused
+with a 4xx or failing with a 5xx is not charged.
 
-https://api.cerebruspulse.xyz
+- [x402 payments guide](https://cerebruspulse.xyz/guides/x402-payments): the flow, networks, wallets and spend caps.
 
-## Integration Path 1: x402 (Direct API)
+## Paid endpoints
 
-Payment: USDC on Base (chain ID 8453) or Solana (mainnet)
-Auth: Wallet signature via x402 SDK (no API keys)
-Latency: Low (single HTTP request)
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `GET /screener` | $0.06 USDC | Scan 50+ perpetuals: signal strength, RSI zone, trend, volatility, funding bias, confluence |
+| `GET /pulse/{coin}` | $0.025 USDC | Multi-timeframe technical analysis, derivatives snapshot, regime and confluence |
+| `GET /sentiment` | $0.01 USDC | Bucketed market sentiment label and how many sources are live |
+| `GET /funding/{coin}` | $0.01 USDC | Funding rate statistics over a 1-168 hour lookback (hourly rates) |
+| `GET /oi/{coin}` | $0.015 USDC | Open interest: 1h/4h/24h deltas, percentile, trend, price-OI divergence |
+| `GET /spread/{coin}` | $0.015 USDC | Impact spread and uncalibrated slippage estimates at $10k-$500k |
+| `GET /correlation` | $0.05 USDC | BTC-alt correlation of 1h returns (30h, 7d or 30d window) with regime |
+| `GET /basis/{coin}` | $0.02 USDC | Hyperliquid perp premium to its oracle, plus oracle vs Chainlink spot |
+| `GET /depeg` | $0.01 USDC | USDC peg status from the Chainlink oracle on Arbitrum |
+| `GET /arb` | $0.02 USDC | Market Stress Index from cross-chain arbitrage scans |
+| `GET /cex-dex/{token}` | $0.02 USDC | Coinbase vs DEX/Chainlink price divergence for one token |
+| `GET /liquidations/{coin}` | $0.03 USDC | Modelled liquidation zones by leverage tier, with cascade risk |
+| `GET /bundle/{coin}` | $0.05 USDC | /pulse output plus 24h funding statistics and sentiment in one call |
+| `GET /demo/{coin}` | Free | Live /pulse analysis (1h, 4h), cached 60 s, 3 requests/min, no wallet |
+| `GET /health` | Free | Gateway health status |
+| `GET /coins` | Free | List the supported perpetuals |
 
-### Paid Endpoints
+Units: funding rates are per hour (Hyperliquid pays hourly); open interest is counted in contracts, not USD;
+`confluence.score` is a bullish vote share from 0 to 1, not a confidence; prices are per `price_unit`
+(PEPE is the 1000-token `kPEPE` market).
 
-- GET /screener?top_n=50 — $0.06 USDC — Market screener: scan 50+ coins for signal strength, RSI zone, trend, vol regime, funding bias, confluence, OI trend. 60s cache.
-- GET /pulse/{coin}?timeframes=1h,4h — $0.025 USDC — Multi-timeframe technical analysis (RSI, EMAs, ATR, Bollinger Bands, VWAP, Z-score, trend, regime, confluence scoring, derivatives data)
-- GET /sentiment — $0.01 USDC — Aggregated market sentiment analysis (fear/greed, momentum, funding bias)
-- GET /funding/{coin}?lookback_hours=24 — $0.01 USDC — Historical and current funding rates with annualized projections
-- GET /oi/{coin} — $0.015 USDC — Open interest analysis: current OI, 1h/4h/24h deltas, percentile rank, trend, price-OI divergence signals
-- GET /spread/{coin} — $0.015 USDC — Spread and liquidity: bid-ask spread (bps), slippage estimates at $10k-$500k notional, liquidity score (1-10)
-- GET /correlation — $0.05 USDC — BTC-alt correlation matrix for top 15 coins with regime classification (CORRELATED/MIXED/DECORRELATED) and sector averages
-- GET /basis/{coin} — $0.02 USDC — Chainlink basis: HL perpetual oracle vs Chainlink aggregated spot price. Basis in bps with signal interpretation (neutral, bullish/bearish contrarian)
-- GET /depeg — $0.01 USDC — USDC collateral health via Chainlink oracle on Arbitrum. Peg status (HEALTHY/ELEVATED/WARNING/CRITICAL), deviation bps, sequencer health
-- GET /arb — $0.02 USDC — Market Stress Index derived from cross-chain arbitrage signals. Stress level (LOW/MODERATE/HIGH/EXTREME) with score 0.0-1.0
-- GET /cex-dex/{token} — $0.02 USDC — CEX-DEX price divergence: Coinbase vs DEX/Chainlink prices for 13 tokens. Spread in bps with directional bias
-- GET /liquidations/{coin} — $0.03 USDC — Liquidation heatmap: estimated liquidation zones across 5 leverage tiers (long/short), cascade risk scoring, and long/short ratio
-- GET /bundle/{coin}?timeframes=1h,4h — $0.05 USDC — The /pulse output, 24h /funding statistics and /sentiment in one request ($0.045 bought separately; no /spread analysis)
+The bundle ($0.05) returns the /pulse output, 24-hour /funding statistics and /sentiment in one request. It costs $0.005 more than buying them separately (/pulse $0.025 + /funding $0.01 + /sentiment $0.01 = $0.045). It does not include the /spread analysis.
 
-### Free Endpoints
+## Integrations
 
-- GET /health — Gateway health status (no payment required)
-- GET /coins — List all available coins (no payment required)
+- [MCP server](https://cerebruspulse.xyz/guides/mcp-server): `uvx cerebrus-pulse-mcp` for Claude, Cursor or any MCP client; pays inside spend limits.
+- [Python client](https://cerebruspulse.xyz/guides/python-client): `pip install "cerebrus-pulse[pay]"`, typed methods that pay inside spend limits.
+- [LangChain tools](https://cerebruspulse.xyz/guides/langchain): `pip install "langchain-cerebrus-pulse[pay]"`.
+- [Python with x402](https://cerebruspulse.xyz/guides/python-sdk): the raw x402 SDK (`pip install "x402[evm]" httpx eth-account`).
+- [TypeScript with x402](https://cerebruspulse.xyz/guides/typescript-sdk): `npm install @x402/fetch @x402/evm viem`.
+- [A2A](https://cerebruspulse.xyz/guides/a2a-agents): an A2A agent card and `message/send`; A2A names the HTTP endpoint and its x402 terms, and payment happens over HTTP.
+- [ACP](https://cerebruspulse.xyz/guides/acp-agents): Virtuals Protocol jobs paid in USDC ($0.25–$2.50), delivering the same engine JSON. Paused.
 
-### Supported Timeframes
+## A2A skills
 
-5m, 15m, 1h, 4h, 1d, 1w
+| Skill ID | Served by | Price (USDC) | Needs a coin | Description |
+|----------|-----------|--------------|--------------|-------------|
+| `confluence-analysis` | `GET /pulse/{coin}` | $0.025 | Yes | Multi-timeframe technical analysis with the confluence vote share |
+| `market-screener` | `GET /screener` | $0.06 | No | Screen 50+ perpetuals by signal strength |
+| `open-interest-analysis` | `GET /oi/{coin}` | $0.015 | Yes | OI deltas, percentile, trend and price-OI divergence |
+| `spread-analysis` | `GET /spread/{coin}` | $0.015 | Yes | Impact spread and slippage estimates |
+| `correlation-matrix` | `GET /correlation` | $0.05 | No | BTC-alt correlation matrix with regime |
+| `intelligence-bundle` | `GET /bundle/{coin}` | $0.05 | Yes | Pulse, 24h funding and sentiment in one call |
+| `basis-analysis` | `GET /basis/{coin}` | $0.02 | Yes | Perp premium to the Hyperliquid oracle, and oracle vs Chainlink |
+| `cex-dex-divergence` | `GET /cex-dex/{token}` | $0.02 | Yes | Coinbase vs DEX/Chainlink divergence for one token |
+| `collateral-health` | `GET /depeg` | $0.01 | No | USDC peg status from Chainlink |
+| `liquidation-heatmap` | `GET /liquidations/{coin}` | $0.03 | Yes | Modelled liquidation zones with cascade risk |
+| `market-stress` | `GET /arb` | $0.02 | No | Cross-chain arbitrage stress index |
 
-### How x402 Payment Works
+## Machine-readable
 
-1. Client sends a standard HTTP GET request
-2. Server responds with 402 Payment Required + payment details
-3. x402 SDK in client auto-signs a USDC micropayment on Base or Solana
-4. Server verifies payment and returns JSON data
+- [OpenAPI (docs site)](https://cerebruspulse.xyz/openapi.yaml): generated from the payment routes and real engine output.
+- [OpenAPI (API)](https://api.cerebruspulse.xyz/openapi.json): the gateway's own copy.
+- [x402 manifest](https://api.cerebruspulse.xyz/.well-known/x402): priced endpoint catalog.
+- [A2A agent card](https://api.cerebruspulse.xyz/.well-known/agent-card.json): skills and prices.
+- [Full documentation](https://cerebruspulse.xyz/llms-full.txt): every docs page in one file.
 
-## Integration Path 2: ACP (Agent Commerce Protocol)
+## Docs
 
-Payment: VIRTUAL token via escrow on Virtuals Protocol
-Auth: ACP SDK + agent wallet
-Best for: Autonomous agent workflows, AI-synthesized analysis
+- [Overview](https://cerebruspulse.xyz/overview): what the API is and every endpoint with its price.
+- [Quickstart](https://cerebruspulse.xyz/quickstart): the free demo, then a first paid call in Python or TypeScript.
+- [Response Schemas](https://cerebruspulse.xyz/reference/response-schemas): units, the common meta block and every enum.
+- [Rate Limits & Errors](https://cerebruspulse.xyz/reference/rate-limits): 12 requests a minute per IP, error formats.
+- [x402 vs A2A vs ACP](https://cerebruspulse.xyz/reference/x402-vs-acp): the three ways in.
+- [GET /pulse/{coin}](https://cerebruspulse.xyz/api/pulse): $0.025 USDC.
+- [GET /sentiment](https://cerebruspulse.xyz/api/sentiment): $0.01 USDC.
+- [GET /funding/{coin}](https://cerebruspulse.xyz/api/funding): $0.01 USDC.
+- [GET /bundle/{coin}](https://cerebruspulse.xyz/api/bundle): $0.05 USDC.
+- [GET /screener](https://cerebruspulse.xyz/api/screener): $0.06 USDC.
+- [GET /oi/{coin}](https://cerebruspulse.xyz/api/oi): $0.015 USDC.
+- [GET /spread/{coin}](https://cerebruspulse.xyz/api/spread): $0.015 USDC.
+- [GET /correlation](https://cerebruspulse.xyz/api/correlation): $0.05 USDC.
+- [GET /basis/{coin}](https://cerebruspulse.xyz/api/basis): $0.02 USDC.
+- [GET /cex-dex/{token}](https://cerebruspulse.xyz/api/cex-dex): $0.02 USDC.
+- [GET /depeg](https://cerebruspulse.xyz/api/depeg): $0.01 USDC.
+- [GET /liquidations/{coin}](https://cerebruspulse.xyz/api/liquidations): $0.03 USDC.
+- [GET /arb](https://cerebruspulse.xyz/api/arb): $0.02 USDC.
 
-### ACP Offerings
+## Supported coins
 
-- cerebrus_pulse — $0.03 — Real-time technical analysis (same data as x402 /pulse endpoint)
-- cerebrus_synthesis Lite — $0.25 — Quick market snapshot, 1 model, 60s timeout
-- cerebrus_synthesis Standard — $0.75 — Full multi-model synthesis, 3 models, 90s timeout
-- cerebrus_synthesis Premium — $2.50 — Deep research with adversarial deliberation, 5+ models, 300s timeout
+AAVE, ADA, APT, ARB, ATOM, AVAX, BERA, BNB, BTC, CRV, DOGE, DOT, DYDX, EIGEN, ENA, ENS, ETH, FET, FIL, HBAR, HYPE, IMX, INJ, JUP, LDO, LINK, LTC, MATIC, MKR, MNT, NEAR, ONDO, OP, PENDLE, PEPE, POL, PYTH, RENDER, SEI, SNX, SOL, STX, SUI, TAO, TIA, TRX, UNI, WIF, WLD, XLM, XRP (51; PEPE trades as kPEPE). Live list: https://api.cerebruspulse.xyz/coins.
 
-### ACP Job Flow
+## Disclaimer
 
-1. Your agent discovers Cerebrus Pulse on Virtuals Protocol marketplace
-2. Agents negotiate terms and payment tier
-3. VIRTUAL token locked in escrow
-4. Cerebrus executes the job and delivers result
-5. Payment released on delivery
-
-## Supported Coins (50+)
-
-AAVE, ADA, APT, ARB, ATOM, AVAX, BERA, BNB, BTC, CRV, DOGE, DOT, DYDX, EIGEN, ENA, ENS, ETH, FET, FIL, HBAR, HYPE, IMX, INJ, JUP, LDO, LINK, LTC, MATIC, MKR, MNT, NEAR, ONDO, OP, PENDLE, PEPE, POL, PYTH, RENDER, SEI, SNX, SOL, STX, SUI, TAO, TIA, TRX, UNI, WIF, WLD, XLM, XRP.
-
-Use GET /coins for the live list (free, no payment required).
-
-## Technical Analysis Indicators
-
-Each /pulse response includes per-timeframe:
-- RSI (14-period) with zone classification
-- EMA 20, EMA 50, EMA 200 with stack alignment
-- ATR (14-period) absolute and percentage
-- Bollinger Bands (upper, middle, lower, width, position)
-- VWAP (20-period)
-- Z-score (100-period)
-- Trend direction and label
-- Candle freshness timestamp
-
-Plus cross-timeframe:
-- Confluence score (0.0-1.0) with directional bias
-- Market regime (RISK_ON, RISK_OFF, etc.)
-- Derivatives data (funding rate, open interest, spread)
-
-## Rate Limits
-
-- 12 requests per minute per IP
-- 20 requests per minute per wallet
-- 3 concurrent requests
-- 1,000 requests per day
-- Free endpoints (/health, /coins) are not rate limited
-
-## Getting Started
-
-### x402 (Developers)
-1. Install the x402 SDK for your language (Python or TypeScript)
-2. Configure with your Base or Solana wallet (needs USDC)
-3. Make HTTP requests to any endpoint — payment is automatic
-4. Documentation: https://cerebruspulse.xyz/quickstart
-
-### ACP (AI Agents)
-1. Install @virtuals-protocol/acp-node SDK
-2. Configure with your agent wallet
-3. Discover and create jobs with "cerebrus-pulse" seller
-4. Documentation: https://cerebruspulse.xyz/guides/acp-agents
-
-## Links
-
-- Documentation: https://cerebruspulse.xyz/overview
-- API Reference — Screener: https://cerebruspulse.xyz/api/screener
-- API Reference — Pulse: https://cerebruspulse.xyz/api/pulse
-- API Reference — Sentiment: https://cerebruspulse.xyz/api/sentiment
-- API Reference — Funding: https://cerebruspulse.xyz/api/funding
-- API Reference — OI: https://cerebruspulse.xyz/api/oi
-- API Reference — Spread: https://cerebruspulse.xyz/api/spread
-- API Reference — Correlation: https://cerebruspulse.xyz/api/correlation
-- API Reference — Basis (Chainlink): https://cerebruspulse.xyz/api/basis
-- API Reference — Depeg (Chainlink): https://cerebruspulse.xyz/api/depeg
-- API Reference — Arb (Stress Index): https://cerebruspulse.xyz/api/arb
-- API Reference — CEX-DEX: https://cerebruspulse.xyz/api/cex-dex
-- API Reference — Liquidations: https://cerebruspulse.xyz/api/liquidations
-- API Reference — Bundle: https://cerebruspulse.xyz/api/bundle
-- Quickstart: https://cerebruspulse.xyz/quickstart
-- x402 Payments Guide: https://cerebruspulse.xyz/guides/x402-payments
-- ACP for Agents: https://cerebruspulse.xyz/guides/acp-agents
-- Python SDK: https://cerebruspulse.xyz/guides/python-sdk
-- TypeScript SDK: https://cerebruspulse.xyz/guides/typescript-sdk
-- Response Schemas: https://cerebruspulse.xyz/reference/response-schemas
-- Supported Coins: https://cerebruspulse.xyz/reference/coins-list
-- Rate Limits: https://cerebruspulse.xyz/reference/rate-limits
+Cerebrus Pulse provides market data and technical indicators for informational purposes only. Nothing it
+returns is financial, investment or trading advice.

@@ -5,12 +5,14 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/build-llms.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "test": "node --test --test-concurrency=1 \"tests/*.test.mjs\"",
     "sync:gateway": "node scripts/sync-gateway.mjs",
-    "check:gateway": "node scripts/sync-gateway.mjs --check"
+    "check:gateway": "node scripts/sync-gateway.mjs --check",
+    "build:llms": "node scripts/build-llms.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.3.0",

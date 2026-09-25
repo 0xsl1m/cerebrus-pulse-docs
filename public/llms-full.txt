@@ -1,86 +1,293 @@
-# Cerebrus Pulse — Full Technical Reference
+# Cerebrus Pulse — full documentation
 
-> Real-time crypto intelligence API for Hyperliquid perpetuals. Two integration paths: x402 micropayments (USDC on Base or Solana) for developers and ACP agent commerce (VIRTUAL on Virtuals Protocol) for autonomous AI agents.
+> Every page of https://cerebruspulse.xyz, in sidebar order, generated from the docs sources by scripts/build-llms.mjs.
+> Response examples are real engine output. Informational only, not financial advice.
 
-## Service Overview
-
-Cerebrus Pulse is a pay-per-query crypto analysis API built by 0xsl1m. It provides multi-timeframe technical analysis, market sentiment, funding rate data, and multi-signal confluence scoring for 50+ Hyperliquid perpetual contracts.
-
-Key differentiator: No API keys, no subscriptions, no accounts. Two payment protocols serve two audiences:
-- x402 (HTTP 402 micropayments) for developers, bots, dashboards
-- ACP (Agent Commerce Protocol) for autonomous AI agents on Virtuals Protocol
-
-Base URL: https://api.cerebruspulse.xyz
-Blockchain: Base (chain ID 8453) + Solana (mainnet)
-Payment token: USDC on Base or Solana (x402) or VIRTUAL (ACP)
-Provider: Cerebrus Pulse
+Summary: https://cerebruspulse.xyz/llms.txt · OpenAPI: https://cerebruspulse.xyz/openapi.yaml and https://api.cerebruspulse.xyz/openapi.json
 
 ---
 
-## x402 API Reference
+Source: https://cerebruspulse.xyz/overview
 
-### GET /pulse/{coin}
+# Cerebrus Pulse
 
-Price: $0.025 USDC
-Description: Multi-timeframe technical analysis for a specific Hyperliquid perpetual.
+**Real-time multi-timeframe technical analysis for 50+ Hyperliquid perpetuals, paid via x402 micropayments on Base or Solana.**
 
-Path Parameters:
-- coin (string, required): Coin ticker, case-insensitive. Examples: BTC, ETH, SOL
+Cerebrus Pulse is an API that delivers institutional-grade technical indicators, derivatives data, market regime detection, cross-exchange divergence signals, and multi-signal confluence scoring — all accessible with a single HTTP request and a USDC micropayment.
 
-Query Parameters:
-- timeframes (string, default "1h,4h"): Comma-separated. Valid values: 5m, 15m, 1h, 4h, 1d, 1w
+## Key Features
 
-Response Schema:
+- **7 indicator families** — RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score and EMA trend, on closed candles only
+- **Confluence vote share** — Four indicators vote on each timeframe; the score (0–1) is the bullish share. A heuristic, not a validated signal
+- **Derivatives data** — Hourly funding (annualized ×24×365), open interest in contracts, impact prices and spread
+- **Market regime** — The trading system's regime label (for example `risk_on`), flagged when stale
+- **Perp basis** — Hyperliquid's perp premium to its oracle, plus how far the oracle sits from Chainlink spot
+- **USDC collateral health** — USDC peg status from the Chainlink feed on Arbitrum
+- **Market Stress Index** — A stress level from cross-chain arbitrage scans (LOW/MODERATE/HIGH/EXTREME)
+- **CEX-DEX divergence** — Coinbase against on-chain prices for the tokens the scanner covers (15 on 2026-09-24)
+- **Liquidation zones** — A model of where liquidations cluster by leverage tier, with its assumptions stated
+- **6 timeframes** — 5-minute, 15-minute, 1-hour, 4-hour, daily, weekly analysis
+- **50+ coins** — Major Hyperliquid perpetuals (BTC, ETH, SOL, and more)
+- **Dual-chain payments** — Pay with USDC on Base or Solana via x402
+
+## Payment Model
+
+Pulse uses the [x402 protocol](https://www.x402.org/) for payments:
+
+1. You make a standard HTTP request
+2. The server responds with `402 Payment Required` and payment details
+3. The x402 SDK in your client automatically signs a USDC micropayment on **Base** or **Solana**
+4. The server verifies payment and returns the data
+
+**No API keys. No subscriptions. No accounts.** Your wallet is your identity. Pay from whichever chain you prefer.
+
+## Endpoints
+
+Prices come from the gateway's payment routes; the 402 response always states the exact amount.
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `GET /screener` | $0.06 USDC | Scan 50+ perpetuals: signal strength, RSI zone, trend, volatility, funding bias, confluence |
+| `GET /pulse/{coin}` | $0.025 USDC | Multi-timeframe technical analysis, derivatives snapshot, regime and confluence |
+| `GET /sentiment` | $0.01 USDC | Bucketed market sentiment label and how many sources are live |
+| `GET /funding/{coin}` | $0.01 USDC | Funding rate statistics over a 1-168 hour lookback (hourly rates) |
+| `GET /oi/{coin}` | $0.015 USDC | Open interest: 1h/4h/24h deltas, percentile, trend, price-OI divergence |
+| `GET /spread/{coin}` | $0.015 USDC | Impact spread and uncalibrated slippage estimates at $10k-$500k |
+| `GET /correlation` | $0.05 USDC | BTC-alt correlation of 1h returns (30h, 7d or 30d window) with regime |
+| `GET /basis/{coin}` | $0.02 USDC | Hyperliquid perp premium to its oracle, plus oracle vs Chainlink spot |
+| `GET /depeg` | $0.01 USDC | USDC peg status from the Chainlink oracle on Arbitrum |
+| `GET /arb` | $0.02 USDC | Market Stress Index from cross-chain arbitrage scans |
+| `GET /cex-dex/{token}` | $0.02 USDC | Coinbase vs DEX/Chainlink price divergence for one token |
+| `GET /liquidations/{coin}` | $0.03 USDC | Modelled liquidation zones by leverage tier, with cascade risk |
+| `GET /bundle/{coin}` | $0.05 USDC | /pulse output plus 24h funding statistics and sentiment in one call |
+| `GET /demo/{coin}` | Free | Live /pulse analysis (1h, 4h), cached 60 s, 3 requests/min, no wallet |
+| `GET /health` | Free | Gateway health status |
+| `GET /coins` | Free | List the supported perpetuals |
+
+## Quick Links
+
+- **[Quickstart](https://cerebruspulse.xyz/quickstart)** — Make your first API call in 5 minutes
+- **[API Reference](https://cerebruspulse.xyz/api/pulse)** — Full endpoint documentation
+- **[x402 Payments Guide](https://cerebruspulse.xyz/guides/x402-payments)** — Understand the payment flow
+- **[MCP Server](https://cerebruspulse.xyz/guides/mcp-server)** — Use it from Claude, Cursor or any MCP client
+- **[Python Client](https://cerebruspulse.xyz/guides/python-client)** — `pip install cerebrus-pulse`, pays inside spend limits
+- **[LangChain](https://cerebruspulse.xyz/guides/langchain)** — LangChain tools on the same client
+- **[Python with x402](https://cerebruspulse.xyz/guides/python-sdk)** and **[TypeScript with x402](https://cerebruspulse.xyz/guides/typescript-sdk)** — Pay with the x402 SDKs directly
+
+## For AI Agents
+
+Agents on the Virtuals Protocol can also buy the same engine data through ACP (Agent Commerce Protocol), in USDC; the ACP seller is paused while it moves to ACP v2. See the [ACP for Agents](https://cerebruspulse.xyz/guides/acp-agents) guide. A2A agents can discover every paid endpoint through the [Agent Card](https://cerebruspulse.xyz/guides/a2a-agents).
+
+## Disclaimer
+
+Cerebrus Pulse provides market data and technical indicators for **informational purposes only**. Nothing provided by this API constitutes financial advice, investment advice, or trading advice. AI-generated analysis, signals, trade ideas, and sentiment labels are algorithmic outputs — not recommendations to buy, sell, or hold any asset. Cryptocurrency trading involves substantial risk of loss. You are solely responsible for your own trading decisions.
+
+---
+
+Source: https://cerebruspulse.xyz/quickstart
+
+# Quickstart
+
+Get real-time technical analysis data from Cerebrus Pulse in under 5 minutes.
+
+## Try the Free Demo First
+
+No wallet needed — the `/demo/{coin}` endpoint returns live 1h + 4h analysis for free (3 requests/min):
+
+```bash
+curl https://api.cerebruspulse.xyz/demo/BTC
+```
+
+Ready for full access with all 6 timeframes and higher rate limits? Set up x402 payments below.
+
+## Prerequisites
+
+- A wallet with USDC on **Base** (chain ID 8453) or **Solana** (mainnet)
+- Python 3.10+ or Node.js 18+
+
+## 1. Install the x402 SDK
+
+**Python:**
+
+```bash
+# For Base (EVM):
+pip install "x402[evm]" httpx eth-account
+# For Solana: pin solana below 0.37 (solana 0.40 removed a module x402's Solana client imports)
+pip install "x402[svm]" "solana>=0.36,<0.37" "solders>=0.27,<0.28" httpx
+```
+**TypeScript:**
+
+```bash
+# x402 v2 client. The older x402-fetch 1.x cannot pay this API.
+npm install @x402/fetch @x402/evm viem
+```
+
+## 2. Make Your First Request
+
+**Python:**
+
+```python
+import asyncio
+import os
+from eth_account import Account
+from x402 import x402Client
+from x402.http.clients import x402HttpxClient
+from x402.mechanisms.evm.exact import register_exact_evm_client
+
+# A dedicated, low-balance Base wallet (keep the key out of source code)
+PRIVATE_KEY = os.environ["BASE_WALLET_PRIVATE_KEY"]
+
+async def main():
+    x402 = x402Client()
+    register_exact_evm_client(x402, Account.from_key(PRIVATE_KEY))
+    x402.set_spend_controls({"max_amount_per_payment": "$0.10"})
+
+    async with x402HttpxClient(x402) as client:
+        # Fetch BTC technical analysis (1h + 4h timeframes)
+        resp = await client.get(
+            "https://api.cerebruspulse.xyz/pulse/BTC",
+            params={"timeframes": "1h,4h"}
+        )
+        data = resp.json()
+
+        print(f"BTC Price: ${data['price']['current']:,.2f}")
+        print(f"Confluence: {data['confluence']['score']} ({data['confluence']['bias']})")
+
+        for tf, analysis in data["timeframes"].items():
+            ind = analysis["indicators"]
+            print(f"\n[{tf}] RSI: {ind['rsi_14']} ({ind['rsi_zone']})")
+            print(f"[{tf}] Trend: {ind['trend']['label']}")
+
+asyncio.run(main())
+```
+**TypeScript:**
+
+```typescript
+import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm";
+import { privateKeyToAccount } from "viem/accounts";
+
+// A dedicated, low-balance Base wallet (keep the key out of source code)
+const account = privateKeyToAccount(process.env.BASE_WALLET_PRIVATE_KEY as `0x${string}`);
+
+const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
+  schemes: [{ network: "eip155:8453", client: new ExactEvmScheme(account) }],
+  spendControls: { maxAmountPerPayment: "$0.10" },
+});
+
+const response = await fetchWithPayment(
+  "https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h"
+);
+
+const data = await response.json();
+
+console.log(`BTC Price: $${data.price.current.toLocaleString()}`);
+console.log(`Confluence: ${data.confluence.score} (${data.confluence.bias})`);
+```
+**cURL:**
+
+```bash
+# Step 1: an unpaid request returns 402 with the x402 v2 terms
+curl -i "https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h"
+# HTTP/1.1 402 Payment Required
+# payment-required: <base64 x402 v2 terms: price, networks, payTo>
+
+# Step 2: an x402 v2 client signs a USDC payment and retries the same
+# request with a PAYMENT-SIGNATURE header. The receipt comes back in
+# PAYMENT-RESPONSE. See the Python and TypeScript tabs.
+```
+
+## 3. Example Response
+
+The fields are described on the [/pulse reference](https://cerebruspulse.xyz/api/pulse). Funding rates are hourly, open interest is in
+contracts (BTC here, not USD), and `confluence.score` is a bullish vote share, not a confidence.
+
+_GET /pulse/BTC?timeframes=1h,4h: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
 ```json
 {
-  "coin": "ETH",
-  "timestamp_iso": "2026-03-02T14:30:00Z",
+  "coin": "BTC",
+  "market_symbol": "BTC",
+  "price_unit": "1 BTC",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
   "price": {
-    "current": 3842.15
+    "current": 84512.5
   },
   "timeframes": {
     "1h": {
       "indicators": {
-        "rsi_14": 58.3,
+        "rsi_14": 49.16,
         "rsi_zone": "neutral",
-        "atr_14": 42.80,
-        "atr_pct": 1.11,
-        "ema_20": 3830.45,
-        "ema_50": 3815.20,
-        "ema_200": 3780.10,
-        "vwap_20": 3835.60,
-        "zscore_100": 0.85,
+        "atr_14": 495.286126,
+        "atr_pct": 0.5881,
+        "ema_20": 84134.27882,
+        "ema_50": 84555.185241,
+        "ema_200": 82476.178645,
+        "vwap_20": 84001.13142,
+        "zscore_100": -0.173,
         "bollinger": {
-          "upper": 3900.00,
-          "middle": 3840.00,
-          "lower": 3780.00,
-          "width_pct": 3.13,
-          "position_pct": 0.52
+          "upper": 84796.137043,
+          "middle": 84040.55,
+          "lower": 83284.962957,
+          "width_pct": 1.7981,
+          "position_pct": 0.6194
         },
         "trend": {
           "direction": 1,
-          "label": "bullish",
-          "ema_stack": "bull_aligned"
+          "label": "weak_bullish",
+          "ema_stack": "mixed"
         }
       },
-      "candle_freshness_seconds": 120.5
+      "candle_freshness_seconds": 300.8,
+      "last_closed_candle_time": "2026-09-24T17:00:00Z",
+      "stale": false
+    },
+    "4h": {
+      "indicators": {
+        "rsi_14": 47.17,
+        "rsi_zone": "neutral",
+        "atr_14": 727.64216,
+        "atr_pct": 0.8715,
+        "ema_20": 84338.703076,
+        "ema_50": 82423.649073,
+        "ema_200": 77957.991913,
+        "vwap_20": 84859.417592,
+        "zscore_100": 1.1847,
+        "bollinger": {
+          "upper": 87855.263546,
+          "middle": 85270.85,
+          "lower": 82686.436454,
+          "width_pct": 6.0617,
+          "position_pct": 0.1557
+        },
+        "trend": {
+          "direction": 1,
+          "label": "weak_bullish",
+          "ema_stack": "mixed"
+        }
+      },
+      "candle_freshness_seconds": 3900.8,
+      "last_closed_candle_time": "2026-09-24T16:00:00Z",
+      "stale": false
     }
   },
   "derivatives": {
-    "funding_rate": 0.0001,
+    "funding_rate": 0.0000125,
     "funding_annualized_pct": 10.95,
-    "open_interest": 8500000000,
-    "impact_bid": 3841.50,
-    "impact_ask": 3842.80,
-    "spread_bps": 3.39
+    "funding_interval_hours": 1,
+    "open_interest": 39370.3015,
+    "impact_bid": 84485.4,
+    "impact_ask": 84500,
+    "impact_spread_bps": 1.73,
+    "spread_bps": 1.73
   },
   "regime": {
-    "current": "RISK_ON",
-    "as_of": 1740939296
+    "current": "unknown",
+    "as_of": 0
   },
   "confluence": {
-    "score": 0.50,
-    "bias": "neutral",
+    "score": 0.62,
+    "bias": "bullish",
     "signals": {
       "rsi": "neutral",
       "trend": "bullish",
@@ -88,588 +295,3582 @@ Response Schema:
       "zscore": "neutral"
     },
     "bullish_count": 1,
-    "bearish_count": 0
+    "bearish_count": 0,
+    "per_timeframe": {
+      "1h": {
+        "score": 0.62,
+        "bull_fraction": 0.625,
+        "family_scores": {
+          "trend_following": 0.75,
+          "mean_reversion": 0.5
+        },
+        "bias": "bullish",
+        "signals": {
+          "rsi": "neutral",
+          "trend": "bullish",
+          "bollinger": "neutral",
+          "zscore": "neutral"
+        },
+        "bullish_count": 1,
+        "bearish_count": 0
+      },
+      "4h": {
+        "score": 0.75,
+        "bull_fraction": 0.75,
+        "family_scores": {
+          "trend_following": 0.75,
+          "mean_reversion": 0.75
+        },
+        "bias": "bullish",
+        "signals": {
+          "rsi": "neutral",
+          "trend": "bullish",
+          "bollinger": "bullish",
+          "zscore": "neutral"
+        },
+        "bullish_count": 2,
+        "bearish_count": 0
+      }
+    },
+    "aligned": true,
+    "alignment_score": 1,
+    "bull_fraction": 0.625,
+    "family_scores": {
+      "trend_following": 0.75,
+      "mean_reversion": 0.5
+    },
+    "primary_timeframe": "1h",
+    "score_type": "heuristic_vote_share",
+    "validated": false,
+    "definition": "score = bull_fraction = (bullish + 0.5*neutral) / votes on primary_timeframe; an unvalidated heuristic, not a confidence or probability"
   },
   "meta": {
     "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
-    "execution_ms": 189,
-    "coins_available": 51
+    "execution_ms": 0,
+    "coins_available": 51,
+    "data_age_seconds": 60,
+    "as_of": {
+      "market_data": "2026-09-24T17:04:00Z",
+      "candles_1h": "2026-09-24T17:00:00Z",
+      "candles_4h": "2026-09-24T16:00:00Z"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      }
+    ]
   }
 }
 ```
 
-Field Reference — Indicators (per timeframe):
-- rsi_14 (number, 0-100): Relative Strength Index, 14-period
-- rsi_zone (string): overbought (>=70), bullish (60-70), neutral (40-60), bearish (30-40), oversold (<=30)
-- atr_14 (number, >=0): Average True Range, 14-period, absolute price units
-- atr_pct (number, >=0): ATR as percentage of current price
-- ema_20, ema_50, ema_200 (number, >0): Exponential Moving Averages
-- vwap_20 (number, >0): Volume-Weighted Average Price, 20-period
-- zscore_100 (number): Standard deviations from 100-period mean
-- bollinger.upper, bollinger.middle, bollinger.lower (number): Bollinger Band levels (20-period SMA, 2 sigma)
-- bollinger.width_pct (number): Band width as percentage of middle band
-- bollinger.position_pct (number, typically 0-1): Price position within bands. 0.0=lower, 0.5=middle, 1.0=upper. Can exceed range.
-- trend.direction (number): 1=bullish, -1=bearish, 0=neutral
-- trend.label (string): bullish, bearish, neutral
-- trend.ema_stack (string): bull_aligned (20>50>200), bear_aligned (20<50<200), mixed (crossing), flat (converged)
-- candle_freshness_seconds (number): Seconds since most recent candle close
+## Next Steps
 
-Field Reference — Derivatives:
-- funding_rate (number): Current 8-hour funding rate (raw decimal, e.g., 0.0001 = 0.01%)
-- funding_annualized_pct (number): Annualized funding rate percentage
-- open_interest (number): Total open interest in USD notional
-- impact_bid (number): Impact bid price (simulated large sell)
-- impact_ask (number): Impact ask price (simulated large buy)
-- spread_bps (number): Bid-ask spread in basis points
-
-Field Reference — Confluence:
-- score (number, 0.0-1.0): Multi-signal confidence score
-- bias (string): bullish, bearish, neutral
-- signals (object): Per-indicator direction — rsi, trend, bollinger, zscore each report bullish/bearish/neutral
-- bullish_count (number, 0-4): Count of bullish signals
-- bearish_count (number, 0-4): Count of bearish signals
-
-Field Reference — Regime:
-- current (string): Market regime label — RISK_ON, RISK_OFF, etc.
-- as_of (number): Unix timestamp of last regime calculation
-
-Field Reference — Meta:
-- provider (string): Always "Cerebrus Pulse"
-- offering (string): Always "cerebrus_pulse"
-- execution_ms (number): Server processing time in milliseconds
-- coins_available (number): Total coins supported
-- data_age_seconds (number): Age of underlying market data
-- warning (string, optional): "stale_data" if data older than 2 hours
-
-Errors: 400 (invalid coin or insufficient data), 402 (payment required), 429 (rate limited), 504 (engine timeout >15s)
+- **[API Reference — /pulse](https://cerebruspulse.xyz/api/pulse)** — Full endpoint documentation with all parameters
+- **[API Reference — /screener](https://cerebruspulse.xyz/api/screener)** — Scan all 50+ coins in one call
+- **[MCP Server](https://cerebruspulse.xyz/guides/mcp-server)** — Use Cerebrus Pulse from Claude, Cursor or any MCP client
+- **[Python Client](https://cerebruspulse.xyz/guides/python-client)** — `pip install cerebrus-pulse`: typed methods that pay for you
+- **[Python with x402](https://cerebruspulse.xyz/guides/python-sdk)** — Full Python integration with the raw x402 SDK
+- **[TypeScript with x402](https://cerebruspulse.xyz/guides/typescript-sdk)** — TypeScript/Node.js integration
+- **[x402 Payments Guide](https://cerebruspulse.xyz/guides/x402-payments)** — Deep dive into how micropayments work
+- **[Response Schemas](https://cerebruspulse.xyz/reference/response-schemas)** — Detailed field descriptions and value ranges
+- **[Supported Coins](https://cerebruspulse.xyz/reference/coins-list)** — Full list of available assets
 
 ---
 
-### GET /sentiment
+Source: https://cerebruspulse.xyz/api/screener
 
-Price: $0.01 USDC
-Description: Aggregated market sentiment analysis across the crypto market. Not coin-specific.
+# GET /screener
 
-No path or query parameters required.
+**Price:** $0.06 USDC per call
 
-Response Schema:
+Scans every covered Hyperliquid perpetual on its 1h candles and returns one compact row per market, sorted by
+`signal_strength`: how extreme the readings are, not which way they point. Use it to find the markets worth
+a closer look, then call [/pulse](https://cerebruspulse.xyz/api/pulse) on them.
+
+The full scan is cached for 60 seconds; each request takes its own `top_n` rows from it.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/screener
+```
+
+### Query Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `top_n` | integer | `50` | 1–50 | How many rows to return. Outside the range the request is refused with 400 before any price is quoted. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `screener` |
+| `coins_scanned` | number | Markets the scan computed |
+| `top_n` | number | Rows returned |
+| `results[].coin` | string | The symbol |
+| `results[].market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `results[].price_unit` | string | What `price` is quoted per: `1 BTC`, or `1000 PEPE` |
+| `results[].price` | number | Hyperliquid mid price in USD per `price_unit`. Absent when the feed has no mid |
+| `results[].signal_strength` | number | 0 to 3.5, higher = more extreme: `abs(RSI − 50) / 50` + `min(abs(z) / 2, 1)` + `min(ATR% / 5, 1)` + 0.5 when the trend has a direction. It measures intensity, not direction |
+| `results[].rsi_14` | number \| null | 1h RSI (14) |
+| `results[].rsi_zone` | string | `overbought`, `bullish`, `neutral`, `bearish`, `oversold` or `unknown`, as in [/pulse](https://cerebruspulse.xyz/api/pulse) |
+| `results[].trend` | string | The 1h trend label: `bullish`, `weak_bullish`, `neutral`, `weak_bearish`, `bearish` or `insufficient_data` |
+| `results[].zscore` | number \| null | 1h z-score of the close against the last 100 closes |
+| `results[].atr_pct` | number \| null | 1h ATR as a percentage of the close |
+| `results[].vol_regime` | string | From `atr_pct`: `LOW` (< 1), `NORMAL` (< 3), `HIGH` (< 6), `EXTREME`, or `UNKNOWN` |
+| `results[].funding_rate` | number \| null | Current Hyperliquid funding rate, per hour |
+| `results[].funding_bias` | string | `long_pays` above the 0.0000125/h baseline, `short_pays` below −0.0000125/h, else `neutral` |
+| `results[].confluence_bias` | string | The 1h confluence bias: `bullish`, `bearish`, `neutral` or `unknown` |
+| `results[].confluence_score` | number | The 1h confluence vote share, 0–1 (see [/pulse](https://cerebruspulse.xyz/api/pulse)) |
+| `results[].oi_trend` | string | From the 4h open-interest change: `RISING` (> +3%), `FALLING` (< −3%), `FLAT`, or `UNKNOWN` without history |
+| `results[].cex_dex_spread_bps` | number \| null | Coinbase vs DEX/Chainlink divergence in basis points, where the CEX-DEX feed covers the token; else null |
+| `results[].cex_dex_direction` | string \| null | `cex_premium` or `dex_premium`, or null |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_screener` |
+| `meta.cex_dex_data_age_seconds` | number | Age of the CEX-DEX snapshot the divergence columns come from |
+| `meta.cex_dex_tokens_available` | number | Tokens that snapshot covers |
+| `meta.cached` | boolean | Optional. `true` when the rows come from the 60-second cache |
+| `meta.cache_age_seconds` | number | Optional. With `cached`: how old the cached scan is |
+
+`meta.as_of` holds `market_data`, `candles_1h` and `candles_4h` (the oldest of the markets' newest closed
+candles), `oi_history` and `cex_dex`.
+
+## Example
+
+_GET /screener?top_n=3: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
 ```json
 {
-  "timestamp_iso": "2026-03-02T14:30:00Z",
-  "sentiment": {
-    "overall": "bullish",
-    "score": 0.68,
-    "labels": {
-      "fear_greed": "greed",
-      "momentum": "positive",
-      "funding_bias": "long"
+  "endpoint": "screener",
+  "coins_scanned": 3,
+  "top_n": 3,
+  "results": [
+    {
+      "coin": "ETH",
+      "market_symbol": "ETH",
+      "price_unit": "1 ETH",
+      "signal_strength": 0.952,
+      "rsi_14": 48.53,
+      "rsi_zone": "neutral",
+      "trend": "weak_bullish",
+      "zscore": -0.597,
+      "atr_pct": 0.6224,
+      "vol_regime": "LOW",
+      "funding_rate": 0.0000125,
+      "funding_bias": "neutral",
+      "confluence_bias": "bullish",
+      "confluence_score": 0.62,
+      "oi_trend": "FLAT",
+      "cex_dex_spread_bps": 4,
+      "cex_dex_direction": "cex_premium",
+      "price": 2688.45
+    },
+    {
+      "coin": "DOGE",
+      "market_symbol": "DOGE",
+      "price_unit": "1 DOGE",
+      "signal_strength": 0.795,
+      "rsi_14": 54.21,
+      "rsi_zone": "neutral",
+      "trend": "weak_bullish",
+      "zscore": 0.012,
+      "atr_pct": 1.0226,
+      "vol_regime": "NORMAL",
+      "funding_rate": 0.0000125,
+      "funding_bias": "neutral",
+      "confluence_bias": "neutral",
+      "confluence_score": 0.5,
+      "oi_trend": "FLAT",
+      "cex_dex_spread_bps": -1.4,
+      "cex_dex_direction": "dex_premium",
+      "price": 0.096249
+    },
+    {
+      "coin": "BTC",
+      "market_symbol": "BTC",
+      "price_unit": "1 BTC",
+      "signal_strength": 0.721,
+      "rsi_14": 49.16,
+      "rsi_zone": "neutral",
+      "trend": "weak_bullish",
+      "zscore": -0.173,
+      "atr_pct": 0.5881,
+      "vol_regime": "LOW",
+      "funding_rate": 0.0000125,
+      "funding_bias": "neutral",
+      "confluence_bias": "bullish",
+      "confluence_score": 0.62,
+      "oi_trend": "RISING",
+      "cex_dex_spread_bps": 4.3,
+      "cex_dex_direction": "cex_premium",
+      "price": 84512.5
+    }
+  ],
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "pulse_screener",
+    "execution_ms": 0,
+    "data_age_seconds": 60,
+    "as_of": {
+      "market_data": "2026-09-24T17:04:00Z",
+      "candles_1h": "2026-09-24T17:00:00Z",
+      "candles_4h": "2026-09-24T16:00:00Z",
+      "oi_history": "2026-09-24T16:45:00Z",
+      "cex_dex": "2026-09-24T16:59:05Z"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      },
+      {
+        "name": "Coinbase Exchange",
+        "url": "https://www.coinbase.com"
+      },
+      {
+        "name": "Chainlink Data Feeds (Arbitrum One)",
+        "url": "https://data.chain.link"
+      }
+    ],
+    "cex_dex_data_age_seconds": 355.4,
+    "cex_dex_tokens_available": 15
+  }
+}
+```
+
+This capture held 1h candles for three markets only, so `coins_scanned` is 3; a live scan covers every
+market in [`/coins`](https://cerebruspulse.xyz/api/coins).
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | `top_n` outside 1–50 (before any price is quoted) |
+| 402 | Payment required (the standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+## Next Steps
+
+- **[GET /pulse/{coin}](https://cerebruspulse.xyz/api/pulse)** — Every timeframe and field for one market
+- **[Response Schemas](https://cerebruspulse.xyz/reference/response-schemas)** — Units, enums and the common `meta` fields
+
+---
+
+Source: https://cerebruspulse.xyz/api/pulse
+
+# GET /pulse/{coin}
+
+**Price:** $0.025 USDC per call
+
+Multi-timeframe technical analysis for one Hyperliquid perpetual: indicators computed on closed candles for
+each requested timeframe, a derivatives snapshot, the market regime and a confluence vote share.
+
+> **Try it free first:**
+> `GET /demo/{coin}` returns this response for 1h and 4h, cached for 60 seconds, 3 requests per minute, no
+> wallet. It adds `meta.demo`, `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and `meta.why_join`.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/pulse/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). Hyperliquid's name for a 1000-token market (`kPEPE`) works too. [`GET /coins`](https://cerebruspulse.xyz/api/coins) lists them. |
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `timeframes` | string | `1h,4h` | Comma-separated, from `5m`, `15m`, `1h`, `4h`, `1d`, `1w`. `1d` and `1w` are built from 1h candles. |
+
+An unknown coin (404) or timeframe (400) is refused before any price is quoted.
+
+## Response
+
+### Top level
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coin` | string | The symbol, upper-case (`PEPE`, not `kPEPE`) |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | What prices are quoted per, and what sizes count: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `price.current` | number | Hyperliquid mid price in USD per `price_unit`. Absent if the price feed has no mid for the market |
+| `timeframes` | object | One entry per requested timeframe, keyed by timeframe (`"1h"`) |
+| `derivatives` | object | Funding, open interest and impact prices. Empty if Hyperliquid's context lacks the market |
+| `regime` | object | The market regime |
+| `confluence` | object | A vote share across four indicators |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+
+### Per timeframe
+
+Indicators use closed candles only; the candle still forming is never included.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timeframes.<tf>.indicators.rsi_14` | number \| null | RSI (14, Wilder's smoothing), 0–100 |
+| `timeframes.<tf>.indicators.rsi_zone` | string | `overbought` (≥ 70), `bullish` (60–70), `neutral` (40–60), `bearish` (30–40), `oversold` (≤ 30), `unknown` |
+| `timeframes.<tf>.indicators.atr_14` | number \| null | Average true range (14), in price units |
+| `timeframes.<tf>.indicators.atr_pct` | number \| null | ATR as a percentage of the last close |
+| `timeframes.<tf>.indicators.ema_20` | number \| null | 20-period EMA of closes; null with fewer than 20 candles |
+| `timeframes.<tf>.indicators.ema_50` | number \| null | 50-period EMA; null with fewer than 50 candles |
+| `timeframes.<tf>.indicators.ema_200` | number \| null | 200-period EMA; null with fewer than 200 candles |
+| `timeframes.<tf>.indicators.vwap_20` | number \| null | Volume-weighted average close of the last 20 candles |
+| `timeframes.<tf>.indicators.zscore_100` | number \| null | Z-score of the last close against the last 100 closes |
+| `timeframes.<tf>.indicators.bollinger.upper` | number | 20-period SMA + 2 standard deviations |
+| `timeframes.<tf>.indicators.bollinger.middle` | number | 20-period SMA |
+| `timeframes.<tf>.indicators.bollinger.lower` | number | 20-period SMA − 2 standard deviations |
+| `timeframes.<tf>.indicators.bollinger.width_pct` | number | (upper − lower) / middle, as a percentage |
+| `timeframes.<tf>.indicators.bollinger.position_pct` | number | Where the last close sits in the bands as a fraction: 0 = lower band, 1 = upper band; outside 0–1 when the close is outside the bands |
+| `timeframes.<tf>.indicators.trend.direction` | number | `1`, `-1` or `0` |
+| `timeframes.<tf>.indicators.trend.label` | string | `bullish` (price > EMA20 > EMA50 > EMA200), `bearish` (the reverse), `weak_bullish` (above EMA200 otherwise), `weak_bearish` (below it), `neutral`, or `insufficient_data` (fewer than 200 candles) |
+| `timeframes.<tf>.indicators.trend.ema_stack` | string | `bull_aligned`, `bear_aligned`, `mixed`, `flat`, or `unknown` with `insufficient_data` |
+| `timeframes.<tf>.candle_freshness_seconds` | number | Seconds since the newest closed candle closed |
+| `timeframes.<tf>.last_closed_candle_time` | string | When the newest closed candle closed (ISO 8601, UTC) |
+| `timeframes.<tf>.stale` | boolean | `true` when no candle has closed for two intervals (the candle feed stalled) |
+| `timeframes.<tf>.error` | string | Optional. Replaces the fields above when a timeframe cannot be computed, e.g. `insufficient_data (12 candles)`. If every requested timeframe fails, the request gets a 400 and is not charged |
+
+### Derivatives
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `derivatives.funding_rate` | number | Current Hyperliquid funding rate **per hour**. `0.0000125` (0.00125% an hour) is Hyperliquid's baseline |
+| `derivatives.funding_annualized_pct` | number | `funding_rate × 24 × 365 × 100`: the baseline annualizes to 10.95% |
+| `derivatives.funding_interval_hours` | number | `1`: Hyperliquid pays funding every hour |
+| `derivatives.open_interest` | number | Open interest counted in `price_unit` (BTC for BTC), **not USD**. Multiply by `price.current` for USD notional |
+| `derivatives.impact_bid` | number | Hyperliquid's impact bid: the average fill price of an impact-size market sell, not the top of the book |
+| `derivatives.impact_ask` | number | Hyperliquid's impact ask |
+| `derivatives.impact_spread_bps` | number | `(impact_ask − impact_bid) / mid × 10000` |
+| `derivatives.spread_bps` | number | Deprecated: the same value as `impact_spread_bps` |
+
+### Regime
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `regime.current` | string | The market regime label published by the trading system, lower-case (for example `risk_on`, `risk_off`), or `unknown` when none is published. Treat values you do not recognize as opaque |
+| `regime.as_of` | number | Unix time in seconds (may be fractional) the regime was set; `0` when unknown |
+| `regime.stale` | boolean | Optional. Added by the gateway when the regime is more than 6 hours old; `current` is then the last known regime, not a live one |
+| `regime.age_seconds` | number | Optional. With `stale`: how old the regime is |
+| `regime.note` | string | Optional. With `stale`: a sentence saying so |
+
+### Confluence
+
+The confluence score is a **vote share**, not a confidence or probability, and it has not been validated as
+predictive. Four indicators vote on the primary timeframe: bullish counts 1, neutral 0.5, bearish 0.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `confluence.score` | number | The primary timeframe's vote share, 0–1, to 2 decimals: 1 = every vote bullish, 0.5 = balanced or neutral, 0 = every vote bearish. Sort by it to rank bullish to bearish, not by strength |
+| `confluence.bull_fraction` | number \| null | The same share to 3 decimals |
+| `confluence.bias` | string | `bullish` (share ≥ 0.625), `bearish` (≤ 0.375), `neutral`, or `unknown` when no timeframe computed |
+| `confluence.signals.rsi` | string | RSI ≥ 60 `bullish`, ≤ 40 `bearish`, else `neutral` |
+| `confluence.signals.trend` | string | The EMA trend direction |
+| `confluence.signals.bollinger` | string | Mean reversion: position above 0.8 `bearish`, below 0.2 `bullish` |
+| `confluence.signals.zscore` | string | Mean reversion: above 1.5 `bearish`, below −1.5 `bullish` |
+| `confluence.bullish_count` | number | Bullish votes on the primary timeframe |
+| `confluence.bearish_count` | number | Bearish votes on the primary timeframe |
+| `confluence.family_scores.trend_following` | number \| null | Vote share of `rsi` and `trend` alone |
+| `confluence.family_scores.mean_reversion` | number \| null | Vote share of `bollinger` and `zscore` alone. The two families often disagree, which the combined score hides |
+| `confluence.primary_timeframe` | string \| null | The first requested timeframe that computed; every top-level confluence field comes from it only |
+| `confluence.per_timeframe.<tf>` | object | The same `score`, `bull_fraction`, `family_scores`, `bias`, `signals` and counts for each computed timeframe |
+| `confluence.aligned` | boolean | `true` when at least two timeframes lean the same way and none leans the other, or all are neutral |
+| `confluence.alignment_score` | number | Share of timeframes leaning the common way; 0 when they disagree, 0.5 when all are neutral |
+| `confluence.score_type` | string | `heuristic_vote_share` |
+| `confluence.validated` | boolean | `false`: the score has no measured predictive value |
+| `confluence.definition` | string | The formula, as text |
+
+### Meta
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `meta.offering` | string | `cerebrus_pulse` |
+| `meta.coins_available` | number | How many markets the API covers |
+| `meta.as_of.<input>` | string | When each input was current: `market_data` (price and derivatives feed) and `candles_<tf>` (close of the newest closed candle) |
+| `meta.warning` | string | Optional. `stale_data` when the price feed is more than 15 minutes old |
+| `meta.warnings` | array | Optional. `stale_candles` when a timeframe's candles stalled; the gateway adds `stale_regime` |
+
+## Example
+
+_GET /pulse/BTC?timeframes=1h,4h: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
+```json
+{
+  "coin": "BTC",
+  "market_symbol": "BTC",
+  "price_unit": "1 BTC",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
+  "price": {
+    "current": 84512.5
+  },
+  "timeframes": {
+    "1h": {
+      "indicators": {
+        "rsi_14": 49.16,
+        "rsi_zone": "neutral",
+        "atr_14": 495.286126,
+        "atr_pct": 0.5881,
+        "ema_20": 84134.27882,
+        "ema_50": 84555.185241,
+        "ema_200": 82476.178645,
+        "vwap_20": 84001.13142,
+        "zscore_100": -0.173,
+        "bollinger": {
+          "upper": 84796.137043,
+          "middle": 84040.55,
+          "lower": 83284.962957,
+          "width_pct": 1.7981,
+          "position_pct": 0.6194
+        },
+        "trend": {
+          "direction": 1,
+          "label": "weak_bullish",
+          "ema_stack": "mixed"
+        }
+      },
+      "candle_freshness_seconds": 300.8,
+      "last_closed_candle_time": "2026-09-24T17:00:00Z",
+      "stale": false
+    },
+    "4h": {
+      "indicators": {
+        "rsi_14": 47.17,
+        "rsi_zone": "neutral",
+        "atr_14": 727.64216,
+        "atr_pct": 0.8715,
+        "ema_20": 84338.703076,
+        "ema_50": 82423.649073,
+        "ema_200": 77957.991913,
+        "vwap_20": 84859.417592,
+        "zscore_100": 1.1847,
+        "bollinger": {
+          "upper": 87855.263546,
+          "middle": 85270.85,
+          "lower": 82686.436454,
+          "width_pct": 6.0617,
+          "position_pct": 0.1557
+        },
+        "trend": {
+          "direction": 1,
+          "label": "weak_bullish",
+          "ema_stack": "mixed"
+        }
+      },
+      "candle_freshness_seconds": 3900.8,
+      "last_closed_candle_time": "2026-09-24T16:00:00Z",
+      "stale": false
     }
   },
+  "derivatives": {
+    "funding_rate": 0.0000125,
+    "funding_annualized_pct": 10.95,
+    "funding_interval_hours": 1,
+    "open_interest": 39370.3015,
+    "impact_bid": 84485.4,
+    "impact_ask": 84500,
+    "impact_spread_bps": 1.73,
+    "spread_bps": 1.73
+  },
+  "regime": {
+    "current": "unknown",
+    "as_of": 0
+  },
+  "confluence": {
+    "score": 0.62,
+    "bias": "bullish",
+    "signals": {
+      "rsi": "neutral",
+      "trend": "bullish",
+      "bollinger": "neutral",
+      "zscore": "neutral"
+    },
+    "bullish_count": 1,
+    "bearish_count": 0,
+    "per_timeframe": {
+      "1h": {
+        "score": 0.62,
+        "bull_fraction": 0.625,
+        "family_scores": {
+          "trend_following": 0.75,
+          "mean_reversion": 0.5
+        },
+        "bias": "bullish",
+        "signals": {
+          "rsi": "neutral",
+          "trend": "bullish",
+          "bollinger": "neutral",
+          "zscore": "neutral"
+        },
+        "bullish_count": 1,
+        "bearish_count": 0
+      },
+      "4h": {
+        "score": 0.75,
+        "bull_fraction": 0.75,
+        "family_scores": {
+          "trend_following": 0.75,
+          "mean_reversion": 0.75
+        },
+        "bias": "bullish",
+        "signals": {
+          "rsi": "neutral",
+          "trend": "bullish",
+          "bollinger": "bullish",
+          "zscore": "neutral"
+        },
+        "bullish_count": 2,
+        "bearish_count": 0
+      }
+    },
+    "aligned": true,
+    "alignment_score": 1,
+    "bull_fraction": 0.625,
+    "family_scores": {
+      "trend_following": 0.75,
+      "mean_reversion": 0.5
+    },
+    "primary_timeframe": "1h",
+    "score_type": "heuristic_vote_share",
+    "validated": false,
+    "definition": "score = bull_fraction = (bullish + 0.5*neutral) / votes on primary_timeframe; an unvalidated heuristic, not a confidence or probability"
+  },
   "meta": {
     "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
-    "execution_ms": 95
+    "execution_ms": 0,
+    "coins_available": 51,
+    "data_age_seconds": 60,
+    "as_of": {
+      "market_data": "2026-09-24T17:04:00Z",
+      "candles_1h": "2026-09-24T17:00:00Z",
+      "candles_4h": "2026-09-24T16:00:00Z"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      }
+    ]
   }
 }
 ```
 
-Field Reference:
-- sentiment.overall (string): Aggregate sentiment — bullish, bearish, neutral
-- sentiment.score (number, 0.0-1.0): Sentiment strength
-- sentiment.labels.fear_greed (string): Market fear/greed classification
-- sentiment.labels.momentum (string): Momentum direction — positive, negative, neutral
-- sentiment.labels.funding_bias (string): Aggregate funding bias — long, short, neutral
+## Errors
 
-Errors: 402 (payment required), 429 (rate limited), 500 (internal error)
+| Status | Reason |
+|--------|--------|
+| 400 | Unsupported timeframe (before any price is quoted), or no requested timeframe could be computed (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+## Next Steps
+
+- **[GET /screener](https://cerebruspulse.xyz/api/screener)** — Rank every market in one call before drilling into one
+- **[Response Schemas](https://cerebruspulse.xyz/reference/response-schemas)** — Units, enums and the common `meta` fields
+- **[Python SDK Guide](https://cerebruspulse.xyz/guides/python-sdk)** and **[TypeScript SDK Guide](https://cerebruspulse.xyz/guides/typescript-sdk)** — Paying from code
 
 ---
 
-### GET /funding/{coin}
+Source: https://cerebruspulse.xyz/api/sentiment
 
-Price: $0.01 USDC
-Description: Current and historical funding rate analysis for a Hyperliquid perpetual.
+# GET /sentiment
 
-Path Parameters:
-- coin (string, required): Coin ticker, case-insensitive
+**Price:** $0.01 USDC per call
 
-Query Parameters:
-- lookback_hours (integer, default 24, range 1-168): Hours of historical funding data
+One market-wide sentiment label. A collector reads up to eight inputs (the Crypto Fear & Greed Index,
+Hyperliquid funding, news headlines, DefiLlama on-chain data, FRED macro series, CoinGecko market data, and
+two inputs that currently produce nothing). The label is the equal-weight mean of the inputs that are live,
+bucketed; the raw score is never returned. `sources_live` says how many inputs it rests on.
 
-Response Schema:
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/sentiment
+```
+
+No parameters.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `sentiment` |
+| `sentiment.label` | string | `very_bearish` (mean ≤ −0.5), `bearish` (≤ −0.15), `neutral` (≤ 0.15), `bullish` (≤ 0.5), `very_bullish`, or `unknown` when no input is live or the collector's file cannot be read |
+| `sentiment.as_of` | number | When the collector last wrote (Unix seconds); `0` when unknown |
+| `sentiment.composite_method` | string | `live_mean` (the mean of the live inputs, the default) or `collector` (the collector's own weighted composite) |
+| `sentiment.sources_live` | string | Live inputs out of all inputs, e.g. `5/8`. An input reading exactly 0 counts as dead |
+| `sentiment.live_sources` | array | The live inputs, from `fear_greed`, `twitter`, `funding_sentiment`, `news_vader`, `onchain`, `macro`, `political`, `broad_market` |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)); `meta.sources` names the providers of the live inputs only, with any attribution notice they require |
+| `meta.offering` | string | `pulse_sentiment` |
+| `meta.sources_live` | string | The same count as `sentiment.sources_live` |
+
+## Example
+
+_GET /sentiment: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
 ```json
 {
-  "coin": "SOL",
-  "timestamp_iso": "2026-03-02T14:30:00Z",
-  "funding": {
-    "current_rate": 0.00008,
-    "annualized_pct": 8.76,
-    "lookback_hours": 48,
-    "average_rate": 0.00007,
-    "max_rate": 0.00015,
-    "min_rate": -0.00002,
-    "history": [
-      { "timestamp": 1740850800, "rate": 0.00006 },
-      { "timestamp": 1740854400, "rate": 0.00008 }
+  "endpoint": "sentiment",
+  "sentiment": {
+    "label": "bullish",
+    "as_of": 1790269024.020345,
+    "composite_method": "live_mean",
+    "sources_live": "5/8",
+    "live_sources": [
+      "fear_greed",
+      "news_vader",
+      "onchain"
     ]
   },
   "meta": {
     "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 120
+    "offering": "pulse_sentiment",
+    "execution_ms": 0,
+    "sources_live": "5/8",
+    "sources": [
+      {
+        "name": "Crypto Fear & Greed Index by alternative.me",
+        "url": "https://alternative.me/crypto/fear-and-greed-index/"
+      },
+      {
+        "name": "News headlines from Cointelegraph, CoinDesk and Crypto News RSS feeds, scored for sentiment by Cerebrus Pulse"
+      },
+      {
+        "name": "DefiLlama",
+        "url": "https://defillama.com"
+      },
+      {
+        "name": "FRED, Federal Reserve Bank of St. Louis",
+        "url": "https://fred.stlouisfed.org",
+        "notice": "This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis."
+      },
+      {
+        "name": "CoinGecko",
+        "url": "https://www.coingecko.com",
+        "notice": "Powered by CoinGecko"
+      }
+    ]
   }
 }
 ```
 
-Field Reference:
-- funding.current_rate (number): Current 8-hour funding rate (raw decimal)
-- funding.annualized_pct (number): Annualized funding rate percentage
-- funding.lookback_hours (integer): Lookback window used
-- funding.average_rate (number): Average rate over lookback period
-- funding.max_rate (number): Maximum rate in lookback period
-- funding.min_rate (number): Minimum rate in lookback period
-- funding.history (array): Array of {timestamp, rate} snapshots
+## Errors
 
-Errors: 400 (invalid coin or lookback_hours out of range), 402 (payment required), 429 (rate limited)
+| Status | Reason |
+|--------|--------|
+| 402 | Payment required (the standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or the sentiment feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
 
 ---
 
-### GET /bundle/{coin}
+Source: https://cerebruspulse.xyz/api/funding
 
-Price: $0.05 USDC (the same data bought separately: /pulse $0.025 + /funding $0.01 + /sentiment $0.01 = $0.045; the bundle has no /spread analysis)
-Description: Complete analysis bundle combining pulse technical analysis, sentiment, and funding data in one response.
+# GET /funding/{coin}
 
-Path Parameters:
-- coin (string, required): Coin ticker, case-insensitive
+**Price:** $0.01 USDC per call
 
-Query Parameters:
-- timeframes (string, default "1h,4h"): Comma-separated. Valid: 5m, 15m, 1h, 4h, 1d, 1w
+Funding rate statistics for one Hyperliquid perpetual over a lookback window. Hyperliquid pays funding
+**every hour**, and every rate here is an hourly rate: `0.0000125` (0.00125% an hour) is its baseline, which
+annualizes to 10.95%.
 
-Response Schema:
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/funding/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](https://cerebruspulse.xyz/api/coins) lists them. |
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `lookback_hours` | integer | `24` | Window in hours, 1–168. Outside that range the request is refused with 400 before any price is quoted. |
+
+## Response
+
+The statistics are flat, at the top level. The response carries no list of individual records.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `funding` |
+| `coin` | string | The symbol, upper-case |
+| `records` | number | Hourly funding records in the window (at most 500) |
+| `lookback_hours` | number | The window used |
+| `avg_funding_rate` | number | Mean hourly funding rate over the window |
+| `annualized_pct` | number | `avg_funding_rate × 24 × 365 × 100` |
+| `funding_interval_hours` | number | `1`: Hyperliquid pays funding hourly |
+| `current` | number | The newest record's hourly rate |
+| `min` | number | Lowest hourly rate in the window |
+| `max` | number | Highest hourly rate in the window |
+| `positive_pct` | number | Share of records with a positive rate (longs paid shorts), in percent |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_funding` |
+
+`meta.as_of.funding` is the time of the newest funding record in the window.
+
+## Example
+
+_GET /funding/BTC?lookback_hours=24: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
 ```json
 {
   "coin": "BTC",
-  "timestamp_iso": "2026-03-02T14:30:00Z",
-  "pulse": {
-    "price": { "current": 98765.43 },
-    "timeframes": {
-      "1h": { "indicators": { "rsi_14": 65.4, "rsi_zone": "bullish", "...": "..." } },
-      "4h": { "indicators": { "rsi_14": 58.1, "rsi_zone": "neutral", "...": "..." } }
-    },
-    "derivatives": { "funding_rate": 0.000125, "open_interest": 1850000000, "...": "..." },
-    "regime": { "current": "RISK_ON", "as_of": 1740939296 },
-    "confluence": { "score": 0.75, "bias": "bullish", "...": "..." }
-  },
-  "sentiment": {
-    "overall": "bullish",
-    "score": 0.68,
-    "labels": { "fear_greed": "greed", "momentum": "positive", "funding_bias": "long" }
-  },
-  "funding": {
-    "current_rate": 0.000125,
-    "annualized_pct": 13.65,
-    "lookback_hours": 24,
-    "history": ["..."]
-  },
+  "records": 23,
+  "lookback_hours": 24,
+  "avg_funding_rate": 0.0000081,
+  "annualized_pct": 7.09,
+  "funding_interval_hours": 1,
+  "current": 0.0000125,
+  "min": -0.00000723,
+  "max": 0.0000125,
+  "positive_pct": 82.6,
+  "endpoint": "funding",
   "meta": {
     "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "bundle": true,
-    "execution_ms": 340
+    "offering": "pulse_funding",
+    "execution_ms": 0,
+    "as_of": {
+      "funding": "2026-09-24T16:00:00Z"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      }
+    ]
   }
 }
 ```
 
-The pulse, sentiment, and funding keys contain the same schemas as their respective individual endpoints.
+## Errors
 
-Errors: 400 (invalid coin), 402 (payment required), 429 (rate limited), 504 (engine timeout)
+| Status | Reason |
+|--------|--------|
+| 400 | `lookback_hours` outside 1–168 (before any price is quoted), or no funding records in the window (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or the funding feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
 
 ---
 
-### GET /screener
+Source: https://cerebruspulse.xyz/api/oi
 
-Price: $0.06 USDC
-Description: Market screener — scans all available coins and returns a compact summary for each. 60-second cache.
+# GET /oi/{coin}
 
-Query Parameters:
-- top_n (integer, default 50, range 1-50): Maximum coins to return, sorted by signal strength
+**Price:** $0.015 USDC per call
 
-Response Schema:
-```json
-{
-  "endpoint": "screener",
-  "coins_scanned": 48,
-  "top_n": 10,
-  "results": [
-    {
-      "coin": "BTC",
-      "signal_strength": 0.72,
-      "rsi_14": 65.4,
-      "rsi_zone": "bullish",
-      "trend": "bullish",
-      "zscore": 1.25,
-      "atr_pct": 2.1,
-      "vol_regime": "NORMAL",
-      "funding_rate": 0.000125,
-      "funding_bias": "long_pays",
-      "confluence_bias": "bullish",
-      "confluence_score": 0.75,
-      "oi_trend": "RISING",
-      "price": 98765.43
-    }
-  ],
-  "meta": {
-    "provider": "OpenClaw/Cerebrus",
-    "offering": "pulse_screener",
-    "execution_ms": 2400,
-    "data_age_seconds": 45.2
-  }
-}
+Open interest for one Hyperliquid perpetual and how it has moved. Open interest is counted in contracts of
+the market's `price_unit` (BTC for BTC), **not in USD**: multiply by `price` for the USD notional. Changes are
+**fractions** (`0.0312` = +3.12%), each measured against the stored reading closest to that age.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/oi/{coin}
 ```
 
-Field Reference:
-- signal_strength (number, 0.0-3.0+): Composite signal strength from RSI deviation, Z-score, ATR, and trend
-- rsi_14 (number, 0-100): RSI 14-period
-- rsi_zone (string): oversold, bearish, neutral, bullish, overbought
-- trend (string): bullish, bearish, neutral
-- vol_regime (string): LOW, NORMAL, HIGH, EXTREME
-- funding_bias (string): long_pays, short_pays, neutral
-- confluence_bias (string): bullish, bearish, neutral
-- confluence_score (number, 0.0-1.0): Multi-signal confluence confidence
-- oi_trend (string): RISING, FALLING, FLAT
+### Path Parameters
 
-Errors: 402 (payment required), 429 (rate limited)
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](https://cerebruspulse.xyz/api/coins) lists them. |
 
----
+## Response
 
-### GET /oi/{coin}
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `oi` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | The contract unit: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `price` | number \| null | Hyperliquid mid price in USD per `price_unit` |
+| `open_interest.current` | number | Open interest in contracts of `price_unit`, not USD |
+| `open_interest.delta_1h` | number \| null | Change over about 1 hour, as a fraction; null when no stored reading is within ±25% of that age |
+| `open_interest.delta_4h` | number \| null | Change over about 4 hours, as a fraction |
+| `open_interest.delta_24h` | number \| null | Change over about 24 hours, as a fraction |
+| `open_interest.delta_windows_seconds.<window>` | number \| null | How old the reading each delta compares against actually was, for `1h`, `4h` and `24h` |
+| `open_interest.history_age_seconds` | number \| null | Age of the newest stored reading |
+| `open_interest.percentile` | number \| null | Where current OI ranks among the stored readings (up to the last 500), 0–100; null with fewer than 20 |
+| `open_interest.percentile_window_hours` | number \| null | The span of history the percentile covers, in hours (about a day today) |
+| `open_interest.trend` | string | From `delta_4h`: `RISING` (> +3%), `FALLING` (< −3%), `FLAT`, or `UNKNOWN` |
+| `open_interest.price_change_4h` | number \| null | Price change over the same window as `delta_4h`, as a fraction |
+| `open_interest.price_oi_divergence` | string | `BEARISH_DIV` (price up > 1% while OI fell > 2%), `BULLISH_DIV` (price down > 1% while OI rose > 2%), `NONE`, or `UNKNOWN` |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_oi` |
 
-Price: $0.015 USDC
-Description: Open interest analysis with delta tracking, percentile ranking, and price-OI divergence detection.
+`meta.as_of` holds `market_data`, `oi_history` (the newest stored reading) and, when the 4-hour reference
+price came from a candle, `candles_1h`. `meta.warnings` carries `stale_oi_history` when the newest stored
+reading is more than an hour old.
 
-Path Parameters:
-- coin (string, required): Coin ticker, case-insensitive
+## Example
 
-Response Schema:
+_GET /oi/BTC: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
 ```json
 {
   "endpoint": "oi",
   "coin": "BTC",
-  "timestamp_iso": "2026-03-05T14:30:00Z",
+  "market_symbol": "BTC",
+  "price_unit": "1 BTC",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
   "open_interest": {
-    "current": 1850000000,
-    "delta_1h": 0.0032,
-    "delta_4h": 0.0115,
-    "delta_24h": 0.0378,
-    "percentile": 88.4,
+    "current": 39370.3015,
+    "delta_1h": 0.0154,
+    "delta_4h": 0.0312,
+    "delta_24h": 0.0063,
+    "delta_windows_seconds": {
+      "1h": 3901,
+      "4h": 14701,
+      "24h": 86701
+    },
+    "history_age_seconds": 1200.8,
+    "percentile": 88.5,
+    "percentile_window_hours": 25.8,
     "trend": "RISING",
+    "price_change_4h": 0.0138,
     "price_oi_divergence": "NONE"
   },
-  "price": 98765.43,
+  "price": 84512.5,
   "meta": {
-    "provider": "OpenClaw/Cerebrus",
+    "provider": "Cerebrus Pulse",
     "offering": "pulse_oi",
-    "execution_ms": 85,
-    "data_age_seconds": 30.1
+    "execution_ms": 0,
+    "data_age_seconds": 60,
+    "as_of": {
+      "market_data": "2026-09-24T17:04:00Z",
+      "oi_history": "2026-09-24T16:45:00Z",
+      "candles_1h": "2026-09-24T13:00:00Z"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      }
+    ]
   }
 }
 ```
 
-Field Reference:
-- open_interest.current (number): Current OI in USD notional
-- open_interest.delta_1h/4h/24h (number): OI change as fraction (0.01 = 1%) over 1h, 4h, 24h
-- open_interest.percentile (number, 0-100): Current OI percentile vs recent history
-- open_interest.trend (string): RISING (>3% 4h), FALLING (<-3% 4h), FLAT
-- open_interest.price_oi_divergence (string): BULLISH_DIV (price down + OI up), BEARISH_DIV (price up + OI down), NONE
+## Errors
 
-Errors: 400 (invalid coin), 402 (payment required), 429 (rate limited)
+| Status | Reason |
+|--------|--------|
+| 400 | No open interest for the market (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
 
 ---
 
-### GET /spread/{coin}
+Source: https://cerebruspulse.xyz/api/spread
 
-Price: $0.015 USDC
-Description: Spread analysis with slippage estimates at multiple notional sizes and liquidity scoring.
+# GET /spread/{coin}
 
-Path Parameters:
-- coin (string, required): Coin ticker, case-insensitive
+**Price:** $0.015 USDC per call
 
-Response Schema:
+The spread between Hyperliquid's impact prices for one perpetual, slippage estimates at four order sizes,
+and a 1–10 liquidity score. The impact spread is **not** the top-of-book bid-ask spread: Hyperliquid's
+impact prices are the average fill of an impact-size market order. The slippage figures come from a formula
+on that spread, not from the order book, and are the same for buys and sells.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/spread/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](https://cerebruspulse.xyz/api/coins) lists them. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `spread` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | What prices are quoted per: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `spread.impact_spread_bps` | number | `(impact_ask − impact_bid) / mid × 10000` |
+| `spread.bid_ask_spread_bps` | number | Deprecated: the same impact spread under an old name (see `meta.deprecated`) |
+| `spread.impact_bid` | number | Hyperliquid's impact bid price |
+| `spread.impact_ask` | number | Hyperliquid's impact ask price |
+| `spread.mid_price` | number | Midpoint of the two impact prices |
+| `spread.mid_price_source` | string | `impact_prices` |
+| `spread.estimated_slippage_bps.<size>` | number | Estimated slippage in basis points for a market order of `$10k`, `$50k`, `$100k` or `$500k` |
+| `spread.slippage_model.formula` | string | `impact_spread_bps / 2 * sqrt(notional_usd / 1e6)` |
+| `spread.slippage_model.calibrated` | boolean | `false`: not measured against fills or the book |
+| `spread.slippage_model.side_aware` | boolean | `false`: one figure for both buys and sells |
+| `spread.liquidity_score` | number | 10 (impact spread < 2 bps), 8 (< 5), 6 (< 10), 4 (< 20), 2 (< 50), else 1 |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_spread` |
+| `meta.deprecated` | object | Fields kept for old clients, each with what to read instead |
+
+## Example
+
+_GET /spread/BTC: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
 ```json
 {
   "endpoint": "spread",
-  "coin": "ETH",
-  "timestamp_iso": "2026-03-05T14:30:00Z",
+  "coin": "BTC",
+  "market_symbol": "BTC",
+  "price_unit": "1 BTC",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
   "spread": {
-    "bid_ask_spread_bps": 3.39,
-    "impact_bid": 3841.50,
-    "impact_ask": 3842.80,
-    "mid_price": 3842.15,
+    "impact_spread_bps": 1.73,
+    "bid_ask_spread_bps": 1.73,
+    "impact_bid": 84485.4,
+    "impact_ask": 84500,
+    "mid_price": 84492.7,
+    "mid_price_source": "impact_prices",
     "estimated_slippage_bps": {
-      "$10k": 0.17,
-      "$50k": 0.38,
-      "$100k": 0.54,
-      "$500k": 1.20
+      "$10k": 0.09,
+      "$50k": 0.19,
+      "$100k": 0.27,
+      "$500k": 0.61
     },
-    "liquidity_score": 8
+    "slippage_model": {
+      "formula": "impact_spread_bps / 2 * sqrt(notional_usd / 1e6)",
+      "calibrated": false,
+      "side_aware": false
+    },
+    "liquidity_score": 10
   },
   "meta": {
-    "provider": "OpenClaw/Cerebrus",
+    "provider": "Cerebrus Pulse",
     "offering": "pulse_spread",
-    "execution_ms": 12,
-    "data_age_seconds": 28.5
+    "execution_ms": 0,
+    "data_age_seconds": 60,
+    "deprecated": {
+      "spread.bid_ask_spread_bps": "the impact spread, not the top-of-book bid-ask; read spread.impact_spread_bps"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      }
+    ]
   }
 }
 ```
 
-Field Reference:
-- spread.bid_ask_spread_bps (number): Bid-ask spread in basis points
-- spread.impact_bid/impact_ask (number): Impact prices for large orders
-- spread.mid_price (number): Mid price between bid and ask
-- spread.estimated_slippage_bps (object): Estimated slippage at $10k, $50k, $100k, $500k notional
-- spread.liquidity_score (integer, 1-10): Liquidity rating. 10=excellent (<2bps), 1=poor (>50bps)
+## Errors
 
-Errors: 400 (invalid coin or no spread data), 402 (payment required), 429 (rate limited)
+| Status | Reason |
+|--------|--------|
+| 400 | No impact prices for the market (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or the market data feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
 
 ---
 
-### GET /correlation
+Source: https://cerebruspulse.xyz/api/correlation
 
-Price: $0.05 USDC
-Description: BTC-alt correlation matrix for top 15 coins with regime classification and sector clustering.
+# GET /correlation
 
-No parameters required.
+**Price:** $0.05 USDC per call
 
-Response Schema:
+How closely 14 large perpetuals move with BTC: the Pearson correlation of **hourly** returns over one window,
+by default the last **30 hours** (30 returns), not 30 days. Returns are joined on candle time; a coin whose
+newest candle lags BTC's is left out rather than mismatched. Each correlation comes with its sample size and
+standard error, so a noisy 30-hour figure can be told apart from a 30-day one.
+
+Coins: BTC, ETH, SOL, DOGE, XRP, AVAX, LINK, ARB, OP, SUI, NEAR, INJ, APT, ADA, PEPE.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/correlation
+```
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `window` | string | `30h` | `30h` (30 hourly returns), `7d` (168) or `30d` (719). Any other value is refused with 400 before any price is quoted. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `correlation` |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `btc_correlation.<coin>` | number \| null | Pearson r of the coin's 1h returns against BTC's, −1 to 1. `BTC` is `1.0`. Null when the coin lags BTC, lacks candles, or has fewer than max(20, window / 2) joined returns |
+| `correlation_stats.<coin>` | object | For each coin with a correlation: `n` (joined returns used) and `stderr` (`(1 − r²) / √(n − 1)`) |
+| `average_correlation` | number \| null | Mean of the non-null correlations, BTC excluded |
+| `regime` | string | `CORRELATED` (average > 0.7), `DECORRELATED` (< 0.3), `MIXED`, or `UNKNOWN` |
+| `sector_averages.<sector>` | number | Mean correlation per sector with data: `L1` (ETH, SOL, AVAX, NEAR, APT, SUI, ADA), `L2` (ARB, OP), `DeFi` (LINK, INJ), `Meme` (DOGE, PEPE) |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_correlation` |
+| `meta.coins_analyzed` | number | Coins with a correlation, BTC included |
+| `meta.window` | string | The window used |
+| `meta.lookback_bars` | number | Hourly returns in the window |
+| `meta.timeframe` | string | `1h` |
+| `meta.method` | string | The method, as text |
+| `meta.lagging_coins` | array | Coins left out because their newest candle is older than BTC's (also flagged in `meta.warnings` as `lagging_coins`) |
+
+`meta.as_of.candles_1h` is the close of BTC's newest candle, which every correlated coin reaches.
+
+## Example
+
+_GET /correlation: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
 ```json
 {
   "endpoint": "correlation",
-  "timestamp_iso": "2026-03-05T14:30:00Z",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
   "btc_correlation": {
-    "BTC": 1.0,
-    "ETH": 0.8234,
-    "SOL": 0.7651,
-    "DOGE": 0.5432,
-    "XRP": 0.6123,
-    "AVAX": 0.7890,
-    "LINK": 0.6543,
-    "ARB": 0.7012,
-    "OP": 0.6789,
-    "SUI": 0.7234,
-    "NEAR": 0.6890,
-    "INJ": 0.5678,
-    "APT": 0.7456,
-    "ADA": 0.6234,
-    "PEPE": 0.4567
+    "BTC": 1,
+    "ETH": 0.9319,
+    "SOL": null,
+    "DOGE": 0.8839,
+    "XRP": null,
+    "AVAX": null,
+    "LINK": null,
+    "ARB": null,
+    "OP": null,
+    "SUI": null,
+    "NEAR": null,
+    "INJ": null,
+    "APT": null,
+    "ADA": null,
+    "PEPE": null
   },
-  "average_correlation": 0.6710,
-  "regime": "MIXED",
+  "correlation_stats": {
+    "ETH": {
+      "n": 30,
+      "stderr": 0.0244
+    },
+    "DOGE": {
+      "n": 30,
+      "stderr": 0.0406
+    }
+  },
+  "average_correlation": 0.9079,
+  "regime": "CORRELATED",
   "sector_averages": {
-    "L1": 0.7198,
-    "L2": 0.6901,
-    "DeFi": 0.6111,
-    "Meme": 0.5000
+    "L1": 0.9319,
+    "Meme": 0.8839
   },
   "meta": {
-    "provider": "OpenClaw/Cerebrus",
+    "provider": "Cerebrus Pulse",
     "offering": "pulse_correlation",
-    "execution_ms": 450,
-    "coins_analyzed": 15,
+    "execution_ms": 0,
+    "coins_analyzed": 3,
+    "window": "30h",
     "lookback_bars": 30,
-    "timeframe": "1h"
+    "timeframe": "1h",
+    "method": "Pearson r of 1h returns joined on candle time; stderr = (1 - r^2) / sqrt(n - 1)",
+    "lagging_coins": [],
+    "as_of": {
+      "candles_1h": "2026-09-24T17:00:00Z"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      }
+    ]
   }
 }
 ```
 
-Field Reference:
-- btc_correlation (object): Per-coin correlation coefficient with BTC (-1.0 to 1.0)
-- average_correlation (number): Mean correlation across all non-BTC coins
-- regime (string): CORRELATED (avg >0.7), MIXED (0.3-0.7), DECORRELATED (avg <0.3)
-- sector_averages (object): Average correlation per sector (L1, L2, DeFi, Meme)
+This capture held 1h candles for BTC, ETH and DOGE only, so the other coins read null and `coins_analyzed`
+is 3. A live response fills every coin that has enough data.
 
-Errors: 402 (payment required), 429 (rate limited), 500 (insufficient candle data)
+## Errors
 
----
-
-### GET /health (Free)
-
-No payment required.
-
-Response: Gateway health status including uptime and kill switch state.
-
-### GET /coins (Free)
-
-No payment required.
-
-Response: Array of available coin tickers with metadata.
+| Status | Reason |
+|--------|--------|
+| 400 | `window` not one of `30h`, `7d`, `30d` (before any price is quoted), or not enough BTC candles (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or the candle feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
 
 ---
 
-## ACP (Agent Commerce Protocol) Reference
+Source: https://cerebruspulse.xyz/api/basis
 
-ACP is the Virtuals Protocol standard for agent-to-agent transactions. Instead of HTTP micropayments, agents negotiate, pay, and deliver services through the ACP SDK using VIRTUAL token escrow.
+# GET /basis/{coin}
 
-### ACP Seller ID
+**Price:** $0.02 USDC per call 
 
-cerebrus-pulse
+Two different measurements for one market:
 
-### Available Offerings
+- **`basis_bps`, the perp premium**: Hyperliquid's mark price against Hyperliquid's own oracle price. This is
+  the premium that funding follows.
+- **`oracle_divergence_bps`**: Hyperliquid's oracle (a weighted median of exchange spot prices) against
+  Chainlink's spot price on Arbitrum. Both are spot references, so this measures how far two spot sources
+  disagree, not funding pressure.
 
-#### cerebrus_pulse
-Price: $0.03 VIRTUAL
-Description: Real-time multi-timeframe technical analysis (same data as x402 /pulse endpoint)
-Timeout: 60s
+## Request
 
-#### cerebrus_synthesis — Lite
-Price: $0.25 VIRTUAL
-Models: 1 model
-Timeout: 60s
-Use case: Quick market snapshots, simple queries, fast decision loops
-
-#### cerebrus_synthesis — Standard
-Price: $0.75 VIRTUAL
-Models: 3 models
-Timeout: 90s
-Use case: Full multi-model synthesis with multiple perspectives, trade ideas, risk scoring
-
-#### cerebrus_synthesis — Premium
-Price: $2.50 VIRTUAL
-Models: 5+ models
-Timeout: 300s
-Use case: Deep research with adversarial deliberation, cross-asset correlation, portfolio recommendations
-
-### ACP Integration Example (TypeScript)
-
-```typescript
-import { AcpClient } from "@virtuals-protocol/acp-node";
-
-const acp = new AcpClient({
-  walletKey: process.env.AGENT_WALLET_KEY,
-});
-
-// Request a Cerebrus Synthesis (Standard tier)
-const job = await acp.createJob({
-  seller: "cerebrus-pulse",
-  offering: "cerebrus_synthesis",
-  requirements: {
-    query: "Analyze the current Bitcoin market structure and identify key support/resistance levels",
-    domain: "crypto",
-    models_requested: 3,
-  },
-});
-
-// Wait for completion
-const result = await acp.waitForJob(job.id);
-console.log(result.deliverable.value.result);
-// Returns multi-model synthesis with consensus scoring
+```
+GET https://api.cerebruspulse.xyz/basis/{coin}
 ```
 
-### ACP Job Flow
+### Path Parameters
 
-1. Your agent creates a job request via ACP SDK
-2. ACP protocol notifies Cerebrus (seller)
-3. Cerebrus accepts and provides a price quote
-4. Your agent approves payment (VIRTUAL locked in escrow)
-5. Cerebrus executes the job
-6. Result delivered, payment released from escrow
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Token symbol (`BTC`, `ETH`, `SOL`). It needs a Chainlink feed in the snapshot (38 on 2026-09-24, BTC, ETH, SOL, LINK, ARB, DOGE, AVAX, NEAR, AAVE, UNI, OP and PEPE among them) and a Hyperliquid market. An unsupported coin gets a 400 listing the available ones, not charged. |
+
+## Response
+
+All prices are USD per single token, including for 1000-token markets such as PEPE.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `basis` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | `1 <coin>`: every price here is per token |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `basis.hl_mark_px` | number | Hyperliquid mark price |
+| `basis.hl_oracle_px` | number | Hyperliquid oracle price |
+| `basis.chainlink_spot_px` | number | Chainlink spot price (Arbitrum) |
+| `basis.basis_bps` | number | Perp premium: `(hl_mark_px − hl_oracle_px) / hl_oracle_px × 10000` |
+| `basis.basis_pct` | number | The same premium in percent |
+| `basis.premium_index_bps` | number \| null | Hyperliquid's own premium sample (impact prices against the oracle) in basis points, which its funding averages |
+| `basis.oracle_divergence_bps` | number \| null | `(hl_oracle_px − chainlink_spot_px) / chainlink_spot_px × 10000`; null, with the warning `chainlink_price_implausible`, when the two differ by more than 2× |
+| `basis.direction` | string | `hl_premium`, `hl_discount` or `aligned`: the sign of `basis_bps` |
+| `basis.signal` | string | A label for the premium's size and sign: `neutral` (−10 to 10 bps), `mildly_bullish` (10 to 50), `mildly_bearish` (−50 to −10), `bearish_contrarian` (above 50), `bullish_contrarian` (below −50). A description of the premium, not a recommendation |
+| `basis.interpretation` | string | The label in words |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_basis` |
+| `meta.basis_definition` | string | The two definitions above, as text |
+| `meta.chainlink_data_age_seconds` | number \| null | Age of the Chainlink snapshot. Above 120 seconds, `meta.warning` is `stale_chainlink_data` |
+| `meta.chainlink_round_age_seconds` | number \| null | Age of the Chainlink round behind the price, when the snapshot records it; null otherwise |
+| `meta.chainlink_feed_network` | string | `arbitrum` |
+| `meta.hl_source` | string | `mark_and_oracle` |
+
+## Example
+
+_GET /basis/BTC: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
+```json
+{
+  "endpoint": "basis",
+  "coin": "BTC",
+  "market_symbol": "BTC",
+  "price_unit": "1 BTC",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
+  "basis": {
+    "hl_mark_px": 84517,
+    "hl_oracle_px": 84539,
+    "chainlink_spot_px": 84501.01946422,
+    "basis_bps": -2.6,
+    "basis_pct": -0.026,
+    "premium_index_bps": -4.61,
+    "oracle_divergence_bps": 4.49,
+    "direction": "hl_discount",
+    "signal": "neutral",
+    "interpretation": "Perp trades at its oracle price: no significant premium"
+  },
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "pulse_basis",
+    "execution_ms": 0,
+    "basis_definition": "basis_bps: Hyperliquid mark vs its oracle (perp premium); oracle_divergence_bps: Hyperliquid oracle vs Chainlink spot",
+    "data_age_seconds": 60,
+    "chainlink_data_age_seconds": 55.6,
+    "chainlink_round_age_seconds": null,
+    "chainlink_feed_network": "arbitrum",
+    "hl_source": "mark_and_oracle",
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      },
+      {
+        "name": "Chainlink Data Feeds (Arbitrum One)",
+        "url": "https://data.chain.link"
+      }
+    ]
+  }
+}
+```
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | No Chainlink feed or Hyperliquid market for the coin, or no snapshot yet (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
 
 ---
 
-## x402 Code Examples
+Source: https://cerebruspulse.xyz/api/depeg
+
+# GET /depeg
+
+**Price:** $0.01 USDC per call 
+
+How far USDC is from $1.00, read from Chainlink's USDC/USD feed on Arbitrum, plus whether the Arbitrum
+sequencer was up when the feeds were read.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/depeg
+```
+
+No parameters.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `depeg` |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `usdc.price_usd` | number | Chainlink USDC/USD price |
+| `usdc.deviation_bps` | number | `abs(price_usd − 1) × 10000` |
+| `usdc.deviation_pct` | number | The same deviation in percent |
+| `usdc.peg_status` | string | `HEALTHY` (< 10 bps), `ELEVATED` (10–50), `WARNING` (50–200) or `CRITICAL` (200 or more) |
+| `usdc.risk_level` | string | `low`, `medium`, `high` or `critical`, matching `peg_status` |
+| `usdc.interpretation` | string | The deviation in words |
+| `infrastructure.arbitrum_sequencer` | string | `up`, `down`, or `unknown` when the check itself failed. While it is not `up`, treat Arbitrum Chainlink prices as possibly stale |
+| `infrastructure.chainlink_feeds_active` | number | Chainlink prices in the snapshot |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_depeg` |
+| `meta.chainlink_data_age_seconds` | number \| null | Age of the Chainlink snapshot. Above 120 seconds, `meta.warning` is `stale_chainlink_data` |
+| `meta.chainlink_round_age_seconds` | number \| null | Age of the USDC round, when the snapshot records it; null otherwise |
+| `meta.oracle_network` | string | `arbitrum` |
+| `meta.feed_address` | string | The Chainlink USDC/USD feed on Arbitrum |
+
+## Example
+
+_GET /depeg: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
+```json
+{
+  "endpoint": "depeg",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
+  "usdc": {
+    "price_usd": 0.99988061,
+    "deviation_bps": 1.19,
+    "deviation_pct": 0.0119,
+    "peg_status": "HEALTHY",
+    "risk_level": "low",
+    "interpretation": "USDC trading within 10bps of peg — normal conditions"
+  },
+  "infrastructure": {
+    "arbitrum_sequencer": "up",
+    "chainlink_feeds_active": 38
+  },
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "pulse_depeg",
+    "execution_ms": 0,
+    "chainlink_data_age_seconds": 55.6,
+    "chainlink_round_age_seconds": null,
+    "oracle_network": "arbitrum",
+    "feed_address": "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3",
+    "sources": [
+      {
+        "name": "Chainlink Data Feeds (Arbitrum One)",
+        "url": "https://data.chain.link"
+      }
+    ]
+  }
+}
+```
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | No Chainlink snapshot yet, or no USDC price in it (the error names the sequencer status); not charged |
+| 402 | Payment required (the standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or the Chainlink feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+---
+
+Source: https://cerebruspulse.xyz/api/arb
+
+# GET /arb
+
+**Price:** $0.02 USDC per call
+
+A market stress index from a cross-chain arbitrage scanner that runs every 5 minutes: how many cross-chain
+price dislocations the most recent scans found and how wide they were, summarised as one level and score.
+The thresholds are heuristics.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/arb
+```
+
+### Query Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `limit` | integer | `10` | 1–50 | How many of the most recent scans to analyze. Outside the range the request is refused with 400 before any price is quoted. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `arb` |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `stress_index.level` | string | `LOW`, `MODERATE`, `HIGH` or `EXTREME` (see below) |
+| `stress_index.score` | number | 0 to 1 within the level's band |
+| `stress_index.interpretation` | string | The level in words |
+| `statistics.scans_analyzed` | number | Scans read (up to `limit`) |
+| `statistics.total_opportunities` | number | Dislocations found across those scans |
+| `statistics.total_profitable` | number | Of those, the ones the scanner rated profitable after costs |
+| `statistics.avg_spread_bps` | number | Mean spread of the dislocations, in basis points |
+| `statistics.max_spread_bps` | number | Widest spread, in basis points |
+| `statistics.unique_tokens_involved` | array | Tokens in the dislocated pairs |
+| `statistics.chain_routes` | array | Buy-chain to sell-chain routes, as `chain->chain` |
+| `recent_scans[].timestamp` | string | When the scan ran |
+| `recent_scans[].scan_duration_s` | number | How long it took |
+| `recent_scans[].opportunities_found` | number | Dislocations in the scan |
+| `recent_scans[].profitable_count` | number | Of those, rated profitable |
+| `recent_scans[].chains_scanned` | number | Chains checked |
+| `recent_scans[].pairs_scanned` | number | Token pairs checked |
+| `recent_scans[].opportunities` | array | Optional. Present when the scan found any: `pair`, `spread_bps` and `estimated_profit_usd` for each |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_stress` |
+| `meta.scan_interval_minutes` | number | `5` |
+| `meta.data_source` | string | The scanner's price sources: DeFiLlama, Chainlink and Coinbase |
+| `meta.excluded` | string | Optional. Present while Coinbase-derived data is switched off: opportunities with a Coinbase-priced leg are left out |
+| `meta.cached` | boolean | Optional. `true` when the result is reused because no new scan has been logged |
+
+`meta.as_of.arb_log` is the time of the newest scan.
+
+### Stress levels
+
+| Level | When | Score |
+|-------|------|-------|
+| `LOW` | No dislocations, or at most 2 with every spread under 100 bps | 0 to 0.3 |
+| `MODERATE` | At most 5 dislocations, or a widest spread under 200 bps | 0.3 to 0.7 |
+| `HIGH` | At most 10 dislocations, or a widest spread under 500 bps | 0.7 to 0.9 |
+| `EXTREME` | More, and wider | 0.9 to 1.0 |
+
+## Example
+
+No captured example: the data capture held no arbitrage log. The fields above follow the engine's
+`process_arb`.
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | `limit` outside 1–50 (before any price is quoted), or no scan data yet (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or the arbitrage log is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+---
+
+Source: https://cerebruspulse.xyz/api/cex-dex
+
+# GET /cex-dex/{token}
+
+**Price:** $0.02 USDC per call
+
+The divergence between Coinbase's price for a token and an on-chain price, from a snapshot the scanner
+refreshes every 5 minutes. The on-chain side is Chainlink where a feed exists; `dex_source` says which
+source it was.
+
+> **Fallback prices:**
+> When no on-chain price was found, the scanner falls back to another source. A `dex_source` of `coinbase`
+> means both sides are Coinbase's own price: the divergence then reads 0 and says nothing.
+
+This endpoint can be withdrawn: while Coinbase-derived data is switched off it answers 503 and quotes no price.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/cex-dex/{token}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `token` | string | Yes | Token symbol, case-insensitive. Aliases: `WETH` → `ETH`, `WBTC` → `BTC`, `BITCOIN` → `BTC`, `ETHEREUM` → `ETH`. The snapshot on 2026-09-24 covered 15 tokens: AAVE, ARB, AVAX, BTC, CRV, DOGE, ETH, FIL, LINK, NEAR, OP, SEI, SOL, SUI, UNI. Another token gets a 400 listing the available ones, not charged. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `cex-dex` |
+| `token` | string | The token, after aliases |
+| `timestamp_iso` | string | When the snapshot was taken (ISO 8601) |
+| `divergence.cex_price` | number | Coinbase price (USD) |
+| `divergence.dex_price` | number | The on-chain price (USD) |
+| `divergence.dex_source` | string | Where `dex_price` came from: `chainlink`, or a fallback such as `coinbase` or `defillama` |
+| `divergence.spread_bps` | number | The divergence in basis points, as the scanner reports it |
+| `divergence.spread_pct` | number | The same in percent |
+| `divergence.direction` | string | `cex_premium` or `dex_premium` |
+| `divergence.interpretation` | string | The direction in words |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)); `data_age_seconds` is the snapshot's age, and above 600 seconds `meta.warning` is `stale_data` |
+| `meta.offering` | string | `pulse_cex_dex` |
+| `meta.refresh_interval_minutes` | number | `5` |
+| `meta.cex_source` | string | `coinbase` |
+
+## Example
+
+_GET /cex-dex/ETH: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
+```json
+{
+  "endpoint": "cex-dex",
+  "token": "ETH",
+  "timestamp_iso": "2026-09-24T16:59:05.418496+00:00",
+  "divergence": {
+    "cex_price": 2687.75,
+    "dex_price": 2686.6836,
+    "dex_source": "chainlink",
+    "spread_bps": 4,
+    "spread_pct": 0.04,
+    "direction": "cex_premium",
+    "interpretation": "CEX trading at premium to DEX"
+  },
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "pulse_cex_dex",
+    "execution_ms": 0,
+    "data_age_seconds": 355.4,
+    "refresh_interval_minutes": 5,
+    "cex_source": "coinbase",
+    "sources": [
+      {
+        "name": "Coinbase Exchange",
+        "url": "https://www.coinbase.com"
+      },
+      {
+        "name": "Chainlink Data Feeds (Arbitrum One)",
+        "url": "https://data.chain.link"
+      }
+    ]
+  }
+}
+```
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | Invalid symbol (before any price is quoted), or a token the snapshot does not cover (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 429 | Rate limit exceeded |
+| 503 | Withdrawn, service disabled, payments down, or the CEX-DEX feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+The [/screener](https://cerebruspulse.xyz/api/screener) carries the same divergence per market in `cex_dex_spread_bps`.
+
+---
+
+Source: https://cerebruspulse.xyz/api/liquidations
+
+# GET /liquidations/{coin}
+
+**Price:** $0.03 USDC per call 
+
+Where liquidations would cluster if open interest were spread across leverage tiers the way the model
+assumes. This is a **model, not observed liquidations**: Hyperliquid publishes no per-leverage open
+interest, so the shares per tier are assumptions, stated in `meta.assumptions`.
+
+How it is built: every position is assumed to have entered at the 24-hour VWAP. For each leverage tier from
+3x up to the market's maximum leverage, the liquidation price follows Hyperliquid's isolated-margin rule with
+its maintenance margin of `1 / (2 × max leverage)`. The USD open interest is split 50:50 between longs and
+shorts (every perp position has a counterparty) and across the tiers by the assumed shares.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/liquidations/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](https://cerebruspulse.xyz/api/coins) lists them. |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `liquidations` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | What prices are quoted per: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `model_estimate` | boolean | `true`: every figure below is modelled |
+| `price` | number | Hyperliquid mid price |
+| `liquidation_zones.longs[].price` | number | Liquidation price of long positions at this tier, below the current price (5 significant figures) |
+| `liquidation_zones.longs[].leverage` | string | The tier, e.g. `25x` |
+| `liquidation_zones.longs[].estimated_liq_usd` | number | USD open interest the model places at this tier on this side |
+| `liquidation_zones.longs[].proximity_pct` | number | Distance from the current price, in percent. Zones are sorted nearest first |
+| `liquidation_zones.shorts[].price` | number | Liquidation price of short positions at this tier, above the current price |
+| `liquidation_zones.shorts[].leverage` | string | The tier |
+| `liquidation_zones.shorts[].estimated_liq_usd` | number | USD open interest placed at this tier on this side |
+| `liquidation_zones.shorts[].proximity_pct` | number | Distance from the current price, in percent |
+| `summary.cascade_risk` | string | From the nearest zone's distance: `EXTREME` (< 1%), `HIGH` (< 2%), `MODERATE` (< 5%), `LOW`, or `UNKNOWN` with no zone |
+| `summary.total_oi_usd` | number | Open interest in USD: contracts × price |
+| `summary.long_short_ratio` | string | Always `50:50`: open interest is equal on both sides of a perp |
+| `summary.total_at_risk_5pct` | number | Modelled USD in zones within 5% of the price |
+| `summary.nearest_cluster.side` | string | `long` or `short` |
+| `summary.nearest_cluster.price` | number | The nearest zone's price |
+| `summary.nearest_cluster.distance_pct` | number | Its distance in percent |
+| `summary.nearest_cluster.estimated_volume` | number | Its modelled USD. `nearest_cluster` is null when there is no zone |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_liquidations` |
+| `meta.methodology` | string | The model in one sentence |
+| `meta.assumptions.max_leverage` | number | The market's maximum leverage on Hyperliquid |
+| `meta.assumptions.maintenance_margin_rate` | number | `1 / (2 × max_leverage)` |
+| `meta.assumptions.assumed_oi_share_by_leverage.<leverage>` | number | The assumed share of open interest per tier (`3x`, `5x`, `10x`, `25x`, `50x`, up to the maximum), summing to 1 |
+| `meta.assumptions.entry_price` | number | The 24-hour VWAP used as every position's entry |
+| `meta.assumptions.long_short_split` | string | `50:50`, with the reason |
+
+## Example
+
+_GET /liquidations/BTC: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
+```json
+{
+  "endpoint": "liquidations",
+  "coin": "BTC",
+  "market_symbol": "BTC",
+  "price_unit": "1 BTC",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
+  "model_estimate": true,
+  "price": 84512.5,
+  "liquidation_zones": {
+    "longs": [
+      {
+        "price": 81670,
+        "leverage": "25x",
+        "estimated_liq_usd": 462159554,
+        "proximity_pct": 3.36
+      },
+      {
+        "price": 76566,
+        "leverage": "10x",
+        "estimated_liq_usd": 554491646,
+        "proximity_pct": 9.4
+      },
+      {
+        "price": 68059,
+        "leverage": "5x",
+        "estimated_liq_usd": 462159554,
+        "proximity_pct": 19.47
+      }
+    ],
+    "shorts": [
+      {
+        "price": 86292,
+        "leverage": "25x",
+        "estimated_liq_usd": 462159554,
+        "proximity_pct": 2.11
+      },
+      {
+        "price": 91270,
+        "leverage": "10x",
+        "estimated_liq_usd": 554491646,
+        "proximity_pct": 8
+      },
+      {
+        "price": 99567,
+        "leverage": "5x",
+        "estimated_liq_usd": 462159554,
+        "proximity_pct": 17.81
+      }
+    ]
+  },
+  "summary": {
+    "cascade_risk": "MODERATE",
+    "total_oi_usd": 3327282606,
+    "long_short_ratio": "50:50",
+    "total_at_risk_5pct": 924319108,
+    "nearest_cluster": {
+      "side": "short",
+      "price": 86292,
+      "distance_pct": 2.11,
+      "estimated_volume": 462159554
+    }
+  },
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "pulse_liquidations",
+    "execution_ms": 0,
+    "data_age_seconds": 60,
+    "methodology": "model estimate, not observed liquidations: assumed leverage tiers and OI shares, Hyperliquid maintenance margin 1/(2*maxLeverage), 24h VWAP as entry",
+    "assumptions": {
+      "max_leverage": 40,
+      "maintenance_margin_rate": 0.0125,
+      "assumed_oi_share_by_leverage": {
+        "3x": 0.1111,
+        "5x": 0.2778,
+        "10x": 0.3333,
+        "25x": 0.2778
+      },
+      "entry_price": 84010,
+      "long_short_split": "50:50 (open interest is equal on both sides of a perp)"
+    },
+    "as_of": {
+      "market_data": "2026-09-24T17:04:00Z",
+      "candles_1h": "2026-09-24T17:00:00Z"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      }
+    ]
+  }
+}
+```
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | No price, open interest or maximum leverage for the market (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+---
+
+Source: https://cerebruspulse.xyz/api/bundle
+
+# GET /bundle/{coin}
+
+**Price:** $0.05 USDC per call
+
+The bundle ($0.05) returns the /pulse output, 24-hour /funding statistics and /sentiment in one request. It costs $0.005 more than buying them separately (/pulse $0.025 + /funding $0.01 + /sentiment $0.01 = $0.045). It does not include the /spread analysis.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/bundle/{coin}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](https://cerebruspulse.xyz/api/coins) lists them. |
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `timeframes` | string | `1h,4h` | Comma-separated, from `5m`, `15m`, `1h`, `4h`, `1d`, `1w`, as for [/pulse](https://cerebruspulse.xyz/api/pulse). |
+
+The funding window is always 24 hours; use [/funding](https://cerebruspulse.xyz/api/funding) for another lookback.
+
+## Response
+
+The technical sections are the same objects [/pulse](https://cerebruspulse.xyz/api/pulse) returns; see that page for their fields.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | `bundle` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | What prices are quoted per: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `price.current` | number | Hyperliquid mid price in USD per `price_unit` |
+| `timeframes` | object | Per-timeframe indicators, as in /pulse |
+| `confluence` | object | The confluence vote share, as in /pulse |
+| `derivatives` | object | Hourly funding, open interest in contracts and impact prices, as in /pulse |
+| `regime` | object | The market regime, as in /pulse |
+| `funding_24h.coin` | string | The symbol |
+| `funding_24h.records` | number | Hourly funding records in the last 24 hours |
+| `funding_24h.lookback_hours` | number | `24` |
+| `funding_24h.avg_funding_rate` | number | Mean hourly funding rate over the window |
+| `funding_24h.annualized_pct` | number | `avg_funding_rate × 24 × 365 × 100` |
+| `funding_24h.funding_interval_hours` | number | `1`: Hyperliquid pays funding hourly |
+| `funding_24h.current` | number | The newest record's hourly rate |
+| `funding_24h.min` | number | Lowest hourly rate in the window |
+| `funding_24h.max` | number | Highest hourly rate in the window |
+| `funding_24h.positive_pct` | number | Share of records with a positive rate (longs paid shorts), in percent |
+| `funding_24h.note` | string | Optional. `unavailable`, in place of the statistics, when the funding history cannot be read |
+| `sentiment.label` | string | The market sentiment label, as in [/sentiment](https://cerebruspulse.xyz/api/sentiment) |
+| `sentiment.as_of` | number | When the sentiment collector last wrote (Unix seconds) |
+| `sentiment.composite_method` | string | `live_mean` or `collector` |
+| `sentiment.sources_live` | string | Live inputs out of all inputs, e.g. `5/8` |
+| `sentiment.live_sources` | array | Names of the live inputs |
+| `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_bundle` |
+
+`meta.as_of` holds `market_data`, one `candles_<tf>` per timeframe and `funding` (the newest funding record).
+
+## Example
+
+_GET /bundle/BTC?timeframes=1h,4h: real engine output on market data captured at 2026-09-24 17:05 UTC. Lists are cut to 3 items. Live responses may also carry meta.disclaimer, which the gateway adds._
+
+```json
+{
+  "endpoint": "bundle",
+  "coin": "BTC",
+  "market_symbol": "BTC",
+  "price_unit": "1 BTC",
+  "timestamp_iso": "2026-09-24T17:05:00Z",
+  "price": {
+    "current": 84512.5
+  },
+  "timeframes": {
+    "1h": {
+      "indicators": {
+        "rsi_14": 49.16,
+        "rsi_zone": "neutral",
+        "atr_14": 495.286126,
+        "atr_pct": 0.5881,
+        "ema_20": 84134.27882,
+        "ema_50": 84555.185241,
+        "ema_200": 82476.178645,
+        "vwap_20": 84001.13142,
+        "zscore_100": -0.173,
+        "bollinger": {
+          "upper": 84796.137043,
+          "middle": 84040.55,
+          "lower": 83284.962957,
+          "width_pct": 1.7981,
+          "position_pct": 0.6194
+        },
+        "trend": {
+          "direction": 1,
+          "label": "weak_bullish",
+          "ema_stack": "mixed"
+        }
+      },
+      "candle_freshness_seconds": 300.8,
+      "last_closed_candle_time": "2026-09-24T17:00:00Z",
+      "stale": false
+    },
+    "4h": {
+      "indicators": {
+        "rsi_14": 47.17,
+        "rsi_zone": "neutral",
+        "atr_14": 727.64216,
+        "atr_pct": 0.8715,
+        "ema_20": 84338.703076,
+        "ema_50": 82423.649073,
+        "ema_200": 77957.991913,
+        "vwap_20": 84859.417592,
+        "zscore_100": 1.1847,
+        "bollinger": {
+          "upper": 87855.263546,
+          "middle": 85270.85,
+          "lower": 82686.436454,
+          "width_pct": 6.0617,
+          "position_pct": 0.1557
+        },
+        "trend": {
+          "direction": 1,
+          "label": "weak_bullish",
+          "ema_stack": "mixed"
+        }
+      },
+      "candle_freshness_seconds": 3900.8,
+      "last_closed_candle_time": "2026-09-24T16:00:00Z",
+      "stale": false
+    }
+  },
+  "confluence": {
+    "score": 0.62,
+    "bias": "bullish",
+    "signals": {
+      "rsi": "neutral",
+      "trend": "bullish",
+      "bollinger": "neutral",
+      "zscore": "neutral"
+    },
+    "bullish_count": 1,
+    "bearish_count": 0,
+    "per_timeframe": {
+      "1h": {
+        "score": 0.62,
+        "bull_fraction": 0.625,
+        "family_scores": {
+          "trend_following": 0.75,
+          "mean_reversion": 0.5
+        },
+        "bias": "bullish",
+        "signals": {
+          "rsi": "neutral",
+          "trend": "bullish",
+          "bollinger": "neutral",
+          "zscore": "neutral"
+        },
+        "bullish_count": 1,
+        "bearish_count": 0
+      },
+      "4h": {
+        "score": 0.75,
+        "bull_fraction": 0.75,
+        "family_scores": {
+          "trend_following": 0.75,
+          "mean_reversion": 0.75
+        },
+        "bias": "bullish",
+        "signals": {
+          "rsi": "neutral",
+          "trend": "bullish",
+          "bollinger": "bullish",
+          "zscore": "neutral"
+        },
+        "bullish_count": 2,
+        "bearish_count": 0
+      }
+    },
+    "aligned": true,
+    "alignment_score": 1,
+    "bull_fraction": 0.625,
+    "family_scores": {
+      "trend_following": 0.75,
+      "mean_reversion": 0.5
+    },
+    "primary_timeframe": "1h",
+    "score_type": "heuristic_vote_share",
+    "validated": false,
+    "definition": "score = bull_fraction = (bullish + 0.5*neutral) / votes on primary_timeframe; an unvalidated heuristic, not a confidence or probability"
+  },
+  "derivatives": {
+    "funding_rate": 0.0000125,
+    "funding_annualized_pct": 10.95,
+    "funding_interval_hours": 1,
+    "open_interest": 39370.3015,
+    "impact_bid": 84485.4,
+    "impact_ask": 84500,
+    "impact_spread_bps": 1.73,
+    "spread_bps": 1.73
+  },
+  "funding_24h": {
+    "coin": "BTC",
+    "records": 23,
+    "lookback_hours": 24,
+    "avg_funding_rate": 0.0000081,
+    "annualized_pct": 7.09,
+    "funding_interval_hours": 1,
+    "current": 0.0000125,
+    "min": -0.00000723,
+    "max": 0.0000125,
+    "positive_pct": 82.6
+  },
+  "sentiment": {
+    "label": "bullish",
+    "as_of": 1790269024.020345,
+    "composite_method": "live_mean",
+    "sources_live": "5/8",
+    "live_sources": [
+      "fear_greed",
+      "news_vader",
+      "onchain"
+    ]
+  },
+  "regime": {
+    "current": "unknown",
+    "as_of": 0
+  },
+  "meta": {
+    "provider": "Cerebrus Pulse",
+    "offering": "pulse_bundle",
+    "execution_ms": 0,
+    "data_age_seconds": 60,
+    "as_of": {
+      "market_data": "2026-09-24T17:04:00Z",
+      "candles_1h": "2026-09-24T17:00:00Z",
+      "candles_4h": "2026-09-24T16:00:00Z",
+      "funding": "2026-09-24T16:00:00Z"
+    },
+    "sources": [
+      {
+        "name": "Hyperliquid",
+        "url": "https://hyperliquid.xyz"
+      },
+      {
+        "name": "Crypto Fear & Greed Index by alternative.me",
+        "url": "https://alternative.me/crypto/fear-and-greed-index/"
+      },
+      {
+        "name": "News headlines from Cointelegraph, CoinDesk and Crypto News RSS feeds, scored for sentiment by Cerebrus Pulse"
+      },
+      {
+        "name": "DefiLlama",
+        "url": "https://defillama.com"
+      },
+      {
+        "name": "FRED, Federal Reserve Bank of St. Louis",
+        "url": "https://fred.stlouisfed.org",
+        "notice": "This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis."
+      },
+      {
+        "name": "CoinGecko",
+        "url": "https://www.coingecko.com",
+        "notice": "Powered by CoinGecko"
+      }
+    ]
+  }
+}
+```
+
+## When to Use Bundle
+
+- **Use bundle** when you want the technical picture, recent funding and market sentiment for one coin: one request instead of three.
+- **Use individual endpoints** when you only need one of them, a funding window other than 24 hours, or sentiment (which is not coin-specific) on its own.
+
+## Errors
+
+| Status | Reason |
+|--------|--------|
+| 400 | Unsupported timeframe (before any price is quoted), or no requested timeframe could be computed (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
+| 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+---
+
+Source: https://cerebruspulse.xyz/api/health
+
+# GET /health
+
+The gateway's health: whether it can serve and take payment, and how fresh its data feeds are. No payment
+required. Not rate limited.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/health
+```
+
+No parameters.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | string | `ok`, or `degraded` when the engine, payments or the settlement ledger is not working |
+| `engine` | string | `available` or `missing` |
+| `payments` | string | `active`, or `DOWN (paid endpoints fail closed)` |
+| `ledger` | string | `writable` or `NOT WRITABLE` (the settlement record) |
+| `kill_switch` | string | `enabled` (serving) or `disabled` (paid endpoints answer 503) |
+| `a2a` | string | `enabled` |
+| `a2a_payment` | string | `http route only`: A2A names the HTTP endpoint and payment happens there |
+| `networks` | array | Payment networks: `eip155:8453` (Base), plus Solana when its rail is on |
+| `paid_routes` | number | Paid endpoints currently priced |
+| `engine_pool` | string | `warm`, or `spawn-per-request (fallback)` |
+| `engine_workers` | array | Per-worker status of the engine pool |
+| `settlements_since_start` | number | Payments settled since the gateway started |
+| `feeds` | object | Age of each upstream data feed, as the stale-feed gate sees it |
+| `concurrency` | object | `in_use` and `max` concurrent requests; a full gauge means paid routes answer 429 |
+| `version` | string | Gateway API version |
+
+## Notes
+
+- If `payments` is not `active`, paid endpoints answer 503 and quote no price (they fail closed).
+- If `kill_switch` is `disabled`, paid endpoints answer 503 with `retry_after: 3600`.
+- A feed past its age budget makes the endpoints that read it answer 503 until it is fresh again.
+- Use this endpoint for uptime monitoring and as a check before a batch of paid requests.
+
+---
+
+Source: https://cerebruspulse.xyz/api/coins
+
+# GET /coins
+
+Returns the list of all coins currently available for analysis. No payment required. Not rate limited.
+
+## Request
+
+```
+GET https://api.cerebruspulse.xyz/coins
+```
+
+No parameters.
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `coins` | string[] | The available market symbols, sorted |
+| `count` | number | How many there are |
+| `meta` | object | `provider` and `offering` |
+
+## Example
+
+```json
+{
+  "coins": [
+    "AAVE", "ADA", "APT", "ARB", "ATOM", "AVAX", "BERA", "BNB",
+    "BTC", "CRV", "DOGE", "DOT", "DYDX", "EIGEN", "ENA", "ENS",
+    "ETH", "FET", "FIL", "HBAR", "HYPE", "IMX", "INJ", "JUP",
+    "LDO", "LINK", "LTC", "MATIC", "MKR", "MNT", "NEAR", "ONDO",
+    "OP", "PENDLE", "PEPE", "POL", "PYTH", "RENDER", "SEI", "SNX",
+    "SOL", "STX", "SUI", "TAO", "TIA", "TRX", "UNI", "WIF",
+    "WLD", "XLM", "XRP"
+  ],
+  "count": 51,
+  "meta": { "provider": "Cerebrus Pulse", "offering": "cerebrus_pulse" }
+}
+```
+
+## Notes
+
+- The coin list is dynamic and may change as new perpetuals are added on Hyperliquid.
+- Always use this endpoint for discovery rather than hardcoding coin lists.
+- Coin tickers are case-insensitive in API requests (`btc`, `BTC`, and `Btc` all work).
+- Some tokens trade on Hyperliquid only as 1000-token markets: `PEPE` is the `kPEPE` market, so its prices are per 1000 PEPE and its open interest counts 1000-PEPE units. Responses say so in `market_symbol` and `price_unit`, and `kPEPE` is accepted as a symbol too.
+- The same list is also served at `/api/v1/coins`.
+
+---
+
+Source: https://cerebruspulse.xyz/guides/x402-payments
+
+# x402 Payments
+
+Cerebrus Pulse uses the [x402 protocol](https://www.x402.org/) for payments — an open standard for HTTP-native micropayments built on the `402 Payment Required` status code.
+
+## How It Works
+
+```
+Client (x402 v2 SDK)              Pulse Gateway                   Facilitator (Coinbase CDP)
+  |                                    |                                     |
+  |  GET /pulse/BTC                    |                                     |
+  |----------------------------------->|                                     |
+  |  402 Payment Required              |                                     |
+  |  PAYMENT-REQUIRED: terms           |                                     |
+  |  (price, Base + Solana, payTo)     |                                     |
+  |<-----------------------------------|                                     |
+  |                                    |                                     |
+  |  Sign a USDC payment authorization |                                     |
+  |  (nothing is sent on-chain yet)    |                                     |
+  |                                    |                                     |
+  |  GET /pulse/BTC                    |                                     |
+  |  PAYMENT-SIGNATURE: signed payload |                                     |
+  |----------------------------------->|  verify                             |
+  |                                    |------------------------------------>|
+  |                                    |<------------------------------------|
+  |                                    |  run the analysis, then settle      |
+  |                                    |------------------------------------>| submits the
+  |                                    |<------------------------------------| USDC transfer
+  |  200 OK + analysis data            |                                     |
+  |  PAYMENT-RESPONSE: receipt         |                                     |
+  |<-----------------------------------|                                     |
+```
+
+An x402 **v2** client handles everything after the first request: it reads the terms from the base64
+`PAYMENT-REQUIRED` header, signs, and retries with `PAYMENT-SIGNATURE`. The gateway settles only after it has
+an answer; a request refused with a 4xx or failing with a 5xx is not charged. From your side it is a normal
+HTTP request that costs $0.01–$0.06. The 402 offers **both Base and Solana**; the SDK pays on a network you
+registered.
+
+The 402 JSON body repeats the Base terms in the older x402 v1 shape for crawlers and directories. It is
+informational: v1 clients, which pay with an `X-PAYMENT` header, are not accepted.
+
+## Supported Networks
+
+Cerebrus Pulse accepts USDC payments on two chains. The 402 response includes payment options for both — your x402 SDK picks the right one based on your wallet.
+
+| Property | Base (EVM) | Solana |
+|----------|-----------|--------|
+| **Network ID** | `eip155:8453` | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` |
+| **Currency** | USDC | USDC |
+| **USDC Address** | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` |
+| **Scheme** | Exact EVM | Exact SVM |
+| **Facilitator** | Coinbase CDP | Coinbase CDP |
+| **Payer gas** | None: you sign an EIP-3009 authorization and the facilitator submits it | None: the facilitator is the fee payer |
+
+## Payment Details by Endpoint
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `/screener` | $0.06 USDC | Market-wide scan of 50+ coins |
+| `/bundle/{coin}` | $0.05 USDC | /pulse, 24h /funding and /sentiment in one request |
+| `/correlation` | $0.05 USDC | BTC-alt correlation matrix |
+| `/liquidations/{coin}` | $0.03 USDC | Liquidation heatmap by leverage tier |
+| `/pulse/{coin}` | $0.025 USDC | Multi-timeframe technical analysis |
+| `/arb` | $0.02 USDC | Market Stress Index |
+| `/basis/{coin}` | $0.02 USDC | Hyperliquid vs Chainlink basis |
+| `/cex-dex/{token}` | $0.02 USDC | CEX-DEX price divergence |
+| `/oi/{coin}` | $0.015 USDC | Open interest analysis |
+| `/spread/{coin}` | $0.015 USDC | Spread & liquidity analysis |
+| `/depeg` | $0.01 USDC | USDC collateral health monitor |
+| `/funding/{coin}` | $0.01 USDC | Funding rate analysis |
+| `/sentiment` | $0.01 USDC | Market sentiment labels |
+| `/health` | Free | Gateway status |
+| `/coins` | Free | List available coins |
+
+## Why x402?
+
+- **No API keys** — Your wallet address is your identity. No registration, no accounts.
+- **No subscriptions** — Pay only for what you use. One query = one micropayment.
+- **Instant settlement** — Payments settle on Base (fast, cheap L2) or Solana (sub-second finality).
+- **Open standard** — x402 is an open protocol. Any x402-compatible client works.
+- **Transparent pricing** — The 402 response includes exact payment details before you pay.
+
+## Wallet Requirements
+
+You need a wallet with USDC on **either** chain, and nothing else: no ETH and no SOL. The payer only signs;
+the facilitator submits the transfer and pays its network fee. Use a dedicated wallet holding a few dollars
+of USDC, not a main wallet.
+
+There is no card or account-based way to pay: every paid call needs a USDC wallet. The free
+[`/demo/{coin}`](https://cerebruspulse.xyz/quickstart#try-the-free-demo-first) endpoint needs none.
+
+### Option A: Base (EVM)
+1. **USDC on Base**: each call costs $0.01–$0.06
+2. **No ETH needed**: the Base payment is an EIP-3009 `transferWithAuthorization` that you sign off-chain
+   and the facilitator submits
+
+**Getting USDC on Base:**
+- Bridge from Ethereum mainnet via the [Base Bridge](https://bridge.base.org)
+- Purchase directly on exchanges that support Base withdrawals (Coinbase, Binance)
+- Use a cross-chain bridge (Across, Stargate)
+
+### Option B: Solana
+1. **USDC on Solana** — Same pricing, same endpoints
+2. **No SOL needed**: the CDP facilitator is the fee payer for the transaction
+
+**Getting USDC on Solana:**
+- Purchase directly on exchanges that support Solana withdrawals (Coinbase, Phantom, Jupiter)
+- Swap on Jupiter or Raydium
+
+## SDK Options
 
 ### Python
-
-```python
-from x402.client import Client
-
-client = Client(
-    wallet_key="your-base-wallet-private-key",
-    network="base"
-)
-
-# Technical analysis for ETH on 1h and 4h timeframes
-response = client.get("https://api.cerebruspulse.xyz/pulse/ETH?timeframes=1h,4h")
-data = response.json()
-
-print(f"Price: ${data['price']['current']}")
-print(f"Confluence: {data['confluence']['score']} ({data['confluence']['bias']})")
-print(f"Regime: {data['regime']['current']}")
-
-# Market sentiment
-sentiment = client.get("https://api.cerebruspulse.xyz/sentiment").json()
-print(f"Sentiment: {sentiment['sentiment']['overall']}")
-
-# Funding rates
-funding = client.get("https://api.cerebruspulse.xyz/funding/BTC?lookback_hours=48").json()
-print(f"Funding: {funding['funding']['annualized_pct']}% annualized")
-
-# Screener (scan all coins at once)
-screener = client.get("https://api.cerebruspulse.xyz/screener?top_n=10").json()
-
-# Open interest analysis
-oi = client.get("https://api.cerebruspulse.xyz/oi/BTC").json()
-print(f"OI trend: {oi['open_interest']['trend']}")
-
-# Spread and liquidity
-spread = client.get("https://api.cerebruspulse.xyz/spread/ETH").json()
-print(f"Liquidity score: {spread['spread']['liquidity_score']}/10")
-
-# Correlation matrix
-corr = client.get("https://api.cerebruspulse.xyz/correlation").json()
-print(f"Correlation regime: {corr['regime']}")
-
-# Bundle (/pulse, 24h /funding and /sentiment in one request)
-bundle = client.get("https://api.cerebruspulse.xyz/bundle/BTC?timeframes=1h,4h").json()
+```bash
+pip install "x402[evm]" httpx eth-account                                        # For Base
+pip install "x402[svm]" "solana>=0.36,<0.37" "solders>=0.27,<0.28" httpx         # For Solana
 ```
+The Solana pins are needed: solana 0.40 removed a module x402's Solana signer imports.
+See the [Python SDK Guide](https://cerebruspulse.xyz/guides/python-sdk) for full integration details.
 
 ### TypeScript / Node.js
+```bash
+npm install @x402/fetch @x402/evm viem                         # For Base
+npm install @x402/fetch @x402/svm @solana/kit @scure/base      # For Solana
+```
+These are the x402 **v2** packages. The older `x402-fetch` 1.x pays with an `X-PAYMENT` header, which this
+API does not accept.
+See the [TypeScript SDK Guide](https://cerebruspulse.xyz/guides/typescript-sdk) for full integration details.
+
+## Budget Controls
+
+Both official x402 clients refuse a payment above a per-payment cap, which defaults to **$1**. Set it lower:
 
 ```typescript
-import { x402Client } from "x402";
-
-const client = new x402Client({
-  walletKey: process.env.BASE_WALLET_KEY,
-  network: "base",
-});
-
-// Technical analysis
-const pulse = await client.get("https://api.cerebruspulse.xyz/pulse/SOL?timeframes=1h,4h");
-console.log(`RSI 1h: ${pulse.timeframes["1h"].indicators.rsi_14}`);
-console.log(`Trend: ${pulse.timeframes["1h"].indicators.trend.label}`);
-console.log(`Confluence: ${pulse.confluence.score} (${pulse.confluence.bias})`);
-
-// Bundle for complete view
-const bundle = await client.get("https://api.cerebruspulse.xyz/bundle/ETH");
-console.log(`Price: $${bundle.pulse.price.current}`);
-console.log(`Sentiment: ${bundle.sentiment.overall}`);
-console.log(`Funding: ${bundle.funding.annualized_pct}%`);
+// TypeScript (@x402/fetch)
+wrapFetchWithPaymentFromConfig(fetch, { schemes, spendControls: { maxAmountPerPayment: "$0.10" } });
 ```
 
-### cURL (manual payment)
-
-```bash
-# First request returns 402 with payment details
-curl -v https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h
-
-# The x402 SDK handles payment automatically.
-# Without SDK, extract payment details from 402 response headers
-# and submit signed USDC transaction on Base.
+```python
+# Python (x402)
+x402.set_spend_controls({"max_amount_per_payment": "$0.10"})
 ```
+
+Each call costs $0.01–$0.06; set the cap just above the most expensive endpoint you call.
+
+## Security
+
+- Payments use EVM or SVM signatures — your private key never leaves your machine
+- The x402 facilitator (Coinbase CDP) verifies payments on-chain for both Base and Solana
+- Pulse never sees your private key — only the signed payment proof
+- All paid endpoints are rate-limited to prevent abuse
+- The payer never needs gas: no ETH on Base, no SOL on Solana
+
+## Related
+
+- **[Quickstart](https://cerebruspulse.xyz/quickstart)** — End-to-end first API call in 5 minutes
+- **[Python SDK Guide](https://cerebruspulse.xyz/guides/python-sdk)** — Full Python integration with async patterns
+- **[TypeScript SDK Guide](https://cerebruspulse.xyz/guides/typescript-sdk)** — Full TypeScript/Node.js integration
+- **[Rate Limits](https://cerebruspulse.xyz/reference/rate-limits)** — Request limits and throttling behavior
 
 ---
+
+Source: https://cerebruspulse.xyz/guides/mcp-server
+
+# MCP Server (cerebrus-pulse-mcp)
+
+[`cerebrus-pulse-mcp`](https://pypi.org/project/cerebrus-pulse-mcp/) is a Model Context Protocol server that
+gives an MCP client 15 tools: every paid Cerebrus Pulse endpoint plus `/health` and `/coins`. Without a
+wallet, paid tools return the exact price and payment terms instead of data; with a Base wallet key they pay
+automatically, inside spend limits.
+
+> **Version:**
+> This page describes **cerebrus-pulse-mcp 0.5.2 or later**. Earlier releases fail to start on a fresh install
+> (they accept MCP SDK 2.x, which removed the API the server uses) and cannot pay when run with `uvx`.
+
+## Install
+
+The server runs with [`uvx`](https://docs.astral.sh/uv/), so there is nothing to install by hand.
+
+### Claude Desktop, Cursor, Windsurf
+
+Add it to your MCP config (`claude_desktop_config.json`, `.cursor/mcp.json`, ...):
+
+```json
+{
+  "mcpServers": {
+    "cerebrus-pulse": {
+      "command": "uvx",
+      "args": ["cerebrus-pulse-mcp"]
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add cerebrus-pulse -- uvx cerebrus-pulse-mcp
+```
+
+### pip
+
+```bash
+pip install cerebrus-pulse-mcp
+cerebrus-pulse-mcp            # speaks MCP over stdio
+```
+
+## Automatic payment
+
+Give the server the private key of a **dedicated, low-balance** Base wallet that holds a little USDC (no ETH
+is needed). The key sits in plain text in the MCP config, so never use a main wallet.
+
+```json
+{
+  "mcpServers": {
+    "cerebrus-pulse": {
+      "command": "uvx",
+      "args": ["cerebrus-pulse-mcp"],
+      "env": {
+        "CEREBRUS_WALLET_KEY": "<private key of a dedicated Base wallet>",
+        "CEREBRUS_MAX_PAYMENT_USD": "0.10",
+        "CEREBRUS_MAX_SPEND_USD": "1.00"
+      }
+    }
+  }
+}
+```
+
+Every payment is checked before anything is signed:
+
+| Variable | Default | Limit |
+|----------|---------|-------|
+| `CEREBRUS_MAX_PAYMENT_USD` | `0.10` | The most a single call may cost |
+| `CEREBRUS_MAX_SPEND_USD` | `1.00` | The most the server may spend while it runs (a restart resets it) |
+| `CEREBRUS_ALLOWED_PAYTO` | The Cerebrus Pulse Base payTo the release ships with | Comma-separated addresses the server may pay; a changed or mistyped `CEREBRUS_BASE_URL` cannot redirect payments |
+| `CEREBRUS_BASE_URL` | `https://api.cerebruspulse.xyz` | The API to call |
+
+Only USDC on Base is paid, and only x402 v2 terms. A refused payment returns `"status": "payment_blocked"`
+with the reason; a malformed limit turns auto-payment off rather than lifting the limit. Automatic payment
+covers **Base only**: `CEREBRUS_WALLET_KEY_SOLANA` is reserved and not used yet.
+
+## Tools
+
+Each paid tool costs what its endpoint costs; see the [endpoint table](https://cerebruspulse.xyz/overview#endpoints).
+
+| Tool | Endpoint |
+|------|----------|
+| `cerebrus_health` | `GET /health` (free) |
+| `cerebrus_list_coins` | `GET /coins` (free) |
+| `cerebrus_pulse` | [`GET /pulse/{coin}`](https://cerebruspulse.xyz/api/pulse) |
+| `cerebrus_sentiment` | [`GET /sentiment`](https://cerebruspulse.xyz/api/sentiment) |
+| `cerebrus_funding` | [`GET /funding/{coin}`](https://cerebruspulse.xyz/api/funding) |
+| `cerebrus_bundle` | [`GET /bundle/{coin}`](https://cerebruspulse.xyz/api/bundle) |
+| `cerebrus_screener` | [`GET /screener`](https://cerebruspulse.xyz/api/screener) |
+| `cerebrus_oi` | [`GET /oi/{coin}`](https://cerebruspulse.xyz/api/oi) |
+| `cerebrus_spread` | [`GET /spread/{coin}`](https://cerebruspulse.xyz/api/spread) |
+| `cerebrus_correlation` | [`GET /correlation`](https://cerebruspulse.xyz/api/correlation) |
+| `cerebrus_stress` | [`GET /arb`](https://cerebruspulse.xyz/api/arb) |
+| `cerebrus_cex_dex` | [`GET /cex-dex/{token}`](https://cerebruspulse.xyz/api/cex-dex) |
+| `cerebrus_basis` | [`GET /basis/{coin}`](https://cerebruspulse.xyz/api/basis) |
+| `cerebrus_depeg` | [`GET /depeg`](https://cerebruspulse.xyz/api/depeg) |
+| `cerebrus_liquidations` | [`GET /liquidations/{coin}`](https://cerebruspulse.xyz/api/liquidations) |
+
+## Command line
+
+The same tools run from a shell with `--json`, which is handy for checking the setup:
+
+```bash
+cerebrus-pulse-mcp --json health
+cerebrus-pulse-mcp --json list-coins
+cerebrus-pulse-mcp --json pulse BTC          # the price and terms, or data if a wallet is set
+cerebrus-pulse-mcp --json funding ETH lookback_hours=48
+```
+
+## Links
+
+- [PyPI](https://pypi.org/project/cerebrus-pulse-mcp/) and [GitHub](https://github.com/0xsl1m/cerebrus-pulse-mcp)
+- [x402 Payments](https://cerebruspulse.xyz/guides/x402-payments): how the payment works
+- [Response Schemas](https://cerebruspulse.xyz/reference/response-schemas): what the tools return
+
+---
+
+Source: https://cerebruspulse.xyz/guides/python-client
+
+# Python Client (cerebrus-pulse)
+
+[`cerebrus-pulse`](https://pypi.org/project/cerebrus-pulse/) wraps every endpoint in a method that returns a
+typed response object. With a wallet key it pays the x402 402 challenge for you, inside spend limits; without
+one, paid methods raise `PaymentRequired` carrying the price and terms. If you would rather drive x402
+yourself, see [Python with x402](https://cerebruspulse.xyz/guides/python-sdk).
+
+> **Version:**
+> This page describes **cerebrus-pulse 0.4.0 or later**. Earlier releases cannot pay and parse `/funding` and
+> `/sentiment` incorrectly.
+
+## Install
+
+```bash
+pip install cerebrus-pulse              # free endpoints; paid ones raise PaymentRequired with the price
+pip install "cerebrus-pulse[pay]"       # + automatic payment in USDC on Base
+pip install "cerebrus-pulse[pay,svm]"   # + automatic payment in USDC on Solana
+```
+
+The `svm` extra pins solana below 0.37 for you: solana 0.40 removed a module x402's Solana signer imports.
+
+## Quick start
+
+```python
+from cerebrus_pulse import CerebrusPulse
+
+client = CerebrusPulse()
+print(len(client.coins()), "coins")      # free
+print(client.health()["status"])         # free
+```
+
+## Paying for endpoints
+
+Give the client the private key of a **dedicated, low-balance** Base wallet holding a little USDC (no ETH is
+needed). On a 402 it signs an x402 v2 payment, resends the request with the `PAYMENT-SIGNATURE` header, and
+returns the data.
+
+```python
+from cerebrus_pulse import CerebrusPulse
+
+client = CerebrusPulse(wallet_key=os.environ["CEREBRUS_WALLET_KEY"])
+
+pulse = client.pulse("BTC", timeframes="1h,4h")
+print(pulse.confluence.score, pulse.confluence.bias)
+print(f"Spent by this client: ${client.spent_usd}")
+```
+
+You can pass your own configured `x402.x402ClientSync` as `x402_client=` instead of a key.
+
+### Spend limits
+
+Every payment is checked before it is signed; a refused one raises `PaymentBlocked` and nothing is signed.
+
+| Argument / environment variable | Default | Limit |
+|---------------------------------|---------|-------|
+| `max_payment_usd` / `CEREBRUS_MAX_PAYMENT_USD` | `0.10` | The most one call may cost |
+| `max_spend_usd` / `CEREBRUS_MAX_SPEND_USD` | `1.00` | The most one client may sign in total |
+| `allowed_pay_to` / `CEREBRUS_ALLOWED_PAYTO` | The API's Base payTo the release ships with | Base addresses the client will pay |
+| `allowed_pay_to_solana` / `CEREBRUS_ALLOWED_PAYTO_SOLANA` | none | Solana addresses the client will pay; empty means Solana is never paid |
+
+Arguments win over environment variables. Only USDC is paid, only x402 v2 terms, and a malformed setting
+raises `ValueError` instead of lifting a limit.
+
+### Solana
+
+```python
+client = CerebrusPulse(
+    solana_key=os.environ["CEREBRUS_SOLANA_KEY"],   # base58 keypair
+    allowed_pay_to_solana="<the Solana payTo in the API's 402 terms>",
+)
+```
+
+### Without a wallet
+
+```python
+from cerebrus_pulse import CerebrusPulse, PaymentRequired
+
+try:
+    CerebrusPulse().pulse("BTC")
+except PaymentRequired as e:
+    term = e.terms[0]
+    print(f"Costs ${e.price_usd} USDC, paid to {term.pay_to} on {term.network}")
+```
+
+## Methods
+
+Each paid method costs what its endpoint costs; see the [endpoint table](https://cerebruspulse.xyz/overview#endpoints). Every
+response keeps the raw JSON in `.raw`, and a field the API did not send is `None`, never a made-up `0`.
+
+| Method | Endpoint |
+|--------|----------|
+| `health()`, `coins()` | `GET /health`, `GET /coins` (free) |
+| `pulse(coin, timeframes=...)` | [`GET /pulse/{coin}`](https://cerebruspulse.xyz/api/pulse) |
+| `sentiment()` | [`GET /sentiment`](https://cerebruspulse.xyz/api/sentiment) |
+| `funding(coin, lookback_hours=...)` | [`GET /funding/{coin}`](https://cerebruspulse.xyz/api/funding) |
+| `bundle(coin)` | [`GET /bundle/{coin}`](https://cerebruspulse.xyz/api/bundle) |
+| `screener(top_n=...)` | [`GET /screener`](https://cerebruspulse.xyz/api/screener) |
+| `oi(coin)` | [`GET /oi/{coin}`](https://cerebruspulse.xyz/api/oi) |
+| `spread(coin)` | [`GET /spread/{coin}`](https://cerebruspulse.xyz/api/spread) |
+| `correlation()` | [`GET /correlation`](https://cerebruspulse.xyz/api/correlation) |
+| `stress()` | [`GET /arb`](https://cerebruspulse.xyz/api/arb) |
+| `cex_dex(token)` | [`GET /cex-dex/{token}`](https://cerebruspulse.xyz/api/cex-dex) |
+| `basis(coin)` | [`GET /basis/{coin}`](https://cerebruspulse.xyz/api/basis) |
+| `depeg()` | [`GET /depeg`](https://cerebruspulse.xyz/api/depeg) |
+| `liquidations(coin)` | [`GET /liquidations/{coin}`](https://cerebruspulse.xyz/api/liquidations) |
+
+## Errors
+
+```python
+from cerebrus_pulse import (
+    CerebrusPulse, CerebrusPulseError, PaymentBlocked, PaymentRejected,
+    PaymentRequired, RateLimited,
+)
+
+try:
+    pulse = client.pulse("BTC")
+except PaymentBlocked as e:
+    print(f"Refused by the spend limits, nothing signed: {e.reason}")
+except PaymentRejected:
+    print("Paid, but the API did not accept the payment. Check the wallet's USDC.")
+except PaymentRequired as e:
+    print(f"Payment needed: ${e.price_usd} USDC")
+except RateLimited:
+    print("Too many requests; back off")
+except CerebrusPulseError as e:
+    print(f"API error: {e.status_code} {e.detail}")
+```
+
+## Links
+
+- [PyPI](https://pypi.org/project/cerebrus-pulse/) and [GitHub](https://github.com/0xsl1m/cerebrus-pulse-python)
+- [LangChain tools](https://cerebruspulse.xyz/guides/langchain), built on this client
+- [Response Schemas](https://cerebruspulse.xyz/reference/response-schemas)
+
+---
+
+Source: https://cerebruspulse.xyz/guides/langchain
+
+# LangChain Tools (langchain-cerebrus-pulse)
+
+[`langchain-cerebrus-pulse`](https://pypi.org/project/langchain-cerebrus-pulse/) turns every Cerebrus Pulse
+endpoint into a LangChain tool. The tools share one [`cerebrus-pulse`](https://cerebruspulse.xyz/guides/python-client) client: give it a
+wallet key and paid tools pay automatically, all under the same spend limits.
+
+> **Version:**
+> This page describes **langchain-cerebrus-pulse 0.4.0 or later**, which needs `langchain-core` 1.x and
+> `cerebrus-pulse` 0.4. Earlier releases cannot pay.
+
+## Install
+
+```bash
+pip install langchain-cerebrus-pulse          # tools; paid ones report the price instead of paying
+pip install "langchain-cerebrus-pulse[pay]"   # + automatic payment in USDC on Base
+pip install "langchain-cerebrus-pulse[svm]"   # + automatic payment in USDC on Solana too
+```
+
+## Quick start
+
+```python
+from cerebrus_pulse import CerebrusPulse
+from langchain_cerebrus_pulse import (
+    CerebrusListCoinsTool, CerebrusPulseTool, CerebrusScreenerTool,
+    CerebrusLiquidationsTool, CerebrusFundingTool, CerebrusBundleTool,
+)
+
+# A dedicated, low-balance Base wallet holding a little USDC. Omit wallet_key
+# and paid tools return the price and payee instead of data.
+client = CerebrusPulse(
+    wallet_key=os.environ["CEREBRUS_WALLET_KEY"],
+    max_payment_usd="0.10",  # most one call may cost
+    max_spend_usd="1.00",    # most this client may spend in total
+)
+
+tools = [
+    tool(client=client)
+    for tool in (
+        CerebrusListCoinsTool, CerebrusPulseTool, CerebrusScreenerTool,
+        CerebrusLiquidationsTool, CerebrusFundingTool, CerebrusBundleTool,
+    )
+]
+```
+
+## With an agent
+
+```python
+from langchain.agents import create_agent
+
+agent = create_agent(
+    "openai:gpt-4o",  # any chat model that supports tool calling
+    tools=tools,
+    system_prompt="You answer questions about Hyperliquid markets with Cerebrus Pulse data.",
+)
+
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "Where are the modelled BTC liquidation clusters?"}]
+})
+print(result["messages"][-1].content)
+print(f"Spent: ${client.spent_usd}")
+```
+
+When a paid tool cannot pay, it returns JSON the model can read:
+`{"error": ..., "payment_required": true, "price_usd": "...", "payment_terms": [...]}`. A refusal by the spend
+limits adds a `reason`, and nothing is signed.
+
+## Tools
+
+Each paid tool costs what its endpoint costs; see the [endpoint table](https://cerebruspulse.xyz/overview#endpoints).
+
+| Tool | Endpoint |
+|------|----------|
+| `CerebrusListCoinsTool` | `GET /coins` (free) |
+| `CerebrusPulseTool` | [`GET /pulse/{coin}`](https://cerebruspulse.xyz/api/pulse) |
+| `CerebrusScreenerTool` | [`GET /screener`](https://cerebruspulse.xyz/api/screener) |
+| `CerebrusLiquidationsTool` | [`GET /liquidations/{coin}`](https://cerebruspulse.xyz/api/liquidations) |
+| `CerebrusStressTool` | [`GET /arb`](https://cerebruspulse.xyz/api/arb) |
+| `CerebrusCexDexTool` | [`GET /cex-dex/{token}`](https://cerebruspulse.xyz/api/cex-dex) |
+| `CerebrusBasisTool` | [`GET /basis/{coin}`](https://cerebruspulse.xyz/api/basis) |
+| `CerebrusDepegTool` | [`GET /depeg`](https://cerebruspulse.xyz/api/depeg) |
+| `CerebrusSentimentTool` | [`GET /sentiment`](https://cerebruspulse.xyz/api/sentiment) |
+| `CerebrusFundingTool` | [`GET /funding/{coin}`](https://cerebruspulse.xyz/api/funding) |
+| `CerebrusOITool` | [`GET /oi/{coin}`](https://cerebruspulse.xyz/api/oi) |
+| `CerebrusSpreadTool` | [`GET /spread/{coin}`](https://cerebruspulse.xyz/api/spread) |
+| `CerebrusCorrelationTool` | [`GET /correlation`](https://cerebruspulse.xyz/api/correlation) |
+| `CerebrusBundleTool` | [`GET /bundle/{coin}`](https://cerebruspulse.xyz/api/bundle) |
+
+The spend limits also read `CEREBRUS_MAX_PAYMENT_USD`, `CEREBRUS_MAX_SPEND_USD` and `CEREBRUS_ALLOWED_PAYTO`;
+see the [Python client](https://cerebruspulse.xyz/guides/python-client#spend-limits).
+
+## Links
+
+- [PyPI](https://pypi.org/project/langchain-cerebrus-pulse/) and [GitHub](https://github.com/0xsl1m/langchain-cerebrus-pulse)
+- [Python Client (cerebrus-pulse)](https://cerebruspulse.xyz/guides/python-client)
+
+---
+
+Source: https://cerebruspulse.xyz/guides/python-sdk
+
+# Python with x402
+
+Call Cerebrus Pulse from Python with the official x402 client, handling the payment yourself.
+
+> **Looking for the cerebrus-pulse package?:**
+> `pip install cerebrus-pulse` is a typed client that wraps every endpoint and pays for you inside spend
+> limits: see [Python Client (cerebrus-pulse)](https://cerebruspulse.xyz/guides/python-client). This page uses the raw x402 SDK.
+
+## Installation
+
+**Base (EVM):**
+
+```bash
+pip install "x402[evm]" httpx eth-account
+```
+**Solana (SVM):**
+
+```bash
+pip install "x402[svm]" "solana>=0.36,<0.37" "solders>=0.27,<0.28" httpx
+```
+
+> **Why the Solana pins:**
+> `x402[svm]` accepts any `solana>=0.36`, and pip now picks solana 0.40, which removed the `solana.rpc.api`
+> module x402's Solana signer imports: `from x402.mechanisms.svm import KeypairSigner` then fails with
+> "SVM mechanism requires solana packages". The pins above are the combination the gateway itself runs
+> (checked with x402 2.24.0, solana 0.36.12 and solders 0.27.1).
+
+## Setup
+
+Build an `x402Client`, register a payment scheme onto it with your signer, then
+hand that client to the HTTP wrapper. The registration goes on the **x402
+client**, not on the HTTP client. This is the x402 **v2** client: it pays with the
+`PAYMENT-SIGNATURE` header, the only one this API accepts. The client refuses any
+payment above its spend cap, $1 by default; the setup below lowers it to $0.10.
+
+**Base (EVM):**
+
+```python
+import os
+from eth_account import Account
+from x402 import x402Client
+from x402.http.clients import x402HttpxClient
+from x402.mechanisms.evm.exact import register_exact_evm_client
+
+# Load your private key securely (env var, keyfile, etc.)
+PRIVATE_KEY = os.environ["BASE_WALLET_PRIVATE_KEY"]
+
+signer = Account.from_key(PRIVATE_KEY)
+
+x402 = x402Client()
+register_exact_evm_client(x402, signer)
+x402.set_spend_controls({"max_amount_per_payment": "$0.10"})  # refuse any payment above $0.10
+```
+**Solana (SVM):**
+
+```python
+import os
+from x402 import x402Client
+from x402.http.clients import x402HttpxClient
+from x402.mechanisms.svm import KeypairSigner
+from x402.mechanisms.svm.exact import register_exact_svm_client
+
+# Load your Solana private key (base58-encoded)
+PRIVATE_KEY = os.environ["SOLANA_WALLET_PRIVATE_KEY"]
+
+signer = KeypairSigner.from_base58(PRIVATE_KEY)
+
+x402 = x402Client()
+register_exact_svm_client(x402, signer)
+x402.set_spend_controls({"max_amount_per_payment": "$0.10"})  # refuse any payment above $0.10
+```
+
+## Async Usage (Recommended)
+
+`x402HttpxClient` takes the configured `x402Client` and handles the 402 flow for
+you: it sends the request, reads the payment terms, signs, and retries.
+
+**Base (EVM):**
+
+```python
+import asyncio
+
+BASE_URL = "https://api.cerebruspulse.xyz"
+
+async def get_pulse(coin: str, timeframes: str = "1h,4h") -> dict:
+    async with x402HttpxClient(x402) as client:
+        resp = await client.get(
+            f"{BASE_URL}/pulse/{coin}",
+            params={"timeframes": timeframes}
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+async def main():
+    data = await get_pulse("BTC")
+    print(f"BTC: {data['confluence']['bias']} (score: {data['confluence']['score']})")
+
+asyncio.run(main())
+```
+**Solana (SVM):**
+
+```python
+import asyncio
+
+BASE_URL = "https://api.cerebruspulse.xyz"
+
+async def get_pulse(coin: str, timeframes: str = "1h,4h") -> dict:
+    async with x402HttpxClient(x402) as client:
+        resp = await client.get(
+            f"{BASE_URL}/pulse/{coin}",
+            params={"timeframes": timeframes}
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+async def main():
+    data = await get_pulse("BTC")
+    print(f"BTC: {data['confluence']['bias']} (score: {data['confluence']['score']})")
+
+asyncio.run(main())
+```
+
+### Helper Functions
+
+```python
+async def get_sentiment() -> dict:
+    async with x402HttpxClient(x402) as client:
+        resp = await client.get(f"{BASE_URL}/sentiment")
+        resp.raise_for_status()
+        return resp.json()
+
+async def get_funding(coin: str, lookback_hours: int = 24) -> dict:
+    async with x402HttpxClient(x402) as client:
+        resp = await client.get(
+            f"{BASE_URL}/funding/{coin}",
+            params={"lookback_hours": lookback_hours}
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+async def get_bundle(coin: str, timeframes: str = "1h,4h") -> dict:
+    async with x402HttpxClient(x402) as client:
+        resp = await client.get(
+            f"{BASE_URL}/bundle/{coin}",
+            params={"timeframes": timeframes}
+        )
+        resp.raise_for_status()
+        return resp.json()
+```
+
+## Working with the Response
+
+Field meanings are on the [/pulse reference](https://cerebruspulse.xyz/api/pulse). Three to get right: funding rates are **hourly**,
+open interest is in **contracts** (BTC for BTC, not USD), and `confluence.score` is a **bullish vote share**
+(1 = all bullish, 0 = all bearish), not a confidence.
+
+```python
+async def analyze_market(coin: str):
+    data = await get_pulse(coin, timeframes="1h,4h")
+
+    price = data["price"].get("current")
+    confluence = data["confluence"]
+    regime = data["regime"]["current"]
+
+    print(f"\n{'='*50}")
+    print(f"{coin} @ ${price:,.2f}  |  Regime: {regime}")
+    print(f"Confluence: {confluence['bias']} (bullish share {confluence['score']})")
+    print(f"{'='*50}")
+
+    for tf, analysis in data["timeframes"].items():
+        if "error" in analysis:
+            print(f"\n  [{tf}] {analysis['error']}")
+            continue
+        ind = analysis["indicators"]
+        print(f"\n  [{tf}] closed at {analysis['last_closed_candle_time']}")
+        print(f"    RSI:     {ind['rsi_14']} ({ind['rsi_zone']})")
+        print(f"    Trend:   {ind['trend']['label']} ({ind['trend']['ema_stack']})")
+        print(f"    BB Pos:  {ind['bollinger']['position_pct']:.0%}")
+        print(f"    Z-Score: {ind['zscore_100']}")
+
+    deriv = data["derivatives"]
+    oi_usd = deriv["open_interest"] * price  # open interest is in contracts
+    print(f"\n  Funding: {deriv['funding_rate']:.7f}/h = {deriv['funding_annualized_pct']:.2f}% annualized")
+    print(f"  OI: {deriv['open_interest']:,.0f} {data['price_unit'].split()[-1]} (${oi_usd:,.0f})")
+    print(f"  Impact spread: {deriv['impact_spread_bps']:.2f} bps")
+```
+
+## Error Handling
+
+```python
+
+async def safe_pulse(coin: str) -> dict | None:
+    try:
+        async with x402HttpxClient(x402) as client:
+            resp = await client.get(f"{BASE_URL}/pulse/{coin}")
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 400:
+            print(f"Invalid input (not charged): {e.response.json().get('detail')}")
+        elif e.response.status_code == 402:
+            print("Payment not accepted, e.g. not enough USDC (nothing settled)")
+        elif e.response.status_code == 404:
+            print(f"Unknown coin: {coin} (GET /coins lists them)")
+        elif e.response.status_code == 429:
+            print("Rate limited — wait and retry")
+        elif e.response.status_code == 503:
+            print(f"Unavailable; retry after {e.response.headers.get('Retry-After')} s")
+        elif e.response.status_code == 504:
+            print("Engine timeout (not charged) — try again")
+        else:
+            print(f"Error {e.response.status_code}: {e.response.text}")
+        return None
+```
+
+## Multi-Coin Scanning
+
+```python
+async def scan_all_coins():
+    # First, get the coin list (free)
+    async with x402HttpxClient(x402) as client:
+        resp = await client.get(f"{BASE_URL}/coins")
+        coins = resp.json()["coins"]
+
+    print(f"Scanning {len(coins)} coins...")
+
+    # Then fetch pulse for each (paid)
+    for coin in coins[:5]:  # Limit to 5 for this example
+        data = await safe_pulse(coin)
+        if data:
+            c = data["confluence"]
+            print(f"  {coin}: {c['bias']} (bullish share {c['score']})")
+```
+
+## Tips
+
+- **Reuse the client** within a session to avoid reconnection overhead
+- **Use `/bundle`** to get `/pulse`, 24h `/funding` and `/sentiment` in one request (one rate-limit slot instead of three); [its page](https://cerebruspulse.xyz/api/bundle) shows how its price compares
+- **Check `/health`** before batch operations to avoid wasting payments on a degraded gateway
+- **Handle stale data** — `meta.warning` is `"stale_data"` when the price feed is more than 15 minutes old, and `meta.warnings` lists stalled inputs such as `"stale_candles"`
+
+## Related
+
+- **[Quickstart](https://cerebruspulse.xyz/quickstart)** — Make your first API call in 5 minutes
+- **[x402 Payments Guide](https://cerebruspulse.xyz/guides/x402-payments)** — How micropayments work, wallet setup, and supported chains
+- **[GET /pulse/{coin}](https://cerebruspulse.xyz/api/pulse)** — Full endpoint reference for the pulse endpoint
+- **[GET /screener](https://cerebruspulse.xyz/api/screener)** — Market-wide scanning endpoint reference
+- **[Response Schemas](https://cerebruspulse.xyz/reference/response-schemas)** — Detailed field descriptions and value ranges
+
+---
+
+Source: https://cerebruspulse.xyz/guides/typescript-sdk
+
+# TypeScript SDK Integration
+
+Cerebrus Pulse takes payment over **x402 v2**. An unpaid request gets `402 Payment Required` with the terms
+in the base64 `PAYMENT-REQUIRED` header; the client pays by retrying with a `PAYMENT-SIGNATURE` header and
+gets the data plus a `PAYMENT-RESPONSE` receipt. The v2 fetch client, `@x402/fetch`, does all of that for you.
+
+> **Do not use `x402-fetch` 1.x:**
+> The older `x402-fetch` package speaks x402 v1: it pays with an `X-PAYMENT` header, which this API does not
+> accept. It signs a payment and gets a second 402. Use `@x402/fetch` (2.x) as shown below.
+
+## Installation
+
+**Base (EVM):**
+
+```bash
+npm install @x402/fetch @x402/evm viem
+```
+**Solana (SVM):**
+
+```bash
+npm install @x402/fetch @x402/svm @solana/kit @scure/base
+```
+
+The examples were checked against `@x402/fetch`, `@x402/evm` and `@x402/svm` 2.27.0. They are ES modules
+(top-level `await`), for Node.js 18 or later.
+
+## Setup
+
+`wrapFetchWithPaymentFromConfig` wraps the native `fetch`. It makes the request, reads the 402 terms, signs a
+USDC payment on a network you registered, and retries. The rest of your code just calls `fetchWithPayment`.
+
+**Base (EVM):**
+
+```typescript
+import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm";
+import { privateKeyToAccount } from "viem/accounts";
+
+// A dedicated, low-balance wallet. Read the key from the environment, never from source.
+const account = privateKeyToAccount(process.env.BASE_WALLET_PRIVATE_KEY as `0x${string}`);
+
+export const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
+  schemes: [{ network: "eip155:8453", client: new ExactEvmScheme(account) }], // Base mainnet
+  spendControls: { maxAmountPerPayment: "$0.10" }, // refuse any single payment above $0.10
+});
+
+export const BASE_URL = "https://api.cerebruspulse.xyz";
+```
+**Solana (SVM):**
+
+```typescript
+import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import { ExactSvmScheme } from "@x402/svm";
+import { createKeyPairSignerFromBytes } from "@solana/kit";
+import { base58 } from "@scure/base";
+
+// A dedicated, low-balance wallet: its base58-encoded secret key, from the environment.
+const signer = await createKeyPairSignerFromBytes(
+  base58.decode(process.env.SOLANA_WALLET_PRIVATE_KEY!),
+);
+
+export const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
+  // Solana mainnet
+  schemes: [{ network: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", client: new ExactSvmScheme(signer) }],
+  spendControls: { maxAmountPerPayment: "$0.10" }, // refuse any single payment above $0.10
+});
+
+export const BASE_URL = "https://api.cerebruspulse.xyz";
+```
+
+> **Spend cap:**
+> `@x402/fetch` refuses any payment above `spendControls.maxAmountPerPayment`, which defaults to **$1** per
+> payment. The most expensive Cerebrus Pulse endpoint costs far less, so a cap of `"$0.10"` loses nothing and
+> limits the damage of a wrong URL.
+
+Register both schemes to let the client pay on whichever rail the 402 offers first (Base is listed first).
+
+## Making Requests
+
+```typescript
+// Pulse — multi-timeframe technical analysis
+export async function getPulse(coin: string, timeframes = "1h,4h") {
+  const resp = await fetchWithPayment(`${BASE_URL}/pulse/${coin}?timeframes=${timeframes}`);
+  return resp.json();
+}
+
+// Sentiment — a bucketed market sentiment label
+export async function getSentiment() {
+  const resp = await fetchWithPayment(`${BASE_URL}/sentiment`);
+  return resp.json();
+}
+
+// Funding — funding rate statistics over 1-168 hours
+export async function getFunding(coin: string, lookbackHours = 24) {
+  const resp = await fetchWithPayment(`${BASE_URL}/funding/${coin}?lookback_hours=${lookbackHours}`);
+  return resp.json();
+}
+
+// Bundle — /pulse, 24h /funding and /sentiment in one request
+export async function getBundle(coin: string, timeframes = "1h,4h") {
+  const resp = await fetchWithPayment(`${BASE_URL}/bundle/${coin}?timeframes=${timeframes}`);
+  return resp.json();
+}
+
+// Free endpoints — no payment needed, use plain fetch
+export async function getCoins(): Promise<{ coins: string[] }> {
+  const resp = await fetch(`${BASE_URL}/coins`);
+  return resp.json();
+}
+```
+
+### The payment receipt
+
+A paid response carries the settlement receipt in the `PAYMENT-RESPONSE` header:
+
+```typescript
+
+const resp = await fetchWithPayment(`${BASE_URL}/pulse/BTC`);
+const receipt = resp.headers.get("PAYMENT-RESPONSE");
+if (receipt) console.log(decodePaymentResponseHeader(receipt)); // transaction, network, payer
+```
+
+## Working with the Response
+
+The shapes below follow what the engine returns; see [GET /pulse](https://cerebruspulse.xyz/api/pulse) for every field.
+
+```typescript
+type TrendLabel = "bullish" | "weak_bullish" | "neutral" | "weak_bearish" | "bearish" | "insufficient_data";
+
+interface PulseResponse {
+  coin: string;
+  market_symbol: string; // Hyperliquid's name for the market (e.g. "kPEPE")
+  price_unit: string; // prices are per this many tokens (e.g. "1000 PEPE")
+  price: { current?: number };
+  timeframes: Record<string, {
+    indicators: {
+      rsi_14: number | null;
+      rsi_zone: string;
+      trend: { direction: -1 | 0 | 1; label: TrendLabel; ema_stack: string };
+      bollinger: { position_pct?: number; width_pct?: number };
+      zscore_100: number | null;
+    };
+    last_closed_candle_time?: string;
+    stale?: boolean;
+  } | { error: string }>;
+  confluence: {
+    score: number; // bullish vote share on the primary timeframe: 1 = all bullish, 0.5 = neutral, 0 = all bearish
+    bias: "bullish" | "bearish" | "neutral" | "unknown";
+    primary_timeframe: string | null;
+  };
+  regime: { current: string; as_of: number; stale?: boolean };
+  derivatives: {
+    funding_rate?: number; // hourly rate
+    funding_annualized_pct?: number;
+    open_interest?: number; // in contracts (price_unit), not USD
+  };
+  meta: { execution_ms: number; warning?: string; warnings?: string[] };
+}
+
+async function analyzeMarket(coin: string) {
+  const data: PulseResponse = await getPulse(coin);
+
+  console.log(`${coin} @ $${data.price.current?.toLocaleString()} | regime: ${data.regime.current}`);
+  console.log(`Confluence: ${data.confluence.bias} (bullish share ${data.confluence.score})`);
+
+  for (const [tf, analysis] of Object.entries(data.timeframes)) {
+    if ("error" in analysis) {
+      console.log(`  [${tf}] ${analysis.error}`);
+      continue;
+    }
+    const { rsi_14, rsi_zone, trend } = analysis.indicators;
+    console.log(`  [${tf}] RSI: ${rsi_14 ?? "n/a"} (${rsi_zone}) | Trend: ${trend.label}`);
+  }
+
+  if (data.meta.warning || data.meta.warnings?.length) {
+    console.warn("Data warnings:", data.meta.warning, data.meta.warnings);
+  }
+}
+```
+
+## Error Handling
+
+```typescript
+async function safePulse(coin: string) {
+  try {
+    const resp = await fetchWithPayment(`${BASE_URL}/pulse/${coin}`);
+
+    if (!resp.ok) {
+      switch (resp.status) {
+        case 400: console.error("Invalid input, e.g. a bad timeframe (not charged)"); break;
+        case 402: console.error("Payment not accepted, e.g. not enough USDC (nothing settled)"); break;
+        case 404: console.error(`Unknown coin: ${coin} (GET /coins lists them)`); break;
+        case 429: console.error("Rate limited: wait and retry"); break;
+        case 503: console.error(`Unavailable; retry after ${resp.headers.get("Retry-After")} s`); break;
+        case 504: console.error("Engine timeout (not charged): try again"); break;
+        default: console.error(`Error ${resp.status}`);
+      }
+      return null;
+    }
+
+    return resp.json();
+  } catch (err) {
+    // Also thrown when a payment would exceed spendControls
+    console.error("Request failed:", err);
+    return null;
+  }
+}
+```
+
+## Multi-Coin Dashboard
+
+```typescript
+async function dashboard() {
+  const { coins } = await getCoins(); // free
+  console.log(`Scanning ${coins.length} coins...\n`);
+
+  // Paid: five /pulse calls. One /screener call covers every coin instead.
+  const results = await Promise.all(
+    coins.slice(0, 5).map(async (coin) => {
+      const data = await safePulse(coin);
+      return data ? { coin, ...data.confluence } : null;
+    }),
+  );
+
+  // Highest bullish vote share first (1 = all bullish, 0 = all bearish)
+  const sorted = results
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .sort((a, b) => b.score - a.score);
+
+  console.log("Coin     Bias       Bullish share");
+  for (const r of sorted) console.log(`${r.coin.padEnd(9)}${r.bias.padEnd(11)}${r.score}`);
+}
+```
+
+## Tips
+
+- Free endpoints (`/health`, `/coins`, `/demo/{coin}`) don't need `fetchWithPayment`; use regular `fetch`
+- `Promise.all` batches requests, but the gateway allows 3 concurrent requests and 12 per minute per IP
+- Check `/health` before a batch to avoid paying into a degraded gateway
+- `meta.warning` (`stale_data`) and `meta.warnings` (for example `stale_candles`) flag old inputs
+- `/bundle` returns `/pulse`, 24h `/funding` and `/sentiment` for one coin in one request (one rate-limit slot instead of three); [its page](https://cerebruspulse.xyz/api/bundle) shows how its price compares
+
+---
+
+Source: https://cerebruspulse.xyz/guides/a2a-agents
+
+# Connecting via A2A Protocol
+
+Cerebrus Pulse publishes an A2A Agent Card and answers A2A `message/send` requests (the
+[A2A protocol](https://github.com/a2aproject/A2A), protocol version 0.3), so an A2A agent can find it and
+ask for a skill in plain language.
+
+> **A2A finds the skill; HTTP takes the payment:**
+> A2A does **not** take payment in-band. For a paid skill, `message/send` replies with the HTTP endpoint that
+> serves it, its price, and that endpoint's x402 v2 terms. Your agent then pays by calling the endpoint with an
+> x402 v2 client (see the [x402 Payments guide](https://cerebruspulse.xyz/guides/x402-payments)). A payment sent inside an A2A message is
+> ignored and nothing is charged for it.
+
+## Agent Card Discovery
+
+```bash
+curl https://api.cerebruspulse.xyz/.well-known/agent-card.json
+```
+
+The card lists every skill with its price, the payment networks, and the A2A endpoint
+(`https://api.cerebruspulse.xyz/a2a`). The same card is served at `/.well-known/agent.json` and
+`/a2a/.well-known/agent-card.json`, and a copy is published at
+`https://cerebruspulse.xyz/.well-known/agent-card.json`.
+
+## Available Skills
+
+Each skill is served, and priced, by one HTTP endpoint:
+
+| Skill ID | Served by | Price (USDC) | Needs a coin | Description |
+|----------|-----------|--------------|--------------|-------------|
+| `confluence-analysis` | `GET /pulse/{coin}` | $0.025 | Yes | Multi-timeframe technical analysis with the confluence vote share |
+| `market-screener` | `GET /screener` | $0.06 | No | Screen 50+ perpetuals by signal strength |
+| `open-interest-analysis` | `GET /oi/{coin}` | $0.015 | Yes | OI deltas, percentile, trend and price-OI divergence |
+| `spread-analysis` | `GET /spread/{coin}` | $0.015 | Yes | Impact spread and slippage estimates |
+| `correlation-matrix` | `GET /correlation` | $0.05 | No | BTC-alt correlation matrix with regime |
+| `intelligence-bundle` | `GET /bundle/{coin}` | $0.05 | Yes | Pulse, 24h funding and sentiment in one call |
+| `basis-analysis` | `GET /basis/{coin}` | $0.02 | Yes | Perp premium to the Hyperliquid oracle, and oracle vs Chainlink |
+| `cex-dex-divergence` | `GET /cex-dex/{token}` | $0.02 | Yes | Coinbase vs DEX/Chainlink divergence for one token |
+| `collateral-health` | `GET /depeg` | $0.01 | No | USDC peg status from Chainlink |
+| `liquidation-heatmap` | `GET /liquidations/{coin}` | $0.03 | Yes | Modelled liquidation zones with cascade risk |
+| `market-stress` | `GET /arb` | $0.02 | No | Cross-chain arbitrage stress index |
+
+## Sending a Task
+
+Send a JSON-RPC 2.0 `message/send` request to the A2A endpoint. This is free: it returns where and how to
+pay, not data.
+
+```python
+
+body = json.dumps({
+    "jsonrpc": "2.0",
+    "method": "message/send",
+    "id": "my-task-1",
+    "params": {
+        "message": {
+            "role": "user",
+            "parts": [{"type": "text", "text": "Analyze BTC confluence"}]
+        }
+    }
+}).encode()
+
+req = urllib.request.Request(
+    "https://api.cerebruspulse.xyz/a2a",
+    data=body,
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+
+with urllib.request.urlopen(req, timeout=15) as resp:
+    result = json.loads(resp.read())["result"]
+
+quote = result["metadata"]["x402"]
+print(result["status"]["state"])                   # input-required
+print(quote["skill_id"], quote["amount"], quote["currency"])
+print(quote["http"]["method"], quote["http"]["url"])  # pay here, with an x402 v2 client
+```
+
+## The Reply to a Paid Skill
+
+The task comes back in state `input-required`. Its message says, in words, what the skill costs and which URL
+to call; `result.metadata.x402` says the same in fields:
+
+| Field | Description |
+|-------|-------------|
+| `status` | `payment-required` |
+| `skill_id` | The skill the request was matched to |
+| `amount` | The price in USDC, e.g. `"0.025"` (the price of the endpoint that serves the skill) |
+| `currency` | `USDC` |
+| `networks` | The payment networks, each with `network`, `recipient` and `label` (Base, Solana) |
+| `network`, `recipient` | The Base network and recipient, kept for older clients |
+| `facilitator` | The x402 facilitator the gateway uses |
+| `inBandPayment` | `false`: A2A messages cannot carry payment |
+| `http.method`, `http.url` | The request to make: for example `GET https://api.cerebruspulse.xyz/pulse/BTC` |
+| `http.route` | The route that serves the skill, e.g. `GET /pulse/:coin` |
+| `http.paymentHeader` | `PAYMENT-SIGNATURE`: the header an x402 v2 client pays with |
+| `paymentRequired` | The x402 v2 terms that endpoint's 402 carries (absent if the gateway could not build them; the endpoint's own 402 still has them) |
+
+Other outcomes:
+
+- **No coin found** for a skill that needs one: state `input-required`, asking which coin.
+- **Service off, payments down, or a stale data feed**: state `failed`, with the reason. Nothing is quoted.
+
+## Intent Extraction
+
+Cerebrus Pulse matches the message to a skill by keywords, or you name the skill in `metadata.skill_id`.
+
+### Natural language
+```json
+{
+  "message": {
+    "role": "user",
+    "parts": [{"type": "text", "text": "Show me the top 10 strongest setups"}]
+  }
+}
+```
+This maps to `market-screener`. Without a match, the default is `confluence-analysis`.
+
+### Explicit skill ID
+```json
+{
+  "message": {
+    "role": "user",
+    "parts": [{"type": "text", "text": "SOL data"}],
+    "metadata": {"skill_id": "spread-analysis"}
+  }
+}
+```
+
+## Coin Extraction
+
+For skills that need a coin, the symbol is taken from the message text: an upper-case symbol from
+[`/coins`](https://cerebruspulse.xyz/api/coins), or a name such as "ethereum" → ETH or "bitcoin" → BTC.
+
+## Task Retrieval
+
+`tasks/get` returns a task the server stored. Replies to `message/send` are complete as sent and are not
+stored, so there is nothing to poll for; `tasks/get` on their ids reports "Task not found or expired".
 
 ## Rate Limits
 
-| Dimension    | Limit         | Window       |
-|-------------|---------------|--------------|
-| Per IP       | 12 requests   | 1 minute     |
-| Per wallet   | 20 requests   | 1 minute     |
-| Concurrent   | 3 requests    | Simultaneous |
-| Daily        | 1,000 requests| 24 hours     |
+The A2A endpoint shares the REST limits: **12 requests per minute per IP**. See
+[Rate Limits & Errors](https://cerebruspulse.xyz/reference/rate-limits).
 
-Free endpoints (/health, /coins) are NOT rate limited.
+## See Also
 
-Rate limit exceeded response:
+- [x402 vs A2A vs ACP](https://cerebruspulse.xyz/reference/x402-vs-acp) — Protocol comparison
+- [x402 Payments](https://cerebruspulse.xyz/guides/x402-payments) — How to pay the endpoint A2A points to
+- [TypeScript SDK](https://cerebruspulse.xyz/guides/typescript-sdk) and [Python SDK](https://cerebruspulse.xyz/guides/python-sdk) — x402 v2 clients
+
+---
+
+Source: https://cerebruspulse.xyz/guides/acp-agents
+
+# ACP for AI Agents
+
+> **Paused:**
+> The Cerebrus Pulse ACP seller is **offline** while it moves to ACP v2, and it is not taking jobs. This page
+> describes the offerings as they are defined for v2. Check the Virtuals marketplace for whether they are
+> listed before you build on them. The [x402 API](https://cerebruspulse.xyz/quickstart) serves the same data today.
+
+## What is ACP?
+
+The [Agent Commerce Protocol](https://whitepaper.virtuals.io/acp-product-resources/acp-dev-onboarding-guide)
+(ACP) is Virtuals Protocol's standard for agent-to-agent jobs. A buyer agent finds a seller, opens a job,
+pays the agreed budget into an on-chain escrow in **USDC on Base**, and the escrow releases when the seller
+delivers.
+
+## Offerings
+
+Each offering runs the Cerebrus Pulse engine for one coin and delivers its JSON: the same data the x402
+endpoints return, with no model calls and no written analysis.
+
+| Offering | Delivers | Budget (USDC) |
+|----------|----------|---------------|
+| `cerebrus_lite` | the /pulse output (1h, 4h) | $0.25 |
+| `cerebrus_synthesis` | the /bundle output (1h, 4h) | $0.75 |
+| `cerebrus_premium` | the /bundle output (15m, 1h, 4h, 1d) | $2.50 |
+| `pulse` | the /pulse output (1h, 4h) | $0.25 |
+
+The `pulse` listing delivers the same as `cerebrus_lite`. Put the coin symbol in the job requirement as text,
+for example `"ETH"`; without one the seller analyzes BTC. The fields are described on the
+[/pulse](https://cerebruspulse.xyz/api/pulse) and [/bundle](https://cerebruspulse.xyz/api/bundle) reference pages.
+
+## Job Flow
+
+```
+Buyer agent                    ACP (Virtuals, Base)                 Cerebrus Pulse
+    |                                  |                                  |
+    |  initiateJob(requirement)        |                                  |
+    |--------------------------------->|  job created                     |
+    |                                  |--------------------------------->|
+    |                                  |  budget proposed (USDC)          |
+    |                                  |<---------------------------------|
+    |  payAndAcceptRequirement()       |                                  |
+    |--------------------------------->|  USDC locked in escrow           |
+    |                                  |--------------------------------->|
+    |                                  |  deliverable (engine JSON)       |
+    |                                  |<---------------------------------|
+    |  job completed, deliverable      |  escrow released                 |
+    |<---------------------------------|--------------------------------->|
+```
+
+## Integration Example
+
+With the official SDK, [`@virtuals-protocol/acp-node`](https://www.npmjs.com/package/@virtuals-protocol/acp-node).
+Your buyer agent must be registered in the Virtuals agent registry, with a whitelisted dev wallet and a
+session entity key; see the SDK's README for that setup.
+
+```bash
+npm install @virtuals-protocol/acp-node
+```
+
+```typescript
+// A CommonJS TypeScript project ("module": "commonjs", "esModuleInterop": true),
+// like the SDK's own examples. In a native ES module the client is the `.default` export.
+
+async function main() {
+  const acpClient = new AcpClient({
+    acpContractClient: await AcpContractClientV2.build(
+      process.env.WHITELISTED_WALLET_PRIVATE_KEY as `0x${string}`, // the dev wallet whitelisted on your agent
+      Number(process.env.SESSION_ENTITY_KEY_ID), // from the agent registry
+      process.env.BUYER_AGENT_WALLET_ADDRESS as `0x${string}`, // your agent's wallet
+    ),
+    onNewTask: async (job, memoToSign) => {
+      if (job.phase === AcpJobPhases.NEGOTIATION && memoToSign?.nextPhase === AcpJobPhases.TRANSACTION) {
+        await job.payAndAcceptRequirement(); // pays the proposed USDC budget into escrow
+      } else if (job.phase === AcpJobPhases.COMPLETED) {
+        console.log(job.getDeliverable()); // the engine's JSON
+      }
+    },
+  });
+  await acpClient.init();
+
+  const [seller] = await acpClient.browseAgents("cerebrus pulse", { topK: 5 });
+  const offering = seller?.jobOfferings.find((o) => o.name === "cerebrus_lite");
+  if (!offering) throw new Error("No Cerebrus Pulse offering is listed right now");
+
+  const jobId = await offering.initiateJob("ETH"); // the coin to analyze
+  console.log(`job ${jobId} opened`);
+}
+
+main();
+```
+
+Checked against `@virtuals-protocol/acp-node` 0.3.0-beta.40. Check the budget the seller proposes before you
+pay; the handler above pays whatever is proposed.
+
+## x402 vs ACP — Which Should I Use?
+
+| | x402 (Direct API) | ACP (Virtuals Protocol) |
+|---|---|---|
+| **For** | Developers, bots, scripts, agents | Agents on Virtuals |
+| **Payment** | USDC on Base or Solana, per call | USDC on Base, into ACP escrow, per job |
+| **Auth** | Wallet signature | ACP SDK + registered agent wallet |
+| **Latency** | One HTTP request | Job negotiation and escrow |
+| **Data** | Every paid endpoint | The /pulse or /bundle output for one coin |
+| **Status** | Live | Paused |
+
+For agent-to-agent discovery with the A2A protocol, see the [A2A Protocol Guide](https://cerebruspulse.xyz/guides/a2a-agents).
+The full comparison is at [x402 vs A2A vs ACP](https://cerebruspulse.xyz/reference/x402-vs-acp).
+
+---
+
+Source: https://cerebruspulse.xyz/reference/response-schemas
+
+# Response Schemas
+
+Every paid endpoint's page lists its own fields and shows a real engine response. This page covers what
+they share: units, the common `meta` block, enums, and what the gateway adds.
+
+The examples are real engine output on market data captured on 2026-09-24, copied from the gateway (the
+same examples it publishes to the x402 Bazaar and in `/openapi.json`). Nothing in them is hand-written.
+
+## Units and conventions
+
+| Convention | Detail |
+|------------|--------|
+| Prices | USD per `price_unit`. For most markets that is one token (`1 BTC`). Hyperliquid lists some tokens only as 1000-token markets: `PEPE` is the `kPEPE` market, so its prices are per `1000 PEPE` and `market_symbol` is `kPEPE`. `/basis` converts to per-token prices |
+| Open interest | Counted in contracts of `price_unit` (`derivatives.open_interest`, `open_interest.current`), **not USD**. Multiply by the price for USD. `/liquidations` reports USD (`total_oi_usd`) |
+| Funding | Hyperliquid funding rates are **hourly**. Annualized figures are `rate × 24 × 365 × 100`; `funding_interval_hours` is `1` |
+| Fractions | `open_interest.delta_*` and `price_change_4h` (`0.0312` = +3.12%), `bollinger.position_pct` (0 = lower band, 1 = upper band, outside 0–1 when the close is outside the bands), confluence scores (0–1) |
+| Percentages | Other `*_pct` fields are percentages: `atr_pct`, `width_pct`, `funding_annualized_pct`, `annualized_pct`, `positive_pct`, `basis_pct`, `spread_pct`, `deviation_pct`, `proximity_pct`, `distance_pct` |
+| Basis points | `*_bps` fields: 1 bp = 0.01% |
+| Times | `timestamp_iso` and every `meta.as_of` entry are ISO 8601 UTC strings. `regime.as_of` and `sentiment.as_of` are Unix seconds (numbers, possibly fractional; `0` when unknown) |
+| Candles | Indicators use closed candles only. `last_closed_candle_time` says when the newest one closed |
+| Missing values | A value that could not be computed is `null`, or the field is absent; never a made-up `0` |
+
+## Meta
+
+Most responses carry these fields in `meta`. Endpoint-specific `meta` fields are on each endpoint's page.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `meta.provider` | string | `Cerebrus Pulse` |
+| `meta.offering` | string | Which analysis produced the response (see the table below) |
+| `meta.execution_ms` | number | Engine time for this request, in milliseconds (0 in the captured examples) |
+| `meta.data_age_seconds` | number | Age of the main input feed when the response was computed |
+| `meta.as_of.<input>` | string | When each input the response used was current, keyed by input: `market_data`, `candles_<tf>`, `funding`, `oi_history`, `cex_dex`, `arb_log` |
+| `meta.sources[].name` | string | A third party whose data the response is built from: Hyperliquid, Chainlink Data Feeds, DefiLlama, CoinGecko, alternative.me, FRED, the news RSS feeds or Coinbase Exchange |
+| `meta.sources[].url` | string | That provider's site, where it has one |
+| `meta.sources[].notice` | string | Optional. An attribution notice the provider requires (for example "Powered by CoinGecko") |
+| `meta.warning` | string | Optional. `stale_data` (the price feed is more than 15 minutes old, or the CEX-DEX snapshot more than 10) or `stale_chainlink_data` (the Chainlink snapshot is more than 2 minutes old) |
+| `meta.warnings` | array | Optional. `stale_candles`, `stale_oi_history`, `lagging_coins`, `chainlink_price_implausible`, `stale_data`, and `stale_regime` (added by the gateway) |
+| `meta.disclaimer` | string | Optional. A not-financial-advice notice the gateway adds to live responses |
+
+| Endpoint | `meta.offering` |
+|----------|-----------------|
+| `/pulse`, `/demo` | `cerebrus_pulse` |
+| `/bundle` | `pulse_bundle` |
+| `/screener` | `pulse_screener` |
+| `/sentiment` | `pulse_sentiment` |
+| `/funding` | `pulse_funding` |
+| `/oi` | `pulse_oi` |
+| `/spread` | `pulse_spread` |
+| `/correlation` | `pulse_correlation` |
+| `/basis` | `pulse_basis` |
+| `/cex-dex` | `pulse_cex_dex` |
+| `/depeg` | `pulse_depeg` |
+| `/liquidations` | `pulse_liquidations` |
+| `/arb` | `pulse_stress` |
+
+## What the gateway adds
+
+The engine computes each response; the gateway passes it through unchanged except for:
+
+- `meta.disclaimer`, on every engine response while the operator leaves it on.
+- `regime.stale`, `regime.age_seconds` and `regime.note`, plus `stale_regime` in `meta.warnings`, when the
+  market regime is more than 6 hours old.
+- On the free `/demo/{coin}`: `meta.demo`, `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and
+  `meta.why_join`.
+
+A paid response also carries the x402 settlement receipt in the `PAYMENT-RESPONSE` header.
+
+## The confluence score
+
+`confluence.score` (in `/pulse`, `/bundle` and the screener's `confluence_score`) is a **vote share**:
+four indicators vote bullish (1), neutral (0.5) or bearish (0) on the primary timeframe, and the score is the
+average. 1 means every vote is bullish, 0.5 balanced or neutral, 0 every vote bearish. It is not a confidence
+or a probability, and it has not been validated as predictive (`confluence.validated` is `false`). Two votes
+follow the trend (RSI, EMA trend) and two fade it (Bollinger position, z-score); `family_scores` shows each
+pair on its own. The top-level fields describe `primary_timeframe` only; `per_timeframe` has the rest.
+
+## Enums
+
+| Field | Values |
+|-------|--------|
+| `rsi_zone` | `overbought`, `bullish`, `neutral`, `bearish`, `oversold`, `unknown` |
+| `trend.label`, screener `trend` | `bullish`, `weak_bullish`, `neutral`, `weak_bearish`, `bearish`, `insufficient_data` |
+| `trend.ema_stack` | `bull_aligned`, `bear_aligned`, `mixed`, `flat`, `unknown` |
+| `confluence.bias`, `confluence_bias` | `bullish`, `bearish`, `neutral`, `unknown` |
+| `regime.current` | A lower-case label from the trading system (e.g. `risk_on`, `risk_off`) or `unknown`; treat unrecognized values as opaque |
+| `sentiment.label` | `very_bearish`, `bearish`, `neutral`, `bullish`, `very_bullish`, `unknown` |
+| `vol_regime` | `LOW`, `NORMAL`, `HIGH`, `EXTREME`, `UNKNOWN` |
+| `funding_bias` | `long_pays`, `short_pays`, `neutral` |
+| `oi_trend`, `open_interest.trend` | `RISING`, `FALLING`, `FLAT`, `UNKNOWN` |
+| `price_oi_divergence` | `BEARISH_DIV`, `BULLISH_DIV`, `NONE`, `UNKNOWN` |
+| correlation `regime` | `CORRELATED`, `MIXED`, `DECORRELATED`, `UNKNOWN` |
+| `basis.direction` | `hl_premium`, `hl_discount`, `aligned` |
+| `basis.signal` | `neutral`, `mildly_bullish`, `mildly_bearish`, `bearish_contrarian`, `bullish_contrarian` |
+| `divergence.direction`, `cex_dex_direction` | `cex_premium`, `dex_premium` |
+| `usdc.peg_status` | `HEALTHY`, `ELEVATED`, `WARNING`, `CRITICAL` |
+| `infrastructure.arbitrum_sequencer` | `up`, `down`, `unknown` |
+| `summary.cascade_risk` | `EXTREME`, `HIGH`, `MODERATE`, `LOW`, `UNKNOWN` |
+| `stress_index.level` | `LOW`, `MODERATE`, `HIGH`, `EXTREME` |
+
+## Errors
+
+Errors are JSON with a `detail` string; a refused parameter also names it in `param`. See
+[Rate Limits & Errors](https://cerebruspulse.xyz/reference/rate-limits).
+
+---
+
+Source: https://cerebruspulse.xyz/reference/coins-list
+
+# Supported Coins
+
+Cerebrus Pulse provides technical analysis for **50+ Hyperliquid perpetuals**.
+
+> **Tip:**
+> The coin list is dynamic. Use `GET /coins` (free) for the live, up-to-date list.
+
+## Current Coins
+
+| Ticker | Asset | Category |
+|--------|-------|----------|
+| BTC | Bitcoin | Major |
+| ETH | Ethereum | Major |
+| SOL | Solana | Major |
+| XRP | Ripple | Major |
+| DOGE | Dogecoin | Major |
+| ADA | Cardano | Major |
+| AVAX | Avalanche | L1 |
+| LINK | Chainlink | Infrastructure |
+| DOT | Polkadot | L1 |
+| MATIC | Polygon | L2 |
+| ARB | Arbitrum | L2 |
+| OP | Optimism | L2 |
+| APT | Aptos | L1 |
+| SUI | Sui | L1 |
+| SEI | Sei | L1 |
+| TIA | Celestia | Modular |
+| INJ | Injective | DeFi |
+| FET | Fetch.ai | AI |
+| NEAR | NEAR Protocol | L1 |
+| ATOM | Cosmos | L1 |
+| FIL | Filecoin | Storage |
+| AAVE | Aave | DeFi |
+| UNI | Uniswap | DeFi |
+| MKR | Maker | DeFi |
+| LDO | Lido | DeFi |
+| PEPE | Pepe | Meme |
+| WIF | dogwifhat | Meme |
+| JUP | Jupiter | DeFi |
+| ONDO | Ondo Finance | RWA |
+| RENDER | Render Network | AI/GPU |
+| WLD | Worldcoin | AI |
+| PENDLE | Pendle | DeFi |
+| STX | Stacks | L2 |
+| HBAR | Hedera | L1 |
+| BNB | BNB | Major |
+| HYPE | Hyperliquid | Infrastructure |
+| TAO | Bittensor | AI |
+| ENA | Ethena | DeFi |
+| LTC | Litecoin | Major |
+| BERA | Berachain | L1 |
+| TRX | Tron | L1 |
+| XLM | Stellar | L1 |
+| CRV | Curve | DeFi |
+| SNX | Synthetix | DeFi |
+| POL | Polygon | L2 |
+| EIGEN | EigenLayer | Infrastructure |
+| DYDX | dYdX | DeFi |
+| MNT | Mantle | L2 |
+| PYTH | Pyth Network | Infrastructure |
+| ENS | ENS | Infrastructure |
+| IMX | Immutable X | Gaming |
+
+## Notes
+
+- **Case-insensitive**: `btc`, `BTC`, and `Btc` all work.
+- **1000-token markets**: Hyperliquid lists PEPE only as `kPEPE`, a market in units of 1000 PEPE. Use `PEPE` or `kPEPE`; responses give prices per 1000 PEPE and say so in `market_symbol` and `price_unit`.
+- **The list is curated**: coins are added to the API's allowlist by hand, not automatically when Hyperliquid lists a market.
+
+## Programmatic Discovery
+
+```bash
+# Free — no payment required
+curl https://api.cerebruspulse.xyz/coins
+```
+
+```json
+{
+  "coins": ["AAVE", "ADA", "APT", "ARB", "..."],
+  "count": 51
+}
+```
+
+Always use `GET /coins` for programmatic workflows rather than hardcoding this list.
+
+---
+
+Source: https://cerebruspulse.xyz/reference/rate-limits
+
+# Rate Limits & Errors
+
+## Rate Limits
+
+Cerebrus Pulse enforces rate limits across multiple dimensions to ensure fair access.
+
+| Dimension | Limit | Window |
+|-----------|-------|--------|
+| **Per IP** | 12 requests | 1 minute |
+| **Per wallet** | 20 paid requests | 1 minute |
+| **Concurrent** | 3 requests | Simultaneous |
+| **Daily** | 2,000 requests per IP | 24 hours |
+
+### How Limits Are Tracked
+
+- **IP-based**: Tracked by your client's source IP address
+- **Wallet-based**: Tracked by the payer of the payment the gateway verified (the EIP-3009 `from` address on Base). A client-supplied header does not count
+- **Concurrent**: Maximum simultaneous requests being processed, across all callers
+- **Daily**: Per IP, reset every 24 hours, with a far higher global backstop
+
+### Rate Limit Response
+
+When a limit is exceeded, you receive:
+
 ```
 HTTP/1.1 429 Too Many Requests
 Content-Type: application/json
@@ -681,89 +3882,154 @@ Content-Type: application/json
 }
 ```
 
----
+### Free Endpoints
+
+`GET /health` and `GET /coins` are **not rate limited**. The free `GET /demo/{coin}` allows 3 requests per minute per IP.
 
 ## Error Codes
 
-| Status | Meaning                | Description                                                              |
-|--------|------------------------|--------------------------------------------------------------------------|
-| 400    | Bad Request            | Invalid coin ticker, invalid timeframe, or insufficient candle data      |
-| 402    | Payment Required       | Standard x402 flow — client needs to sign USDC payment via x402 SDK     |
-| 429    | Too Many Requests      | Rate limit exceeded. Back off and retry after window.                    |
-| 500    | Internal Server Error  | Unexpected engine failure                                                |
-| 503    | Service Unavailable    | Gateway in maintenance mode (kill switch disabled). retry_after: 3600    |
-| 504    | Gateway Timeout        | Analysis engine took >15 seconds. Retry once.                            |
+| Status | Meaning | When It Happens |
+|--------|---------|-----------------|
+| **400** | Bad Request | An invalid timeframe or integer parameter, refused before any price is quoted; or the engine could not answer (for example no data for the market), which is not charged |
+| **402** | Payment Required | The standard x402 flow: pay with an x402 v2 client. A 402 after paying means the payment was not accepted, and nothing was settled |
+| **404** | Not Found | An unknown coin, refused before any price is quoted |
+| **429** | Too Many Requests | A rate limit above was exceeded |
+| **500** | Internal Server Error | An unexpected engine failure (not charged) |
+| **503** | Service Unavailable | The service is switched off (`retry_after: 3600`), payments are down, or an upstream data feed is missing or stale (`Retry-After: 300`). No price is quoted |
+| **504** | Gateway Timeout | The engine took longer than 15 seconds (not charged). Try again |
 
-Error response format (all errors):
+A payment settles only after the gateway has an answer: any 4xx or 5xx after you paid is not charged.
+
+## Error Response Format
+
+Errors are JSON with a `detail` string. A refused parameter is also named in `param`, often with what is
+allowed:
+
 ```json
-{
-  "detail": "Human-readable error message"
-}
+{"detail": "Unsupported timeframes: 2h. Allowed: 5m, 15m, 1h, 4h, 1d, 1w.", "param": "timeframes", "allowed": ["5m", "15m", "1h", "4h", "1d", "1w"]}
+{"detail": "Unknown coin 'NOTACOIN'. GET /coins lists the supported symbols.", "param": "coin", "did_you_mean": ["NEAR"], "supported_coins": "/coins"}
 ```
 
-503 responses include:
-```json
-{
-  "detail": "Service temporarily unavailable",
-  "retry_after": 3600
-}
-```
+### 503 Example
 
----
+```json
+{"detail": "Service temporarily disabled", "retry_after": 3600}
+```
 
 ## Best Practices
 
-1. Check GET /health before batch operations to verify gateway is operational
-2. Use exponential backoff on 429 responses
-3. Do not retry on 400 — fix the request parameters first
-4. Retry once on 504 — engine timeouts are usually transient
-5. Respect 503 retry_after — gateway is in maintenance
-6. Use GET /bundle for multi-data needs — 1 request instead of 3, fewer rate limit slots consumed
-7. Use GET /coins to validate coin tickers before making paid requests
-8. Cache results appropriately — crypto data updates on candle close intervals (5m/15m/1h/4h/1d/1w)
-9. Use GET /screener for market-wide scanning — 1 call at $0.06 vs 50+ individual /pulse calls at $0.025 each
+1. **Check `/health` first** — Before batch operations, verify the gateway is operational and the kill switch is enabled.
+2. **Use backoff on 429** — Wait the indicated window duration before retrying.
+3. **Don't retry on 400** — These are client errors. Fix the request before retrying.
+4. **Retry on 504** — Engine timeouts are usually transient. A single retry typically succeeds.
+5. **Respect 503** — Wait for the `Retry-After` period before retrying.
+6. **Use `/bundle` for multi-data** — Instead of calling `/pulse` + `/sentiment` + `/funding` separately (3 requests), use `/bundle` (1 request), which uses one rate-limit slot instead of three. [Its page](https://cerebruspulse.xyz/api/bundle) shows how its price compares with the three calls.
 
 ---
 
-## Supported Coins
+Source: https://cerebruspulse.xyz/reference/x402-vs-acp
 
-AAVE, ADA, APT, ARB, ATOM, AVAX, BERA, BNB, BTC, CRV, DOGE, DOT, DYDX, EIGEN, ENA, ENS, ETH, FET, FIL, HBAR, HYPE, IMX, INJ, JUP, LDO, LINK, LTC, MATIC, MKR, MNT, NEAR, ONDO, OP, PENDLE, PEPE, POL, PYTH, RENDER, SEI, SNX, SOL, STX, SUI, TAO, TIA, TRX, UNI, WIF, WLD, XLM, XRP.
+# x402 vs A2A vs ACP
 
-Use GET /coins for the authoritative live list (free, no payment required).
+Cerebrus services are available through three protocols. Choose based on your use case.
 
-## Supported Timeframes
+## Comparison
 
-- 5m (5-minute candles)
-- 15m (15-minute candles)
-- 1h (1-hour candles)
-- 4h (4-hour candles)
-- 1d (daily candles, aggregated from 1h)
-- 1w (weekly candles, aggregated from 1h)
+| | x402 (Direct API) | A2A (Agent-to-Agent) | ACP (Virtuals Protocol) |
+|---|---|---|---|
+| **Target user** | Developers, bots, dashboards, agents | A2A agent networks | Agents on Virtuals Protocol |
+| **Payment** | USDC micropayments on Base or Solana | None in-band: the reply names the HTTP endpoint and its x402 terms, and you pay there | USDC on Base, in ACP escrow |
+| **Authentication** | Wallet signature (no API keys) | None: discovery and quotes are free | ACP SDK + agent wallet |
+| **Discovery** | API docs | Agent Card (`.well-known`) | Virtuals marketplace |
+| **Transport** | HTTP REST | JSON-RPC 2.0 over HTTP | ACP SDK |
+| **Latency** | Low (~200–500ms) | Low (~200–500ms) | Higher (negotiation + escrow) |
+| **Pricing** | $0.01–$0.06 per call | $0.01–$0.06 per skill (paid over HTTP) | A USDC budget per job (below) |
+| **Settlement** | Instant (Base L2 or Solana) | Over HTTP (x402), as for direct calls | ACP escrow release |
+| **Status** | Live | Live (discovery) | Paused |
+| **Protocol** | HTTP 402 (open standard) | A2A (Linux Foundation) | Agent Commerce Protocol (Virtuals) |
 
-Default: 1h,4h when not specified.
+## Available Services
 
----
+### Via x402
 
-## Links
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `GET /screener` | $0.06 USDC | Scan 50+ perpetuals: signal strength, RSI zone, trend, volatility, funding bias, confluence |
+| `GET /pulse/{coin}` | $0.025 USDC | Multi-timeframe technical analysis, derivatives snapshot, regime and confluence |
+| `GET /sentiment` | $0.01 USDC | Bucketed market sentiment label and how many sources are live |
+| `GET /funding/{coin}` | $0.01 USDC | Funding rate statistics over a 1-168 hour lookback (hourly rates) |
+| `GET /oi/{coin}` | $0.015 USDC | Open interest: 1h/4h/24h deltas, percentile, trend, price-OI divergence |
+| `GET /spread/{coin}` | $0.015 USDC | Impact spread and uncalibrated slippage estimates at $10k-$500k |
+| `GET /correlation` | $0.05 USDC | BTC-alt correlation of 1h returns (30h, 7d or 30d window) with regime |
+| `GET /basis/{coin}` | $0.02 USDC | Hyperliquid perp premium to its oracle, plus oracle vs Chainlink spot |
+| `GET /depeg` | $0.01 USDC | USDC peg status from the Chainlink oracle on Arbitrum |
+| `GET /arb` | $0.02 USDC | Market Stress Index from cross-chain arbitrage scans |
+| `GET /cex-dex/{token}` | $0.02 USDC | Coinbase vs DEX/Chainlink price divergence for one token |
+| `GET /liquidations/{coin}` | $0.03 USDC | Modelled liquidation zones by leverage tier, with cascade risk |
+| `GET /bundle/{coin}` | $0.05 USDC | /pulse output plus 24h funding statistics and sentiment in one call |
+| `GET /demo/{coin}` | Free | Live /pulse analysis (1h, 4h), cached 60 s, 3 requests/min, no wallet |
+| `GET /health` | Free | Gateway health status |
+| `GET /coins` | Free | List the supported perpetuals |
 
-- Homepage: https://cerebruspulse.xyz
-- Documentation: https://cerebruspulse.xyz/overview
-- Quickstart: https://cerebruspulse.xyz/quickstart
-- API — Pulse: https://cerebruspulse.xyz/api/pulse
-- API — Sentiment: https://cerebruspulse.xyz/api/sentiment
-- API — Funding: https://cerebruspulse.xyz/api/funding
-- API — Screener: https://cerebruspulse.xyz/api/screener
-- API — OI: https://cerebruspulse.xyz/api/oi
-- API — Spread: https://cerebruspulse.xyz/api/spread
-- API — Correlation: https://cerebruspulse.xyz/api/correlation
-- API — Bundle: https://cerebruspulse.xyz/api/bundle
-- API — Health: https://cerebruspulse.xyz/api/health
-- API — Coins: https://cerebruspulse.xyz/api/coins
-- Guide — x402 Payments: https://cerebruspulse.xyz/guides/x402-payments
-- Guide — Python SDK: https://cerebruspulse.xyz/guides/python-sdk
-- Guide — TypeScript SDK: https://cerebruspulse.xyz/guides/typescript-sdk
-- Guide — ACP for Agents: https://cerebruspulse.xyz/guides/acp-agents
-- Reference — Response Schemas: https://cerebruspulse.xyz/reference/response-schemas
-- Reference — Supported Coins: https://cerebruspulse.xyz/reference/coins-list
-- Reference — Rate Limits & Errors: https://cerebruspulse.xyz/reference/rate-limits
-- Reference — x402 vs ACP: https://cerebruspulse.xyz/reference/x402-vs-acp
+### Via A2A
+
+| Skill ID | Served by | Price (USDC) | Needs a coin | Description |
+|----------|-----------|--------------|--------------|-------------|
+| `confluence-analysis` | `GET /pulse/{coin}` | $0.025 | Yes | Multi-timeframe technical analysis with the confluence vote share |
+| `market-screener` | `GET /screener` | $0.06 | No | Screen 50+ perpetuals by signal strength |
+| `open-interest-analysis` | `GET /oi/{coin}` | $0.015 | Yes | OI deltas, percentile, trend and price-OI divergence |
+| `spread-analysis` | `GET /spread/{coin}` | $0.015 | Yes | Impact spread and slippage estimates |
+| `correlation-matrix` | `GET /correlation` | $0.05 | No | BTC-alt correlation matrix with regime |
+| `intelligence-bundle` | `GET /bundle/{coin}` | $0.05 | Yes | Pulse, 24h funding and sentiment in one call |
+| `basis-analysis` | `GET /basis/{coin}` | $0.02 | Yes | Perp premium to the Hyperliquid oracle, and oracle vs Chainlink |
+| `cex-dex-divergence` | `GET /cex-dex/{token}` | $0.02 | Yes | Coinbase vs DEX/Chainlink divergence for one token |
+| `collateral-health` | `GET /depeg` | $0.01 | No | USDC peg status from Chainlink |
+| `liquidation-heatmap` | `GET /liquidations/{coin}` | $0.03 | Yes | Modelled liquidation zones with cascade risk |
+| `market-stress` | `GET /arb` | $0.02 | No | Cross-chain arbitrage stress index |
+
+### Via ACP (paused)
+
+Each offering delivers the engine's JSON for one coin; none calls a model.
+
+| Offering | Delivers | Budget (USDC) |
+|----------|----------|---------------|
+| `cerebrus_lite` | the /pulse output (1h, 4h) | $0.25 |
+| `cerebrus_synthesis` | the /bundle output (1h, 4h) | $0.75 |
+| `cerebrus_premium` | the /bundle output (15m, 1h, 4h, 1d) | $2.50 |
+| `pulse` | the /pulse output (1h, 4h) | $0.25 |
+
+## When to Use x402
+
+- You're building a **dashboard** or **monitoring tool** that needs frequent data pulls
+- You want the **lowest latency** and **lowest cost** per query
+- You're writing a **bot or script** that consumes structured data
+- You want to **avoid the Virtuals ecosystem** and use standard HTTP
+- You need **high-frequency queries** (up to 2,000 a day per IP)
+
+## When to Use A2A
+
+- You're building an **AI agent** that needs to discover and consume services programmatically
+- You want **standardized agent discovery** via the Agent Card protocol
+- You want to ask for a skill in plain language over **JSON-RPC** (`message/send`) and be told where to get it
+- You want to integrate with the **A2A ecosystem** (a Linux Foundation project)
+- Your agent can then pay the named HTTP endpoint with an **x402 v2 client**
+
+## When to Use ACP
+
+- Your agent runs on **Virtuals Protocol** and buys services through ACP jobs and escrow
+- You want the /pulse or /bundle output for one coin as an ACP deliverable
+- Note: the ACP seller is **paused** while it moves to ACP v2; use x402 meanwhile
+
+## Can I Use Multiple?
+
+Yes. Many teams combine protocols:
+
+1. **x402** `/pulse/BTC` → Get live technical indicators ($0.025)
+2. **A2A** `message/send` → Agent discovers a skill and gets the HTTP endpoint and x402 terms that serve it
+3. **ACP** `cerebrus_synthesis` → The /bundle output for one coin, as an ACP job (when ACP is back)
+
+A2A adds discovery on top of x402: it names the endpoint and its terms, and the payment is the same x402 call on Base or Solana. ACP sells the same engine data as ACP jobs.
+
+## Migration
+
+Moving between protocols doesn't require account changes. A2A leads to the same wallet-based x402 payments on Base or Solana as direct calls. ACP uses USDC on Base through Virtuals Protocol escrow. There's no lock-in to any protocol.
