@@ -1,7 +1,7 @@
 {
   "_meta": {
     "generated_by": "scripts/sync-gateway.mjs",
-    "source": "gateway acp-v2/provider_loop.py: OFFERINGS and price_for() retail",
+    "source": "gateway acp-v2/provider_loop.py: OFFERINGS and RETAIL_USDC",
     "note": "Do not edit by hand. The ACP seller is paused; these are the v2 definitions, not live listings."
   },
   "currency": "USDC",
@@ -41,13 +41,13 @@
     },
     {
       "name": "pulse",
-      "service_key": "cerebrus_lite",
+      "service_key": "cerebrus_pulse",
       "endpoint": "pulse",
       "timeframes": [
         "1h",
         "4h"
       ],
-      "budget_usdc": "0.25"
+      "budget_usdc": "0.03"
     }
   ]
 }

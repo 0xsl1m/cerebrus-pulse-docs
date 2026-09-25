@@ -130,6 +130,10 @@ export const ACP_FILE = join(ROOT, 'src', 'data', 'acp.json');
 const OFFERING_RE =
   /"(\w+)":\s*\("(\w+)",\s*lambda coin:\s*\{"endpoint":\s*"([\w-]+)",\s*"coin":\s*coin,\s*"timeframes":\s*\[([^\]]*)\]\}\)/g;
 
+// The retail price per service key: the module-level RETAIL_USDC dict, or the
+// `retail = {...}` literal inside price_for() in providers before it moved out.
+const RETAIL_RE = /^\s*(?:RETAIL_USDC|retail)\s*(?::[^=\n]+)?=\s*\{([^}]*)\}/m;
+
 /**
  * The ACP v2 offerings as acp-v2/provider_loop.py serves them: which engine
  * endpoint and timeframes each delivers, and the USDC budget it proposes
@@ -137,8 +141,8 @@ const OFFERING_RE =
  */
 export function parseAcp(providerPy) {
   const block = dictBlock(providerPy, 'OFFERINGS');
-  const retailSrc = providerPy.match(/retail = \{([^}]*)\}/);
-  if (!retailSrc) throw new Error('retail prices not found in provider_loop.py');
+  const retailSrc = providerPy.match(RETAIL_RE);
+  if (!retailSrc) throw new Error('retail prices (RETAIL_USDC) not found in provider_loop.py');
   const retail = Object.fromEntries([...retailSrc[1].matchAll(/"(\w+)":\s*([0-9.]+)/g)].map((m) => [m[1], m[2]]));
   const offerings = [...block.matchAll(OFFERING_RE)].map(([, name, serviceKey, endpoint, tfs]) => {
     if (!(serviceKey in retail)) throw new Error(`ACP offering ${name} has no retail price`);
@@ -157,7 +161,7 @@ export function parseAcp(providerPy) {
   return {
     _meta: {
       generated_by: 'scripts/sync-gateway.mjs',
-      source: 'gateway acp-v2/provider_loop.py: OFFERINGS and price_for() retail',
+      source: 'gateway acp-v2/provider_loop.py: OFFERINGS and RETAIL_USDC',
       note: 'Do not edit by hand. The ACP seller is paused; these are the v2 definitions, not live listings.',
     },
     currency: 'USDC',

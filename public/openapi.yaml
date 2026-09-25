@@ -159,11 +159,7 @@ paths:
                         type:
                           - number
                           - 'null'
-                      basis_bps:
-                        type:
-                          - number
-                          - 'null'
-                      basis_pct:
+                      perp_premium_bps:
                         type:
                           - number
                           - 'null'
@@ -172,6 +168,14 @@ paths:
                           - number
                           - 'null'
                       oracle_divergence_bps:
+                        type:
+                          - number
+                          - 'null'
+                      basis_bps:
+                        type:
+                          - number
+                          - 'null'
+                      basis_pct:
                         type:
                           - number
                           - 'null'
@@ -206,6 +210,17 @@ paths:
                         type:
                           - string
                           - 'null'
+                      deprecated:
+                        type: object
+                        properties:
+                          basis.basis_bps:
+                            type:
+                              - string
+                              - 'null'
+                          basis.basis_pct:
+                            type:
+                              - string
+                              - 'null'
                       data_age_seconds:
                         type:
                           - number
@@ -246,10 +261,11 @@ paths:
                   hl_mark_px: 84517
                   hl_oracle_px: 84539
                   chainlink_spot_px: 84501.01946422
-                  basis_bps: -2.6
-                  basis_pct: -0.026
+                  perp_premium_bps: -2.6
                   premium_index_bps: -4.61
                   oracle_divergence_bps: 4.49
+                  basis_bps: 4.49
+                  basis_pct: 0.0449
                   direction: hl_discount
                   signal: neutral
                   interpretation: 'Perp trades at its oracle price: no significant premium'
@@ -258,8 +274,14 @@ paths:
                   offering: pulse_basis
                   execution_ms: 0
                   basis_definition: >-
-                    basis_bps: Hyperliquid mark vs its oracle (perp premium); oracle_divergence_bps: Hyperliquid oracle
-                    vs Chainlink spot
+                    perp_premium_bps: Hyperliquid mark vs its oracle (perp premium), which direction, signal and
+                    interpretation describe; oracle_divergence_bps: Hyperliquid oracle vs Chainlink spot, which
+                    basis_bps has always carried
+                  deprecated:
+                    basis.basis_bps: >-
+                      the Hyperliquid oracle vs Chainlink spot gap, not the perp premium; read
+                      basis.oracle_divergence_bps, or basis.perp_premium_bps for the premium
+                    basis.basis_pct: basis.basis_bps / 100; read basis.oracle_divergence_bps
                   data_age_seconds: 60
                   chainlink_data_age_seconds: 55.6
                   chainlink_round_age_seconds: null

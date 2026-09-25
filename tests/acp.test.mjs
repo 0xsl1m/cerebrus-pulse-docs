@@ -18,10 +18,24 @@ test('offerings are read from the provider: endpoint, timeframes, USDC budget', 
   assert.deepEqual(acp.offerings, [
     { name: 'cerebrus_lite', service_key: 'cerebrus_lite', endpoint: 'pulse', timeframes: ['1h', '4h'], budget_usdc: '0.25' },
     { name: 'cerebrus_premium', service_key: 'cerebrus_premium', endpoint: 'bundle', timeframes: ['15m', '1d'], budget_usdc: '2.50' },
+    { name: 'pulse', service_key: 'cerebrus_pulse', endpoint: 'pulse', timeframes: ['1h', '4h'], budget_usdc: '0.03' },
   ]);
   assert.equal(acp.currency, 'USDC');
-  assert.deepEqual(acpRange(acp), { min: '0.25', max: '2.50' });
+  assert.deepEqual(acpRange(acp), { min: '0.03', max: '2.50' });
   assert.match(acpTableMarkdown(acp), /\| `cerebrus_lite` \| the \/pulse output \(1h, 4h\) \| \$0\.25 \|/);
+  assert.match(acpTableMarkdown(acp), /\| `pulse` \| the \/pulse output \(1h, 4h\) \| \$0\.03 \|/);
+});
+
+// The provider moved its prices from a `retail = {...}` literal inside
+// price_for() to a module-level RETAIL_USDC; the parser reads both.
+test('retail prices are read from RETAIL_USDC or from the older price_for() literal', () => {
+  const current = read('tests/fixtures/gateway/acp-v2/provider_loop.py');
+  const older = current
+    .replace(/\n# Retail price[^\n]*\nRETAIL_USDC = \{[^}]*\}\n/, '\n')
+    .replace('    return RETAIL_USDC.get(service_key)', '    retail = {"cerebrus_lite": 0.25, "cerebrus_premium": 2.5, "cerebrus_pulse": 0.03}\n    return retail.get(service_key)');
+  assert.doesNotMatch(older, /RETAIL_USDC/);
+  assert.deepEqual(parseAcp(older).offerings, parseAcp(current).offerings);
+  assert.throws(() => parseAcp(current.replace(/RETAIL_USDC = \{[^}]*\}/, 'RETAIL_USDC = load_prices()')), /retail prices/);
 });
 
 test('the ACP guide uses the real SDK, says USDC, and says ACP is paused', () => {

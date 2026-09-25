@@ -56,7 +56,7 @@ The bundle ($0.05) returns the /pulse output, 24-hour /funding statistics and /s
 - [Python with x402](https://cerebruspulse.xyz/guides/python-sdk): the raw x402 SDK (`pip install "x402[evm]" httpx eth-account`).
 - [TypeScript with x402](https://cerebruspulse.xyz/guides/typescript-sdk): `npm install @x402/fetch @x402/evm viem`.
 - [A2A](https://cerebruspulse.xyz/guides/a2a-agents): an A2A agent card and `message/send`; A2A names the HTTP endpoint and its x402 terms, and payment happens over HTTP.
-- [ACP](https://cerebruspulse.xyz/guides/acp-agents): Virtuals Protocol jobs paid in USDC ($0.25–$2.50), delivering the same engine JSON. Paused.
+- [ACP](https://cerebruspulse.xyz/guides/acp-agents): Virtuals Protocol jobs paid in USDC ($0.03–$2.50), delivering the same engine JSON. Paused.
 
 ## A2A skills
 

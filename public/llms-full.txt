@@ -1428,11 +1428,14 @@ Source: https://cerebruspulse.xyz/api/basis
 
 Two different measurements for one market:
 
-- **`basis_bps`, the perp premium**: Hyperliquid's mark price against Hyperliquid's own oracle price. This is
-  the premium that funding follows.
+- **`perp_premium_bps`, the perp premium**: Hyperliquid's mark price against Hyperliquid's own oracle price.
+  This is the premium that funding follows, and the one `direction`, `signal` and `interpretation` describe.
 - **`oracle_divergence_bps`**: Hyperliquid's oracle (a weighted median of exchange spot prices) against
   Chainlink's spot price on Arbitrum. Both are spot references, so this measures how far two spot sources
   disagree, not funding pressure.
+
+`basis_bps` and `basis_pct` are kept for old clients and are deprecated. They carry the oracle vs Chainlink
+gap, as they always have, not the perp premium.
 
 ## Request
 
@@ -1460,16 +1463,18 @@ All prices are USD per single token, including for 1000-token markets such as PE
 | `basis.hl_mark_px` | number | Hyperliquid mark price |
 | `basis.hl_oracle_px` | number | Hyperliquid oracle price |
 | `basis.chainlink_spot_px` | number | Chainlink spot price (Arbitrum) |
-| `basis.basis_bps` | number | Perp premium: `(hl_mark_px − hl_oracle_px) / hl_oracle_px × 10000` |
-| `basis.basis_pct` | number | The same premium in percent |
+| `basis.perp_premium_bps` | number | Perp premium: `(hl_mark_px − hl_oracle_px) / hl_oracle_px × 10000` |
 | `basis.premium_index_bps` | number \| null | Hyperliquid's own premium sample (impact prices against the oracle) in basis points, which its funding averages |
 | `basis.oracle_divergence_bps` | number \| null | `(hl_oracle_px − chainlink_spot_px) / chainlink_spot_px × 10000`; null, with the warning `chainlink_price_implausible`, when the two differ by more than 2× |
-| `basis.direction` | string | `hl_premium`, `hl_discount` or `aligned`: the sign of `basis_bps` |
+| `basis.basis_bps` | number \| null | Deprecated: the same value as `oracle_divergence_bps` (see `meta.deprecated`) |
+| `basis.basis_pct` | number \| null | Deprecated: `basis_bps` in percent |
+| `basis.direction` | string | `hl_premium`, `hl_discount` or `aligned`: the sign of `perp_premium_bps` |
 | `basis.signal` | string | A label for the premium's size and sign: `neutral` (−10 to 10 bps), `mildly_bullish` (10 to 50), `mildly_bearish` (−50 to −10), `bearish_contrarian` (above 50), `bullish_contrarian` (below −50). A description of the premium, not a recommendation |
 | `basis.interpretation` | string | The label in words |
 | `meta` | object | Common metadata ([Response Schemas](https://cerebruspulse.xyz/reference/response-schemas#meta)) |
 | `meta.offering` | string | `pulse_basis` |
 | `meta.basis_definition` | string | The two definitions above, as text |
+| `meta.deprecated` | object | Fields kept for old clients, each with what to read instead |
 | `meta.chainlink_data_age_seconds` | number \| null | Age of the Chainlink snapshot. Above 120 seconds, `meta.warning` is `stale_chainlink_data` |
 | `meta.chainlink_round_age_seconds` | number \| null | Age of the Chainlink round behind the price, when the snapshot records it; null otherwise |
 | `meta.chainlink_feed_network` | string | `arbitrum` |
@@ -1490,10 +1495,11 @@ _GET /basis/BTC: real engine output on market data captured at 2026-09-24 17:05 
     "hl_mark_px": 84517,
     "hl_oracle_px": 84539,
     "chainlink_spot_px": 84501.01946422,
-    "basis_bps": -2.6,
-    "basis_pct": -0.026,
+    "perp_premium_bps": -2.6,
     "premium_index_bps": -4.61,
     "oracle_divergence_bps": 4.49,
+    "basis_bps": 4.49,
+    "basis_pct": 0.0449,
     "direction": "hl_discount",
     "signal": "neutral",
     "interpretation": "Perp trades at its oracle price: no significant premium"
@@ -1502,7 +1508,11 @@ _GET /basis/BTC: real engine output on market data captured at 2026-09-24 17:05 
     "provider": "Cerebrus Pulse",
     "offering": "pulse_basis",
     "execution_ms": 0,
-    "basis_definition": "basis_bps: Hyperliquid mark vs its oracle (perp premium); oracle_divergence_bps: Hyperliquid oracle vs Chainlink spot",
+    "basis_definition": "perp_premium_bps: Hyperliquid mark vs its oracle (perp premium), which direction, signal and interpretation describe; oracle_divergence_bps: Hyperliquid oracle vs Chainlink spot, which basis_bps has always carried",
+    "deprecated": {
+      "basis.basis_bps": "the Hyperliquid oracle vs Chainlink spot gap, not the perp premium; read basis.oracle_divergence_bps, or basis.perp_premium_bps for the premium",
+      "basis.basis_pct": "basis.basis_bps / 100; read basis.oracle_divergence_bps"
+    },
     "data_age_seconds": 60,
     "chainlink_data_age_seconds": 55.6,
     "chainlink_round_age_seconds": null,
@@ -3561,7 +3571,7 @@ endpoints return, with no model calls and no written analysis.
 | `cerebrus_lite` | the /pulse output (1h, 4h) | $0.25 |
 | `cerebrus_synthesis` | the /bundle output (1h, 4h) | $0.75 |
 | `cerebrus_premium` | the /bundle output (15m, 1h, 4h, 1d) | $2.50 |
-| `pulse` | the /pulse output (1h, 4h) | $0.25 |
+| `pulse` | the /pulse output (1h, 4h) | $0.03 |
 
 The `pulse` listing delivers the same as `cerebrus_lite`. Put the coin symbol in the job requirement as text,
 for example `"ETH"`; without one the seller analyzes BTC. The fields are described on the
@@ -3996,7 +4006,7 @@ Each offering delivers the engine's JSON for one coin; none calls a model.
 | `cerebrus_lite` | the /pulse output (1h, 4h) | $0.25 |
 | `cerebrus_synthesis` | the /bundle output (1h, 4h) | $0.75 |
 | `cerebrus_premium` | the /bundle output (15m, 1h, 4h, 1d) | $2.50 |
-| `pulse` | the /pulse output (1h, 4h) | $0.25 |
+| `pulse` | the /pulse output (1h, 4h) | $0.03 |
 
 ## When to Use x402
 

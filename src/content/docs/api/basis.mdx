@@ -13,11 +13,14 @@ import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 Two different measurements for one market:
 
-- **`basis_bps`, the perp premium**: Hyperliquid's mark price against Hyperliquid's own oracle price. This is
-  the premium that funding follows.
+- **`perp_premium_bps`, the perp premium**: Hyperliquid's mark price against Hyperliquid's own oracle price.
+  This is the premium that funding follows, and the one `direction`, `signal` and `interpretation` describe.
 - **`oracle_divergence_bps`**: Hyperliquid's oracle (a weighted median of exchange spot prices) against
   Chainlink's spot price on Arbitrum. Both are spot references, so this measures how far two spot sources
   disagree, not funding pressure.
+
+`basis_bps` and `basis_pct` are kept for old clients and are deprecated. They carry the oracle vs Chainlink
+gap, as they always have, not the perp premium.
 
 ## Request
 
@@ -45,16 +48,18 @@ All prices are USD per single token, including for 1000-token markets such as PE
 | `basis.hl_mark_px` | number | Hyperliquid mark price |
 | `basis.hl_oracle_px` | number | Hyperliquid oracle price |
 | `basis.chainlink_spot_px` | number | Chainlink spot price (Arbitrum) |
-| `basis.basis_bps` | number | Perp premium: `(hl_mark_px − hl_oracle_px) / hl_oracle_px × 10000` |
-| `basis.basis_pct` | number | The same premium in percent |
+| `basis.perp_premium_bps` | number | Perp premium: `(hl_mark_px − hl_oracle_px) / hl_oracle_px × 10000` |
 | `basis.premium_index_bps` | number \| null | Hyperliquid's own premium sample (impact prices against the oracle) in basis points, which its funding averages |
 | `basis.oracle_divergence_bps` | number \| null | `(hl_oracle_px − chainlink_spot_px) / chainlink_spot_px × 10000`; null, with the warning `chainlink_price_implausible`, when the two differ by more than 2× |
-| `basis.direction` | string | `hl_premium`, `hl_discount` or `aligned`: the sign of `basis_bps` |
+| `basis.basis_bps` | number \| null | Deprecated: the same value as `oracle_divergence_bps` (see `meta.deprecated`) |
+| `basis.basis_pct` | number \| null | Deprecated: `basis_bps` in percent |
+| `basis.direction` | string | `hl_premium`, `hl_discount` or `aligned`: the sign of `perp_premium_bps` |
 | `basis.signal` | string | A label for the premium's size and sign: `neutral` (−10 to 10 bps), `mildly_bullish` (10 to 50), `mildly_bearish` (−50 to −10), `bearish_contrarian` (above 50), `bullish_contrarian` (below −50). A description of the premium, not a recommendation |
 | `basis.interpretation` | string | The label in words |
 | `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
 | `meta.offering` | string | `pulse_basis` |
 | `meta.basis_definition` | string | The two definitions above, as text |
+| `meta.deprecated` | object | Fields kept for old clients, each with what to read instead |
 | `meta.chainlink_data_age_seconds` | number \| null | Age of the Chainlink snapshot. Above 120 seconds, `meta.warning` is `stale_chainlink_data` |
 | `meta.chainlink_round_age_seconds` | number \| null | Age of the Chainlink round behind the price, when the snapshot records it; null otherwise |
 | `meta.chainlink_feed_network` | string | `arbitrum` |
