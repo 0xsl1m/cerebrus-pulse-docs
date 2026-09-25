@@ -3,11 +3,11 @@ title: GET /oi/{coin}
 description: Open interest analysis with delta tracking and divergence detection.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /oi/\{coin\}
 
-<Badge text="$0.015 USDC" variant="tip" />
+<PriceBadge endpoint="oi" />
 
 Returns open interest analysis for a Hyperliquid perpetual — current OI, delta over multiple timeframes, percentile rank, trend direction, and price-OI divergence signals.
 

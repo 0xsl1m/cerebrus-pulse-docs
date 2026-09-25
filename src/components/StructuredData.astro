@@ -1,4 +1,10 @@
 ---
+import prices from '../data/prices.json';
+import { priceOf, priceRange, usd } from '../lib/pricing.mjs';
+
+// x402 prices come from the gateway's payment routes (src/data/prices.json, F010).
+const range = priceRange(prices);
+
 interface Props {
   title?: string;
   description?: string;
@@ -7,7 +13,7 @@ interface Props {
 
 const {
   title = "Cerebrus Pulse — Real-time Crypto Intelligence API",
-  description = "Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. x402 micropayments, Google A2A agent-to-agent protocol, and ACP AI synthesis via Virtuals Protocol. From $0.01/query. No API keys required.",
+  description = `Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. x402 micropayments, Google A2A agent-to-agent protocol, and ACP AI synthesis via Virtuals Protocol. From ${usd(range.min)}/query. No API keys required.`,
   url = "https://cerebruspulse.xyz",
 } = Astro.props;
 
@@ -39,11 +45,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Pulse — Multi-timeframe Technical Analysis",
       "description": "RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score, trend detection, confluence scoring, derivatives data, and market regime for any Hyperliquid perpetual.",
-      "price": "0.025",
+      "price": priceOf(prices, "pulse"),
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.025",
+        "price": priceOf(prices, "pulse"),
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -53,11 +59,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Sentiment — Market Sentiment Analysis",
       "description": "Aggregated crypto market sentiment with fear/greed, momentum, and funding bias labels.",
-      "price": "0.01",
+      "price": priceOf(prices, "sentiment"),
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.01",
+        "price": priceOf(prices, "sentiment"),
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -67,11 +73,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Funding — Funding Rate Analysis",
       "description": "Current and historical funding rates with annualized projections for Hyperliquid perpetuals.",
-      "price": "0.01",
+      "price": priceOf(prices, "funding"),
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.01",
+        "price": priceOf(prices, "funding"),
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -81,11 +87,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Screener — Market Screener",
       "description": "Scan 50+ coins at once for signal strength, RSI zone, trend direction, volatility regime, funding bias, confluence, and OI trend.",
-      "price": "0.06",
+      "price": priceOf(prices, "screener"),
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.06",
+        "price": priceOf(prices, "screener"),
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -95,11 +101,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Open Interest — OI Analysis",
       "description": "Current OI, delta over 1h/4h/24h, percentile rank, trend direction, and price-OI divergence signals.",
-      "price": "0.015",
+      "price": priceOf(prices, "oi"),
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.015",
+        "price": priceOf(prices, "oi"),
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -109,11 +115,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Spread — Liquidity Analysis",
       "description": "Bid-ask spread, slippage estimates at various notional sizes, and liquidity scoring for Hyperliquid perpetuals.",
-      "price": "0.015",
+      "price": priceOf(prices, "spread"),
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.015",
+        "price": priceOf(prices, "spread"),
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -123,11 +129,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Correlation — BTC-Alt Correlation Matrix",
       "description": "BTC-alt correlation matrix across top 15 coins with 30-day rolling correlation, regime classification, and sector clustering.",
-      "price": "0.05",
+      "price": priceOf(prices, "correlation"),
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.05",
+        "price": priceOf(prices, "correlation"),
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -137,11 +143,11 @@ const webApplicationSchema = {
       "@type": "Offer",
       "name": "Bundle — Complete Analysis Bundle",
       "description": "Pulse + Sentiment + Funding + Spread combined in one response. 20% discount versus calling endpoints individually.",
-      "price": "0.05",
+      "price": priceOf(prices, "bundle"),
       "priceCurrency": "USD",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
-        "price": "0.05",
+        "price": priceOf(prices, "bundle"),
         "priceCurrency": "USD",
         "unitText": "per query"
       },
@@ -206,7 +212,7 @@ const webApplicationSchema = {
     "Google A2A agent-to-agent protocol with Agent Card discovery",
     "ACP agent commerce on Virtuals Protocol",
     "No API keys or subscriptions required",
-    "Pay-per-query pricing from $0.01"
+    `Pay-per-query pricing from ${usd(range.min)}`
   ],
   "creator": {
     "@type": "Organization",
@@ -252,10 +258,10 @@ const productSchema = {
   "url": url,
   "offers": {
     "@type": "AggregateOffer",
-    "lowPrice": "0.01",
+    "lowPrice": range.min,
     "highPrice": "2.50",
     "priceCurrency": "USD",
-    "offerCount": 11
+    "offerCount": webApplicationSchema.offers.length
   }
 };
 ---

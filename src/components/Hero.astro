@@ -1,5 +1,9 @@
 ---
 import Brain3D from './Brain3D.astro';
+import prices from '../data/prices.json';
+import { priceOf, usd } from '../lib/pricing.mjs';
+
+const pulsePrice = usd(priceOf(prices, 'pulse'));
 ---
 
 <section class="landing-hero pt-24">
@@ -139,7 +143,7 @@ import Brain3D from './Brain3D.astro';
           <span class="ml-2 text-xs text-[#64748B] font-mono">terminal</span>
         </div>
         <pre class="p-3 sm:p-4 text-xs sm:text-sm leading-relaxed overflow-x-auto"><code class="text-[#CBD5E1]"><span class="text-[#64748B]">$</span> curl https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h
-<span class="text-[#64748B]"># 402 Payment Required  &#8594;  x402 SDK auto-pays $0.02 USDC</span>
+<span class="text-[#64748B]"># 402 Payment Required  &#8594;  x402 SDK auto-pays {pulsePrice} USDC</span>
 
 <span class="text-[#60A5FA]">&#123;</span>
   <span class="text-[#93C5FD]">"coin"</span>: <span class="text-[#FBBF24]">"BTC"</span>,

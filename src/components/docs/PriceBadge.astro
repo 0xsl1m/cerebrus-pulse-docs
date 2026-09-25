@@ -1,0 +1,14 @@
+---
+// The price badge on an API reference page, read from src/data/prices.json (F010).
+import { Badge } from '@astrojs/starlight/components';
+import prices from '../../data/prices.json';
+import { priceOf, usd } from '../../lib/pricing.mjs';
+
+interface Props {
+  endpoint: string;
+}
+
+const { endpoint } = Astro.props;
+---
+
+<Badge text={`${usd(priceOf(prices, endpoint))} USDC`} variant="tip" />

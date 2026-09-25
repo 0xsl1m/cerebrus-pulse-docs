@@ -1,0 +1,25 @@
+---
+// A2A skills, the HTTP route that serves each one and its price, from
+// src/data/prices.json (the gateway's SKILL_MAP and X402_ROUTES, F010).
+import prices from '../../data/prices.json';
+import { skillRows, usd } from '../../lib/pricing.mjs';
+
+const rows = skillRows(prices);
+---
+
+<table>
+  <thead>
+    <tr><th>Skill ID</th><th>Served by</th><th>Price (USDC)</th><th>Needs a coin</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    {rows.map((s) => (
+      <tr>
+        <td><code>{s.id}</code></td>
+        <td><code>GET {s.path}</code></td>
+        <td>{usd(s.price)}</td>
+        <td>{s.needs_coin ? 'Yes' : 'No'}</td>
+        <td>{s.summary}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>

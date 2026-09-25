@@ -3,11 +3,11 @@ title: GET /arb
 description: Market Stress Index derived from cross-chain arbitrage signals.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /arb
 
-<Badge text="$0.02 USDC" variant="tip" />
+<PriceBadge endpoint="arb" />
 
 Returns a Market Stress Index derived from cross-chain price dislocations across decentralized exchanges. Higher stress levels indicate broader market dislocation, increased volatility risk, and potential mean-reversion opportunities.
 

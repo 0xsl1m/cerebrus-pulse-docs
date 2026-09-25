@@ -3,11 +3,11 @@ title: GET /spread/{coin}
 description: Spread analysis with slippage estimates and liquidity scoring.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /spread/\{coin\}
 
-<Badge text="$0.015 USDC" variant="tip" />
+<PriceBadge endpoint="spread" />
 
 Returns bid-ask spread, estimated slippage at various notional sizes, and a liquidity score. Critical for execution-focused agents that need to account for market impact before placing orders.
 

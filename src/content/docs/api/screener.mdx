@@ -3,11 +3,11 @@ title: GET /screener
 description: Crypto screener API endpoint — scan 50+ Hyperliquid perpetuals for RSI signals, trend direction, volatility regime, confluence bias, and CEX-DEX divergence in one call.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /screener
 
-<Badge text="$0.06 USDC" variant="tip" />
+<PriceBadge endpoint="screener" />
 
 Scans all available Hyperliquid perpetuals and returns a compact summary for each coin — signal strength, RSI zone, trend direction, volatility regime, funding bias, confluence, and open interest trend. Ideal for market-wide scanning before drilling into individual coins.
 

@@ -1,4 +1,9 @@
 ---
+import prices from '../data/prices.json';
+import { priceOf, priceRange, usd } from '../lib/pricing.mjs';
+
+const pulsePrice = usd(priceOf(prices, 'pulse'));
+const range = priceRange(prices);
 ---
 
 <section class="landing-section landing-section-alt overflow-hidden relative" id="how-it-works">
@@ -46,7 +51,7 @@
             auto-signs a USDC micropayment on Base or Solana.
           </p>
           <div class="flex items-center gap-2">
-            <span class="price-badge">$0.02 USDC</span>
+            <span class="price-badge">{pulsePrice} USDC</span>
             <span class="text-[#64748B] text-sm">on Base or Solana</span>
           </div>
         </div>
@@ -91,7 +96,7 @@
             Submit a JSON-RPC <code class="text-[#FF69B4] bg-[#1F0A1A] px-1.5 py-0.5 rounded text-xs">message/send</code> request. Intent is extracted and matched to a skill.
           </p>
           <div class="flex items-center gap-2">
-            <span class="price-badge" style="background: rgba(255, 20, 147, 0.1); color: #FF69B4; border-color: rgba(255, 20, 147, 0.25);">$0.008 – $0.04</span>
+            <span class="price-badge" style="background: rgba(255, 20, 147, 0.1); color: #FF69B4; border-color: rgba(255, 20, 147, 0.25);">{usd(range.min)} – {usd(range.max)}</span>
             <span class="text-[#64748B] text-sm">USDC</span>
           </div>
         </div>

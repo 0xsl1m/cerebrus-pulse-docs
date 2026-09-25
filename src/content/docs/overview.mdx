@@ -3,6 +3,8 @@ title: Overview
 description: Cerebrus Pulse API — real-time crypto technical analysis, confluence scoring, and regime detection for 50+ Hyperliquid perpetual futures. Pay-per-call via x402 USDC micropayments.
 ---
 
+import EndpointPrices from '../../components/docs/EndpointPrices.astro';
+
 # Cerebrus Pulse
 
 **Real-time multi-timeframe technical analysis for 50+ Hyperliquid perpetuals, paid via x402 micropayments on Base or Solana.**
@@ -36,22 +38,9 @@ Pulse uses the [x402 protocol](https://www.x402.org/) for payments:
 
 ## Endpoints
 
-| Endpoint | Price | Description |
-|----------|-------|-------------|
-| `GET /screener` | $0.04 USDC | Scan 50+ coins: signals, trends, vol regime, confluence |
-| `GET /pulse/{coin}` | $0.02 USDC | Multi-timeframe technical analysis |
-| `GET /sentiment` | $0.01 USDC | Market sentiment labels |
-| `GET /funding/{coin}` | $0.01 USDC | Funding rate analysis |
-| `GET /oi/{coin}` | $0.01 USDC | Open interest: delta, percentile, trend, divergence |
-| `GET /spread/{coin}` | $0.008 USDC | Spread: slippage estimates, liquidity score |
-| `GET /correlation` | $0.03 USDC | BTC-alt correlation matrix with regime classification |
-| `GET /basis/{coin}` | $0.015 USDC | Chainlink basis: HL oracle vs Chainlink spot |
-| `GET /depeg` | $0.008 USDC | USDC collateral health via Chainlink oracle |
-| `GET /arb` | $0.02 USDC | Market Stress Index from cross-chain arbitrage signals |
-| `GET /cex-dex/{token}` | $0.015 USDC | CEX-DEX price divergence for a specific token |
-| `GET /bundle/{coin}` | $0.04 USDC | Pulse + Sentiment + Funding + Spread (17% discount) |
-| `GET /health` | Free | Gateway health status |
-| `GET /coins` | Free | List available coins |
+Prices come from the gateway's payment routes; the 402 response always states the exact amount.
+
+<EndpointPrices />
 
 ## Quick Links
 

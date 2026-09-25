@@ -3,11 +3,11 @@ title: GET /pulse/{coin}
 description: Crypto technical analysis API — get RSI, EMA, Bollinger Bands, ATR, VWAP, regime detection, and confluence scoring across 6 timeframes for any Hyperliquid perpetual.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /pulse/\{coin\}
 
-<Badge text="$0.025 USDC" variant="tip" />
+<PriceBadge endpoint="pulse" />
 
 Returns comprehensive multi-timeframe technical analysis for a Hyperliquid perpetual.
 

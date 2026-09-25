@@ -1,0 +1,9 @@
+---
+// "$0.01–$0.06": the cheapest and dearest paid endpoint, from src/data/prices.json (F010).
+import prices from '../../data/prices.json';
+import { priceRange, usd } from '../../lib/pricing.mjs';
+
+const { min, max } = priceRange(prices);
+---
+
+{usd(min)}–{usd(max)}

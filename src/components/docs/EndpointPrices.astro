@@ -1,0 +1,21 @@
+---
+// Every endpoint with its price, from src/data/prices.json (F010).
+import prices from '../../data/prices.json';
+import { FREE_ENDPOINTS, endpointRows, usd } from '../../lib/pricing.mjs';
+
+const rows = endpointRows(prices);
+---
+
+<table>
+  <thead>
+    <tr><th>Endpoint</th><th>Price</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    {rows.map((r) => (
+      <tr><td><code>GET {r.path}</code></td><td>{usd(r.price)} USDC</td><td>{r.summary}</td></tr>
+    ))}
+    {FREE_ENDPOINTS.map((r) => (
+      <tr><td><code>GET {r.path}</code></td><td>Free</td><td>{r.summary}</td></tr>
+    ))}
+  </tbody>
+</table>

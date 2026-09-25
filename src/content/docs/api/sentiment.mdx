@@ -3,11 +3,11 @@ title: GET /sentiment
 description: Market sentiment analysis across the crypto market.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /sentiment
 
-<Badge text="$0.01 USDC" variant="tip" />
+<PriceBadge endpoint="sentiment" />
 
 Returns aggregated market sentiment labels.
 

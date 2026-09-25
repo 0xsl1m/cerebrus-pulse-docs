@@ -3,11 +3,11 @@ title: GET /funding/{coin}
 description: Funding rate analysis with historical lookback.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /funding/\{coin\}
 
-<Badge text="$0.01 USDC" variant="tip" />
+<PriceBadge endpoint="funding" />
 
 Returns current and historical funding rate analysis for a Hyperliquid perpetual.
 

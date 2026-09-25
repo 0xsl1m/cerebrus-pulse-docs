@@ -7,11 +7,21 @@ import CoinGrid from '../components/CoinGrid.astro';
 import LiveDemo from '../components/LiveDemo.astro';
 import Metrics from '../components/Metrics.astro';
 import Footer from '../components/Footer.astro';
+import prices from '../data/prices.json';
+import { priceRange, usd } from '../lib/pricing.mjs';
+
+// Prices and the endpoint count come from the gateway's payment routes (F010).
+const range = priceRange(prices);
+const description =
+  `Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals across 6 timeframes. ` +
+  `${prices.routes.length} paid x402 endpoints (${usd(range.min)}-${usd(range.max)}/query) with USDC payments on Base and Solana, ` +
+  `A2A agent-to-agent protocol with Agent Card discovery, and ACP AI synthesis via Virtuals Protocol ($0.10-$2.00). ` +
+  `No API keys or subscriptions required.`;
 ---
 
 <Landing
   title="Cerebrus Pulse — Real-time Crypto Intelligence"
-  description="Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals across 6 timeframes. 15 x402 endpoints ($0.008-$0.06/query) with USDC payments on Base and Solana, A2A agent-to-agent protocol with Agent Card discovery, and ACP AI synthesis via Virtuals Protocol ($0.10-$2.00). No API keys or subscriptions required."
+  description={description}
 >
   <Hero />
   <HowItWorks />

@@ -3,6 +3,8 @@ title: A2A Protocol
 description: Connect to Cerebrus Pulse using Google's Agent-to-Agent (A2A) protocol for agent discovery and task execution.
 ---
 
+import SkillPrices from '../../../components/docs/SkillPrices.astro';
+
 # Connecting via A2A Protocol
 
 Cerebrus Pulse implements [Google's A2A protocol](https://github.com/google/a2a-spec) (v0.3), an open standard for agent-to-agent communication governed by the Linux Foundation. Payments are handled via x402 USDC micropayments on Base or Solana.
@@ -19,14 +21,9 @@ The Agent Card describes all available skills, pricing, and the A2A endpoint URL
 
 ## Available Skills
 
-| Skill ID | Price (USDC) | Requires Coin | Description |
-|----------|-------------|---------------|-------------|
-| `confluence-analysis` | $0.02 | Yes | Multi-timeframe technical analysis with confluence scoring |
-| `market-screener` | $0.04 | No | Screen 51 perpetuals by signal strength |
-| `open-interest-analysis` | $0.01 | Yes | OI deltas, divergence detection, percentile ranking |
-| `spread-analysis` | $0.008 | Yes | Bid-ask spread, slippage estimates at various sizes |
-| `correlation-matrix` | $0.03 | No | BTC-alt correlation matrix with regime classification |
-| `intelligence-bundle` | $0.04 | Yes | Complete analytical package (17% discount vs individual) |
+Each skill is served, and priced, by one HTTP endpoint:
+
+<SkillPrices />
 
 ## Sending a Task
 

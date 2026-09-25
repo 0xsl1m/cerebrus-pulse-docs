@@ -3,6 +3,11 @@ title: x402 vs A2A vs ACP
 description: Compare direct API access (x402), agent-to-agent protocol (A2A), and autonomous agent commerce (ACP) for Cerebrus services.
 ---
 
+import EndpointPrices from '../../../components/docs/EndpointPrices.astro';
+import SkillPrices from '../../../components/docs/SkillPrices.astro';
+import Price from '../../../components/docs/Price.astro';
+import PriceRange from '../../../components/docs/PriceRange.astro';
+
 # x402 vs A2A vs ACP
 
 Cerebrus services are available through three protocols. Choose based on your use case.
@@ -17,7 +22,7 @@ Cerebrus services are available through three protocols. Choose based on your us
 | **Discovery** | API docs | Agent Card (`.well-known`) | Virtuals marketplace |
 | **Transport** | HTTP REST | JSON-RPC 2.0 over HTTP | ACP SDK |
 | **Latency** | Low (~200–500ms) | Low (~200–500ms) | Higher (negotiation + escrow) |
-| **Pricing** | $0.008–$0.04 per query | $0.008–$0.04 per task | $0.03–$2.00 per job |
+| **Pricing** | <PriceRange /> per call | <PriceRange /> per skill (paid over HTTP) | $0.03–$2.00 per job |
 | **Settlement** | Instant (Base L2 or Solana) | Instant (Base L2 or Solana) | ACP escrow release |
 | **Protocol** | HTTP 402 (open standard) | Google A2A (Linux Foundation) | Agent Commerce Protocol (Virtuals) |
 
@@ -25,23 +30,11 @@ Cerebrus services are available through three protocols. Choose based on your us
 
 ### Via x402
 
-| Endpoint | Price | Data |
-|----------|-------|------|
-| `/pulse/{coin}` | $0.02 | Multi-timeframe technical analysis |
-| `/sentiment` | $0.01 | Market sentiment |
-| `/funding/{coin}` | $0.01 | Funding rate analysis |
-| `/bundle/{coin}` | $0.04 | All three combined |
+<EndpointPrices />
 
 ### Via A2A
 
-| Skill ID | Price | Data |
-|----------|-------|------|
-| `confluence-analysis` | $0.02 | Multi-timeframe confluence scoring |
-| `market-screener` | $0.04 | Screen 51 perpetuals by signal strength |
-| `open-interest-analysis` | $0.01 | OI deltas, divergence, percentiles |
-| `spread-analysis` | $0.008 | Bid-ask spread, slippage estimates |
-| `correlation-matrix` | $0.03 | BTC-alt correlation with regime |
-| `intelligence-bundle` | $0.04 | Complete package (17% discount) |
+<SkillPrices />
 
 ### Via ACP
 
@@ -80,7 +73,7 @@ Cerebrus services are available through three protocols. Choose based on your us
 
 Yes. Many teams combine protocols:
 
-1. **x402** `/pulse/BTC` → Get live technical indicators (200ms, $0.02)
+1. **x402** `/pulse/BTC` → Get live technical indicators (<Price endpoint="pulse" />)
 2. **A2A** `message/send` → Agent discovers and consumes skills via JSON-RPC with x402 payment
 3. **ACP** `cerebrus_synthesis` → "What's the medium-term outlook for BTC?" (45s, $0.50)
 

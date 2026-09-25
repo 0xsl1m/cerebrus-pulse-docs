@@ -4,10 +4,11 @@ description: Complete analysis bundle — pulse, sentiment, and funding combined
 ---
 
 import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /bundle/\{coin\}
 
-<Badge text="$0.05 USDC" variant="tip" /> <Badge text="Best Value" variant="success" />
+<PriceBadge endpoint="bundle" /> <Badge text="Best Value" variant="success" />
 
 Returns pulse technical analysis, sentiment, funding, and spread data in a single response. **9% cheaper** than calling all four endpoints individually ($0.05 vs $0.055 = $0.025 + $0.01 + $0.01 + $0.015).
 

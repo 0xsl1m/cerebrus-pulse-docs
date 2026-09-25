@@ -1,0 +1,197 @@
+{
+  "_meta": {
+    "generated_by": "scripts/sync-gateway.mjs",
+    "sources": [
+      "gateway service/server.py: X402_ROUTES (the objects that gate payment) and SKILL_MAP",
+      "gateway service/x402_server_config.json: prices"
+    ],
+    "note": "Do not edit by hand. Rerun `npm run sync:gateway` after a gateway price change."
+  },
+  "api_version": "1.4.0",
+  "currency": "USDC",
+  "routes": [
+    {
+      "route": "GET /pulse/:coin",
+      "path": "/pulse/{coin}",
+      "endpoint": "pulse",
+      "config_key": "pulse",
+      "price": "0.025",
+      "gateway_description": "Cerebrus Pulse: multi-timeframe technical analysis for 50+ perpetuals"
+    },
+    {
+      "route": "GET /sentiment",
+      "path": "/sentiment",
+      "endpoint": "sentiment",
+      "config_key": "sentiment",
+      "price": "0.01",
+      "gateway_description": "Cerebrus Sentiment: bucketed multi-source market sentiment"
+    },
+    {
+      "route": "GET /funding/:coin",
+      "path": "/funding/{coin}",
+      "endpoint": "funding",
+      "config_key": "funding",
+      "price": "0.01",
+      "gateway_description": "Cerebrus Funding: historical funding rate analysis"
+    },
+    {
+      "route": "GET /bundle/:coin",
+      "path": "/bundle/{coin}",
+      "endpoint": "bundle",
+      "config_key": "bundle",
+      "price": "0.05",
+      "gateway_description": "Cerebrus Bundle: pulse + sentiment + funding + spread combined"
+    },
+    {
+      "route": "GET /screener",
+      "path": "/screener",
+      "endpoint": "screener",
+      "config_key": "screener",
+      "price": "0.06",
+      "gateway_description": "Cerebrus Screener: scan 50+ coins for top signals, trends, and regime"
+    },
+    {
+      "route": "GET /oi/:coin",
+      "path": "/oi/{coin}",
+      "endpoint": "oi",
+      "config_key": "oi",
+      "price": "0.015",
+      "gateway_description": "Cerebrus OI: open interest analysis with delta, percentile, and divergence"
+    },
+    {
+      "route": "GET /spread/:coin",
+      "path": "/spread/{coin}",
+      "endpoint": "spread",
+      "config_key": "spread",
+      "price": "0.015",
+      "gateway_description": "Cerebrus Spread: bid-ask spread, slippage estimates, and liquidity scoring"
+    },
+    {
+      "route": "GET /correlation",
+      "path": "/correlation",
+      "endpoint": "correlation",
+      "config_key": "correlation",
+      "price": "0.05",
+      "gateway_description": "Cerebrus Correlation: BTC-alt correlation matrix with regime classification"
+    },
+    {
+      "route": "GET /basis/:coin",
+      "path": "/basis/{coin}",
+      "endpoint": "basis",
+      "config_key": "basis",
+      "price": "0.02",
+      "gateway_description": "Cerebrus Basis: Hyperliquid perp premium to its oracle, plus oracle vs Chainlink spot divergence"
+    },
+    {
+      "route": "GET /cex-dex/:token",
+      "path": "/cex-dex/{token}",
+      "endpoint": "cex-dex",
+      "config_key": "cex_dex",
+      "price": "0.02",
+      "gateway_description": "Cerebrus CEX-DEX: cross-venue price divergence between Coinbase and DEX/Chainlink"
+    },
+    {
+      "route": "GET /depeg",
+      "path": "/depeg",
+      "endpoint": "depeg",
+      "config_key": "depeg",
+      "price": "0.01",
+      "gateway_description": "Cerebrus Depeg: USDC collateral health monitor via Chainlink oracle"
+    },
+    {
+      "route": "GET /liquidations/:coin",
+      "path": "/liquidations/{coin}",
+      "endpoint": "liquidations",
+      "config_key": "liquidations",
+      "price": "0.03",
+      "gateway_description": "Cerebrus Liquidations: estimated liquidation heatmap by leverage tier with cascade risk"
+    },
+    {
+      "route": "GET /arb",
+      "path": "/arb",
+      "endpoint": "arb",
+      "config_key": "arb",
+      "price": "0.02",
+      "gateway_description": "Cerebrus Stress: cross-chain market stress index from arbitrage detection across 8 chains"
+    }
+  ],
+  "skills": [
+    {
+      "id": "confluence-analysis",
+      "endpoint": "pulse",
+      "path": "/pulse/{coin}",
+      "needs_coin": true,
+      "price": "0.025"
+    },
+    {
+      "id": "market-screener",
+      "endpoint": "screener",
+      "path": "/screener",
+      "needs_coin": false,
+      "price": "0.06"
+    },
+    {
+      "id": "open-interest-analysis",
+      "endpoint": "oi",
+      "path": "/oi/{coin}",
+      "needs_coin": true,
+      "price": "0.015"
+    },
+    {
+      "id": "spread-analysis",
+      "endpoint": "spread",
+      "path": "/spread/{coin}",
+      "needs_coin": true,
+      "price": "0.015"
+    },
+    {
+      "id": "correlation-matrix",
+      "endpoint": "correlation",
+      "path": "/correlation",
+      "needs_coin": false,
+      "price": "0.05"
+    },
+    {
+      "id": "intelligence-bundle",
+      "endpoint": "bundle",
+      "path": "/bundle/{coin}",
+      "needs_coin": true,
+      "price": "0.05"
+    },
+    {
+      "id": "basis-analysis",
+      "endpoint": "basis",
+      "path": "/basis/{coin}",
+      "needs_coin": true,
+      "price": "0.02"
+    },
+    {
+      "id": "cex-dex-divergence",
+      "endpoint": "cex-dex",
+      "path": "/cex-dex/{token}",
+      "needs_coin": true,
+      "price": "0.02"
+    },
+    {
+      "id": "collateral-health",
+      "endpoint": "depeg",
+      "path": "/depeg",
+      "needs_coin": false,
+      "price": "0.01"
+    },
+    {
+      "id": "liquidation-heatmap",
+      "endpoint": "liquidations",
+      "path": "/liquidations/{coin}",
+      "needs_coin": true,
+      "price": "0.03"
+    },
+    {
+      "id": "market-stress",
+      "endpoint": "arb",
+      "path": "/arb",
+      "needs_coin": false,
+      "price": "0.02"
+    }
+  ]
+}

@@ -4,10 +4,11 @@ description: USDC collateral health monitor via Chainlink oracle on Arbitrum.
 ---
 
 import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /depeg
 
-<Badge text="$0.01 USDC" variant="tip" /> <Badge text="Powered by Chainlink" variant="note" />
+<PriceBadge endpoint="depeg" /> <Badge text="Powered by Chainlink" variant="note" />
 
 Real-time USDC peg health monitoring via Chainlink's USDC/USD price feed on Arbitrum. Reports deviation from the $1.00 peg, risk classification, and Arbitrum L2 sequencer status.
 

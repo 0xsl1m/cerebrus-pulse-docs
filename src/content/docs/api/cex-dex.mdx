@@ -3,11 +3,11 @@ title: GET /cex-dex/{'{token}'}
 description: Real-time CEX-DEX price divergence for a specific token.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /cex-dex/{'{token}'}
 
-<Badge text="$0.02 USDC" variant="tip" />
+<PriceBadge endpoint="cex-dex" />
 
 Compares the centralized exchange (Coinbase) price against decentralized exchange (Chainlink/DeFiLlama) prices for a specific token in real time. Returns the divergence in basis points with directional bias.
 

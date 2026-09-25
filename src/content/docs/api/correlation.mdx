@@ -3,11 +3,11 @@ title: GET /correlation
 description: BTC-alt correlation matrix with regime classification.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /correlation
 
-<Badge text="$0.05 USDC" variant="tip" />
+<PriceBadge endpoint="correlation" />
 
 Returns a BTC-alt correlation matrix across the top 15 Hyperliquid perpetuals, with 30-day rolling correlation, regime classification, and sector averages. Essential for portfolio agents managing multi-asset exposure.
 

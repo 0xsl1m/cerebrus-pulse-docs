@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "prices": {
+    "pulse": "0.025",
+    "arb": "0.02"
+  }
+}

@@ -1,0 +1,182 @@
+// Copies the facts the docs must not invent from the gateway source into
+// src/data/, so every page reads them from one place (F010).
+//
+// Prices: the gateway builds X402_ROUTES in service/server.py; each route's
+// price is prices.get("<key>", "<fallback>") read from
+// service/x402_server_config.json. Those route objects are what gates payment,
+// so they are the only price source. A2A skills come from SKILL_MAP in the
+// same file: each skill is served, and priced, by one of those routes. The
+// A2A agent card in public/.well-known/ gets its prices and version filled in
+// from the same data, as the gateway fills its own card.
+//
+// The gateway repo is local-only, so this runs on a machine that has it:
+//
+//   node scripts/sync-gateway.mjs           regenerate the generated files
+//   node scripts/sync-gateway.mjs --check   exit 1 if any is out of date
+//
+// The gateway is looked for at $CEREBRUS_GATEWAY_DIR, else ../gateway (the
+// cerebrus-pulse workspace layout). --check without a gateway skips (exit 0)
+// so a checkout without it (CI, Vercel) is not blocked.
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = fileURLToPath(new URL('../', import.meta.url));
+export const PRICES_FILE = join(ROOT, 'src', 'data', 'prices.json');
+
+export function gatewayDir(env = process.env) {
+  return resolve(env.CEREBRUS_GATEWAY_DIR || join(ROOT, '..', 'gateway'));
+}
+
+/** The source of the Python dict literal that starts at `NAME = {` or `NAME: dict = {`. */
+function dictBlock(source, name) {
+  const start = source.search(new RegExp(`^\\s*${name}\\s*(?::[^=]+)?=\\s*\\{`, 'm'));
+  if (start === -1) throw new Error(`${name} = { ... } not found in server.py`);
+  let depth = 0;
+  for (let i = source.indexOf('{', start); i < source.length; i++) {
+    if (source[i] === '{') depth++;
+    else if (source[i] === '}' && --depth === 0) return source.slice(start, i + 1);
+  }
+  throw new Error(`${name} is not closed in server.py`);
+}
+
+const ROUTE_RE =
+  /"GET (\/[^"]+)":\s*RouteConfig\(\s*accepts=make_option\(prices\.get\("([a-z_]+)",\s*"([0-9.]+)"\)\),\s*description="([^"]*)"/g;
+
+/**
+ * The paid routes, in X402_ROUTES order: [{route, path, endpoint, price, ...}].
+ * `price` is what the gateway charges: the config price, else the route's fallback.
+ */
+export function parseRoutes(serverPy, config) {
+  const block = dictBlock(serverPy, 'routes');
+  const configured = config.prices || {};
+  const routes = [...block.matchAll(ROUTE_RE)].map(([, path, key, fallback, description]) => ({
+    route: `GET ${path}`,
+    path: path.replace(/:([A-Za-z_]\w*)/g, '{$1}'),
+    endpoint: path.split('/')[1],
+    config_key: key,
+    price: String(configured[key] ?? fallback),
+    gateway_description: description,
+  }));
+  const declared = (block.match(/"GET \//g) || []).length;
+  if (!routes.length || routes.length !== declared) {
+    throw new Error(`parsed ${routes.length} of ${declared} routes; the route table format changed`);
+  }
+  return routes;
+}
+
+const SKILL_RE = /"([a-z0-9-]+)":\s*\{"endpoint":\s*"([a-z0-9-]+)",\s*"needs_coin":\s*(True|False)\}/g;
+
+/** A2A skills from SKILL_MAP, each priced by the route that serves it. */
+export function parseSkills(serverPy, routes) {
+  const block = dictBlock(serverPy, 'SKILL_MAP');
+  const skills = [...block.matchAll(SKILL_RE)].map(([, id, endpoint, needsCoin]) => {
+    const route = routes.find((r) => r.endpoint === endpoint);
+    if (!route) throw new Error(`skill ${id} is served by /${endpoint}, which has no paid route`);
+    return { id, endpoint, path: route.path, needs_coin: needsCoin === 'True', price: route.price };
+  });
+  if (!skills.length) throw new Error('SKILL_MAP parsed to nothing; its format changed');
+  return skills;
+}
+
+export function buildPrices(dir = gatewayDir()) {
+  const serverPy = readFileSync(join(dir, 'service', 'server.py'), 'utf8');
+  const config = JSON.parse(readFileSync(join(dir, 'service', 'x402_server_config.json'), 'utf8'));
+  const routes = parseRoutes(serverPy, config);
+  const version = serverPy.match(/^API_VERSION = "([^"]+)"/m);
+  if (!version) throw new Error('API_VERSION not found in server.py');
+  return {
+    _meta: {
+      generated_by: 'scripts/sync-gateway.mjs',
+      sources: [
+        'gateway service/server.py: X402_ROUTES (the objects that gate payment) and SKILL_MAP',
+        'gateway service/x402_server_config.json: prices',
+      ],
+      note: 'Do not edit by hand. Rerun `npm run sync:gateway` after a gateway price change.',
+    },
+    api_version: version[1],
+    currency: 'USDC',
+    routes,
+    skills: parseSkills(serverPy, routes),
+  };
+}
+
+export const serialize = (value) => JSON.stringify(value, null, 2) + '\n';
+const normalize = (text) => text.replace(/\r\n/g, '\n');
+
+export const AGENT_CARD_FILE = join(ROOT, 'public', '.well-known', 'agent-card.json');
+// The legacy discovery path serves the same card, as the gateway does.
+export const AGENT_JSON_FILE = join(ROOT, 'public', '.well-known', 'agent.json');
+const SKILL_PRICE_SENTENCE = / \$[0-9.]+ USDC per call\.$/;
+
+/**
+ * The site's copy of the A2A agent card with its prices filled in from the
+ * payment routes, the way the gateway fills its own (_with_generated_fields).
+ * The prose stays hand-written here; every skill must be one SKILL_MAP serves.
+ */
+export function withGeneratedCardFields(card, prices) {
+  const ids = new Set(prices.skills.map((s) => s.id));
+  const listed = new Set((card.skills || []).map((s) => s.id));
+  const missing = [...ids].filter((id) => !listed.has(id));
+  const unknown = [...listed].filter((id) => !ids.has(id));
+  if (missing.length || unknown.length) {
+    throw new Error(`agent card skills differ from SKILL_MAP: missing ${missing}, unknown ${unknown}`);
+  }
+  const out = structuredClone(card);
+  out.version = prices.api_version;
+  const x402 = out.extensions.x402;
+  x402.pricing = Object.fromEntries(prices.skills.map((s) => [s.id, s.price]));
+  const values = prices.skills.map((s) => Number(s.price)).sort((a, b) => a - b);
+  x402.pricing_notes =
+    `All prices in USDC per call, from $${values[0]} to $${values[values.length - 1]}, ` +
+    'settled over x402 v2. Generated from the gateway\'s payment routes.';
+  for (const skill of out.skills) {
+    const price = prices.skills.find((s) => s.id === skill.id).price;
+    skill.description = `${skill.description.replace(SKILL_PRICE_SENTENCE, '').trimEnd()} $${price} USDC per call.`;
+  }
+  return out;
+}
+
+/** Files this script owns: {path: expected content}. */
+export function expectedFiles(dir = gatewayDir()) {
+  const prices = buildPrices(dir);
+  const card = serialize(
+    withGeneratedCardFields(JSON.parse(readFileSync(AGENT_CARD_FILE, 'utf8')), prices)
+  );
+  return {
+    [PRICES_FILE]: serialize(prices),
+    [AGENT_CARD_FILE]: card,
+    [AGENT_JSON_FILE]: card,
+  };
+}
+
+function main(argv) {
+  const dir = gatewayDir();
+  const check = argv.includes('--check');
+  if (!existsSync(join(dir, 'service', 'server.py'))) {
+    if (check) {
+      console.log(`sync-gateway: skipped, no gateway source at ${dir} (set CEREBRUS_GATEWAY_DIR)`);
+      return 0;
+    }
+    console.error(`sync-gateway: no gateway source at ${dir} (set CEREBRUS_GATEWAY_DIR)`);
+    return 1;
+  }
+  let stale = 0;
+  for (const [path, content] of Object.entries(expectedFiles(dir))) {
+    const current = existsSync(path) ? normalize(readFileSync(path, 'utf8')) : null;
+    if (current === content) continue;
+    if (check) {
+      console.error(`sync-gateway: ${path} is out of date with ${dir}`);
+      stale++;
+    } else {
+      writeFileSync(path, content);
+      console.log(`sync-gateway: wrote ${path}`);
+    }
+  }
+  if (check && !stale) console.log('sync-gateway: up to date');
+  return stale ? 1 : 0;
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  process.exit(main(process.argv.slice(2)));
+}

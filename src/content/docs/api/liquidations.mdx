@@ -4,10 +4,11 @@ description: Liquidation heatmap API — estimated liquidation zones, cascade ri
 ---
 
 import { Badge } from '@astrojs/starlight/components';
+import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 # GET /liquidations/\{coin\}
 
-<Badge text="$0.03 USDC" variant="tip" /> <Badge text="New" variant="note" />
+<PriceBadge endpoint="liquidations" /> <Badge text="New" variant="note" />
 
 Returns estimated liquidation zones across 5 leverage tiers (3x, 5x, 10x, 25x, 50x) for both longs and shorts. Includes cascade risk scoring, long/short ratio derived from funding skew, and nearest cluster alerts.
 

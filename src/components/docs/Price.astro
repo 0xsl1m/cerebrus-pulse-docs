@@ -1,0 +1,13 @@
+---
+// An endpoint's price in running text ("$0.025"), from src/data/prices.json (F010).
+import prices from '../../data/prices.json';
+import { priceOf, usd } from '../../lib/pricing.mjs';
+
+interface Props {
+  endpoint: string;
+}
+
+const { endpoint } = Astro.props;
+---
+
+{usd(priceOf(prices, endpoint))}
