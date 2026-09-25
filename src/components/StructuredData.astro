@@ -13,7 +13,7 @@ interface Props {
 
 const {
   title = "Cerebrus Pulse — Real-time Crypto Intelligence API",
-  description = `Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. x402 micropayments, Google A2A agent-to-agent protocol, and ACP AI synthesis via Virtuals Protocol. From ${usd(range.min)}/query. No API keys required.`,
+  description = `Cerebrus Pulse is a pay-per-query crypto intelligence API for 50+ Hyperliquid perpetuals. x402 micropayments and Google A2A agent-to-agent discovery. From ${usd(range.min)}/query. No API keys required.`,
   url = "https://cerebruspulse.xyz",
 } = Astro.props;
 
@@ -152,48 +152,6 @@ const webApplicationSchema = {
         "unitText": "per query"
       },
       "url": url + "/api/bundle"
-    },
-    {
-      "@type": "Offer",
-      "name": "ACP Synthesis — Lite",
-      "description": "Quick AI-synthesized market snapshot via Agent Commerce Protocol on Virtuals Protocol. 1 model, 60s timeout.",
-      "price": "0.25",
-      "priceCurrency": "USD",
-      "priceSpecification": {
-        "@type": "UnitPriceSpecification",
-        "price": "0.25",
-        "priceCurrency": "USD",
-        "unitText": "per job"
-      },
-      "url": url + "/guides/acp-agents"
-    },
-    {
-      "@type": "Offer",
-      "name": "ACP Synthesis — Standard",
-      "description": "Full multi-model AI synthesis with trade ideas and risk scoring via Agent Commerce Protocol. 3 models, 90s timeout.",
-      "price": "0.75",
-      "priceCurrency": "USD",
-      "priceSpecification": {
-        "@type": "UnitPriceSpecification",
-        "price": "0.75",
-        "priceCurrency": "USD",
-        "unitText": "per job"
-      },
-      "url": url + "/guides/acp-agents"
-    },
-    {
-      "@type": "Offer",
-      "name": "ACP Synthesis — Premium",
-      "description": "Deep AI research with adversarial deliberation, cross-asset analysis, and portfolio recommendations. 5+ models, 300s timeout.",
-      "price": "2.50",
-      "priceCurrency": "USD",
-      "priceSpecification": {
-        "@type": "UnitPriceSpecification",
-        "price": "2.50",
-        "priceCurrency": "USD",
-        "unitText": "per job"
-      },
-      "url": url + "/guides/acp-agents"
     }
   ],
   "featureList": [
@@ -210,7 +168,7 @@ const webApplicationSchema = {
     "50+ Hyperliquid perpetuals supported",
     "x402 micropayments on Base or Solana (USDC)",
     "Google A2A agent-to-agent protocol with Agent Card discovery",
-    "ACP agent commerce on Virtuals Protocol",
+    "ACP (Virtuals Protocol) data tiers, currently paused",
     "No API keys or subscriptions required",
     `Pay-per-query pricing from ${usd(range.min)}`
   ],
@@ -259,7 +217,7 @@ const productSchema = {
   "offers": {
     "@type": "AggregateOffer",
     "lowPrice": range.min,
-    "highPrice": "2.50",
+    "highPrice": range.max,
     "priceCurrency": "USD",
     "offerCount": webApplicationSchema.offers.length
   }

@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "generated_by": "scripts/sync-gateway.mjs",
+    "source": "gateway acp-v2/provider_loop.py: OFFERINGS and price_for() retail",
+    "note": "Do not edit by hand. The ACP seller is paused; these are the v2 definitions, not live listings."
+  },
+  "currency": "USDC",
+  "chain": "Base",
+  "offerings": [
+    {
+      "name": "cerebrus_lite",
+      "service_key": "cerebrus_lite",
+      "endpoint": "pulse",
+      "timeframes": [
+        "1h",
+        "4h"
+      ],
+      "budget_usdc": "0.25"
+    },
+    {
+      "name": "cerebrus_synthesis",
+      "service_key": "cerebrus_synthesis",
+      "endpoint": "bundle",
+      "timeframes": [
+        "1h",
+        "4h"
+      ],
+      "budget_usdc": "0.75"
+    },
+    {
+      "name": "cerebrus_premium",
+      "service_key": "cerebrus_premium",
+      "endpoint": "bundle",
+      "timeframes": [
+        "15m",
+        "1h",
+        "4h",
+        "1d"
+      ],
+      "budget_usdc": "2.50"
+    },
+    {
+      "name": "pulse",
+      "service_key": "cerebrus_lite",
+      "endpoint": "pulse",
+      "timeframes": [
+        "1h",
+        "4h"
+      ],
+      "budget_usdc": "0.25"
+    }
+  ]
+}

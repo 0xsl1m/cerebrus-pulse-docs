@@ -1,9 +1,12 @@
 ---
 import prices from '../data/prices.json';
 import { priceOf, priceRange, usd } from '../lib/pricing.mjs';
+import acp from '../data/acp.json';
+import { acpRange } from '../lib/acp.mjs';
 
 const pulsePrice = usd(priceOf(prices, 'pulse'));
 const range = priceRange(prices);
+const acpBudget = acpRange(acp);
 ---
 
 <section class="landing-section landing-section-alt overflow-hidden relative" id="how-it-works">
@@ -26,7 +29,7 @@ const range = priceRange(prices);
     <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
       <span class="gradient-text">Three Paths to Intelligence</span>
     </h2>
-    <p class="mb-8 sm:mb-16 text-center text-[#94A3B8] text-base sm:text-lg" data-reveal="slide-up">Choose x402 for direct queries, A2A for agent-to-agent discovery, or ACP for autonomous commerce.</p>
+    <p class="mb-8 sm:mb-16 text-center text-[#94A3B8] text-base sm:text-lg" data-reveal="slide-up">Choose x402 for direct queries, A2A for agent-to-agent discovery, or ACP for Virtuals agents.</p>
 
     <!-- x402 Path -->
     <div class="mb-6">
@@ -121,38 +124,38 @@ const range = priceRange(prices);
     <div>
       <div class="flex items-center gap-3 mb-8">
         <span class="hero-badge-acp !text-xs">ACP</span>
-        <h3 class="text-lg font-semibold text-[#CBD5E1]">For autonomous AI agents on Virtuals Protocol</h3>
+        <h3 class="text-lg font-semibold text-[#CBD5E1]">For AI agents on Virtuals Protocol (paused)</h3>
       </div>
       <div class="grid gap-8 md:grid-cols-3">
         <div class="step-card step-card-acp group" data-reveal="stagger">
           <div class="step-number step-number-acp mb-6">1</div>
           <h3 class="mb-3 text-xl font-bold text-[#E8ECF4]">Discover</h3>
           <p class="mb-4 text-[#94A3B8]">
-            Your agent finds Cerebrus Pulse on the Virtuals Protocol marketplace via ACP service discovery.
+            Your agent finds Cerebrus Pulse on the Virtuals Protocol marketplace with the ACP SDK.
           </p>
-          <code class="block rounded-lg bg-[#0B0F1A] p-3 text-sm text-[#FBBF24] font-mono border border-[rgba(245,158,11,0.15)]">acp.discover("crypto-analysis")</code>
+          <code class="block rounded-lg bg-[#0B0F1A] p-3 text-sm text-[#FBBF24] font-mono border border-[rgba(245,158,11,0.15)]">acpClient.browseAgents("cerebrus pulse")</code>
         </div>
         <div class="step-card step-card-acp group" data-reveal="stagger">
           <div class="step-number step-number-acp mb-6">2</div>
-          <h3 class="mb-3 text-xl font-bold text-[#E8ECF4]">Negotiate</h3>
+          <h3 class="mb-3 text-xl font-bold text-[#E8ECF4]">Open a Job</h3>
           <p class="mb-4 text-[#94A3B8]">
-            Agents negotiate terms and payment. Choose from Lite, Standard, or Premium synthesis tiers.
+            Pick a data tier and pay the proposed budget into ACP escrow.
           </p>
           <div class="flex items-center gap-2">
-            <span class="price-badge-acp">$0.10 - $2.00</span>
-            <span class="text-[#64748B] text-sm">VIRTUAL</span>
+            <span class="price-badge-acp">${acpBudget.min} - ${acpBudget.max}</span>
+            <span class="text-[#64748B] text-sm">USDC on Base</span>
           </div>
         </div>
         <div class="step-card step-card-acp group" data-reveal="stagger">
           <div class="step-number step-number-acp mb-6">3</div>
-          <h3 class="mb-3 text-xl font-bold text-[#E8ECF4]">Synthesize</h3>
+          <h3 class="mb-3 text-xl font-bold text-[#E8ECF4]">Receive</h3>
           <p class="mb-4 text-[#94A3B8]">
-            Receive AI-synthesized market narratives with trade recommendations, not just raw indicators.
+            The deliverable is the engine's JSON for your coin: the same data the x402 endpoints return.
           </p>
           <div class="flex flex-wrap gap-2">
-            <span class="coin-chip text-xs" style="border-color: rgba(245,158,11,0.25);">Narrative</span>
-            <span class="coin-chip text-xs" style="border-color: rgba(245,158,11,0.25);">Trade Ideas</span>
-            <span class="coin-chip text-xs" style="border-color: rgba(245,158,11,0.25);">Risk Score</span>
+            <span class="coin-chip text-xs" style="border-color: rgba(245,158,11,0.25);">JSON</span>
+            <span class="coin-chip text-xs" style="border-color: rgba(245,158,11,0.25);">Escrow</span>
+            <span class="coin-chip text-xs" style="border-color: rgba(245,158,11,0.25);">USDC</span>
           </div>
         </div>
       </div>

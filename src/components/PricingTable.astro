@@ -1,6 +1,8 @@
 ---
 import prices from '../data/prices.json';
 import { priceOf, usd } from '../lib/pricing.mjs';
+import acp from '../data/acp.json';
+import { delivers } from '../lib/acp.mjs';
 
 const x402EndpointList = [
   {
@@ -106,27 +108,18 @@ const x402Endpoints = x402EndpointList.map((ep) => ({
   price: usd(priceOf(prices, ep.path.split('/')[1])),
 }));
 
-const acpTiers = [
-  {
-    tier: 'Lite',
-    price: '$0.25',
-    description: 'Quick market snapshot',
-    details: 'Summary of current conditions with a directional bias. Ideal for fast decision loops.',
-  },
-  {
-    tier: 'Standard',
-    price: '$0.75',
-    description: 'Full synthesis report',
-    details: 'Multi-timeframe analysis with narrative context, trade ideas, and risk scoring.',
-    highlight: true,
-  },
-  {
-    tier: 'Premium',
-    price: '$2.50',
-    description: 'Deep research analysis',
-    details: 'Comprehensive cross-asset analysis with correlation mapping, regime context, and portfolio-level recommendations.',
-  },
-];
+// ACP v2 offerings from the provider's own definitions (src/data/acp.json, F009):
+// each delivers the engine's JSON for one coin; none calls a model.
+const ACP_TIERS = { cerebrus_lite: 'Lite', cerebrus_synthesis: 'Standard', cerebrus_premium: 'Premium' };
+const acpTiers = acp.offerings
+  .filter((o) => o.name in ACP_TIERS)
+  .map((o) => ({
+    tier: ACP_TIERS[o.name as keyof typeof ACP_TIERS],
+    price: `$${o.budget_usdc}`,
+    description: `The /${o.endpoint} output`,
+    details: `The engine's JSON for one coin: ${delivers(o)}, in USDC on Base through ACP escrow.`,
+    highlight: o.name === 'cerebrus_synthesis',
+  }));
 
 const freeEndpoints = [
   { method: 'GET', path: '/health', description: 'Gateway health status' },
@@ -143,7 +136,7 @@ const freeEndpoints = [
     </h2>
     <p class="mb-4 text-center text-[#94A3B8] text-base sm:text-lg" data-reveal="slide-up">Three protocols. Two chains. Same intelligence.</p>
     <p class="mb-8 sm:mb-12 text-center text-sm text-[#64748B]" data-reveal="slide-up">
-      x402 for structured data via HTTP (Base or Solana). A2A for agent-to-agent discovery. ACP for AI-synthesized insights via Virtuals Protocol.
+      x402 for structured data via HTTP (Base or Solana). A2A for agent-to-agent discovery. ACP for Virtuals Protocol agents (paused).
     </p>
 
     <!-- x402 Pricing -->
@@ -199,7 +192,7 @@ const freeEndpoints = [
     <!-- ACP Pricing -->
     <div class="flex items-center gap-3 mb-6">
       <span class="hero-badge-acp !text-xs">ACP</span>
-      <h3 class="text-base font-semibold text-[#94A3B8]">AI synthesis via Virtuals Protocol</h3>
+      <h3 class="text-base font-semibold text-[#94A3B8]">Data tiers via Virtuals Protocol (paused)</h3>
     </div>
     <div class="grid gap-5 md:grid-cols-3">
       {acpTiers.map((tier) => (

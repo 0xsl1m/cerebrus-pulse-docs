@@ -7,6 +7,7 @@ import EndpointPrices from '../../../components/docs/EndpointPrices.astro';
 import SkillPrices from '../../../components/docs/SkillPrices.astro';
 import Price from '../../../components/docs/Price.astro';
 import PriceRange from '../../../components/docs/PriceRange.astro';
+import AcpOfferings from '../../../components/docs/AcpOfferings.astro';
 
 # x402 vs A2A vs ACP
 
@@ -16,14 +17,15 @@ Cerebrus services are available through three protocols. Choose based on your us
 
 | | x402 (Direct API) | A2A (Agent-to-Agent) | ACP (Virtuals Protocol) |
 |---|---|---|---|
-| **Target user** | Developers, bots, dashboards | AI agent networks | Autonomous AI agents |
-| **Payment** | USDC micropayments on Base or Solana | None in-band: the reply names the HTTP endpoint and its x402 terms, and you pay there | VIRTUAL token escrow |
+| **Target user** | Developers, bots, dashboards, agents | A2A agent networks | Agents on Virtuals Protocol |
+| **Payment** | USDC micropayments on Base or Solana | None in-band: the reply names the HTTP endpoint and its x402 terms, and you pay there | USDC on Base, in ACP escrow |
 | **Authentication** | Wallet signature (no API keys) | None: discovery and quotes are free | ACP SDK + agent wallet |
 | **Discovery** | API docs | Agent Card (`.well-known`) | Virtuals marketplace |
 | **Transport** | HTTP REST | JSON-RPC 2.0 over HTTP | ACP SDK |
 | **Latency** | Low (~200–500ms) | Low (~200–500ms) | Higher (negotiation + escrow) |
-| **Pricing** | <PriceRange /> per call | <PriceRange /> per skill (paid over HTTP) | $0.03–$2.00 per job |
+| **Pricing** | <PriceRange /> per call | <PriceRange /> per skill (paid over HTTP) | A USDC budget per job (below) |
 | **Settlement** | Instant (Base L2 or Solana) | Over HTTP (x402), as for direct calls | ACP escrow release |
+| **Status** | Live | Live (discovery) | Paused |
 | **Protocol** | HTTP 402 (open standard) | A2A (Linux Foundation) | Agent Commerce Protocol (Virtuals) |
 
 ## Available Services
@@ -36,14 +38,11 @@ Cerebrus services are available through three protocols. Choose based on your us
 
 <SkillPrices />
 
-### Via ACP
+### Via ACP (paused)
 
-| Offering | Price | Service |
-|----------|-------|---------|
-| `cerebrus_pulse` | $0.03 | Technical analysis (same data as x402) |
-| `cerebrus_lite` | $0.10 | Single-model AI synthesis |
-| `cerebrus_synthesis` | $0.50 | 3-model AI synthesis |
-| `cerebrus_premium` | $2.00 | 5+ model deep synthesis |
+Each offering delivers the engine's JSON for one coin; none calls a model.
+
+<AcpOfferings />
 
 ## When to Use x402
 
@@ -63,11 +62,9 @@ Cerebrus services are available through three protocols. Choose based on your us
 
 ## When to Use ACP
 
-- You're building an **autonomous AI agent** on Virtuals Protocol
-- You need **AI synthesis** (not just raw data) — multi-model analysis with reasoning
-- You want your agent to **participate in the Virtuals marketplace**
-- You need **complex, long-running analysis** (up to 5 minutes)
-- You want **agent-to-agent discovery** and negotiation
+- Your agent runs on **Virtuals Protocol** and buys services through ACP jobs and escrow
+- You want the /pulse or /bundle output for one coin as an ACP deliverable
+- Note: the ACP seller is **paused** while it moves to ACP v2; use x402 meanwhile
 
 ## Can I Use Multiple?
 
@@ -75,10 +72,10 @@ Yes. Many teams combine protocols:
 
 1. **x402** `/pulse/BTC` → Get live technical indicators (<Price endpoint="pulse" />)
 2. **A2A** `message/send` → Agent discovers a skill and gets the HTTP endpoint and x402 terms that serve it
-3. **ACP** `cerebrus_synthesis` → "What's the medium-term outlook for BTC?" (45s, $0.50)
+3. **ACP** `cerebrus_synthesis` → The /bundle output for one coin, as an ACP job (when ACP is back)
 
-A2A adds discovery on top of x402: it names the endpoint and its terms, and the payment is the same x402 call on Base or Solana. ACP provides AI synthesis with multi-model reasoning.
+A2A adds discovery on top of x402: it names the endpoint and its terms, and the payment is the same x402 call on Base or Solana. ACP sells the same engine data as ACP jobs.
 
 ## Migration
 
-Moving between protocols doesn't require account changes. A2A leads to the same wallet-based x402 payments on Base or Solana as direct calls. ACP uses VIRTUAL tokens on Virtuals Protocol. There's no lock-in to any protocol.
+Moving between protocols doesn't require account changes. A2A leads to the same wallet-based x402 payments on Base or Solana as direct calls. ACP uses USDC on Base through Virtuals Protocol escrow. There's no lock-in to any protocol.

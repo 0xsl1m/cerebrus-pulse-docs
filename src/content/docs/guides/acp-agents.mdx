@@ -1,104 +1,111 @@
 ---
 title: ACP for Agents
-description: Access Cerebrus services via the Virtuals Protocol Agent Commerce Protocol.
+description: Buy Cerebrus Pulse data through the Virtuals Protocol Agent Commerce Protocol (ACP), paid in USDC on Base. Currently paused.
 ---
+
+import AcpOfferings from '../../../components/docs/AcpOfferings.astro';
 
 # ACP for AI Agents
 
-If you're building AI agents on the [Virtuals Protocol](https://virtuals.io/), you can access Cerebrus services via the **Agent Commerce Protocol (ACP)** — an agent-to-agent commerce layer.
+:::caution[Paused]
+The Cerebrus Pulse ACP seller is **offline** while it moves to ACP v2, and it is not taking jobs. This page
+describes the offerings as they are defined for v2. Check the Virtuals marketplace for whether they are
+listed before you build on them. The [x402 API](/quickstart) serves the same data today.
+:::
 
 ## What is ACP?
 
-ACP is Virtuals Protocol's standard for agent-to-agent transactions. Instead of HTTP micropayments (x402), agents negotiate, pay, and deliver services through the ACP SDK using VIRTUAL token escrow.
+The [Agent Commerce Protocol](https://whitepaper.virtuals.io/acp-product-resources/acp-dev-onboarding-guide)
+(ACP) is Virtuals Protocol's standard for agent-to-agent jobs. A buyer agent finds a seller, opens a job,
+pays the agreed budget into an on-chain escrow in **USDC on Base**, and the escrow releases when the seller
+delivers.
 
-## Available Offerings
+## Offerings
 
-### Cerebrus Synthesis
+Each offering runs the Cerebrus Pulse engine for one coin and delivers its JSON: the same data the x402
+endpoints return, with no model calls and no written analysis.
 
-Multi-model AI synthesis with domain-specific expertise.
+<AcpOfferings />
 
-| Tier | Price | Models | Timeout | Use Case |
-|------|-------|--------|---------|----------|
-| **Lite** | $0.25 | 1 model | 60s | Quick answers, simple queries |
-| **Standard** | $0.75 | 3 models | 90s | Balanced analysis with multiple perspectives |
-| **Premium** | $2.50 | 5+ models | 300s | Deep synthesis with adversarial deliberation |
+The `pulse` listing delivers the same as `cerebrus_lite`. Put the coin symbol in the job requirement as text,
+for example `"ETH"`; without one the seller analyzes BTC. The fields are described on the
+[/pulse](/api/pulse) and [/bundle](/api/bundle) reference pages.
 
-### Cerebrus Pulse (via ACP)
-
-The same real-time technical analysis available via x402, also accessible through ACP for agent-to-agent workflows.
-
-| Offering | Price | Description |
-|----------|-------|-------------|
-| `cerebrus_pulse` | $0.03 | Multi-timeframe TA for Hyperliquid perpetuals |
-
-## ACP Job Flow
+## Job Flow
 
 ```
-Your Agent                    ACP Protocol                    Cerebrus
-    |                              |                              |
-    |  Create job request          |                              |
-    |----------------------------->|                              |
-    |                              |  Notify seller               |
-    |                              |----------------------------->|
-    |                              |                              |
-    |                              |  Accept + price quote        |
-    |                              |<-----------------------------|
-    |                              |                              |
-    |  Approve payment (escrow)    |                              |
-    |----------------------------->|  VIRTUAL token locked        |
-    |                              |                              |
-    |                              |  Execute job                 |
-    |                              |----------------------------->|
-    |                              |                              |
-    |                              |  Deliver result              |
-    |                              |<-----------------------------|
-    |                              |                              |
-    |  Receive deliverable         |  Release payment             |
-    |<-----------------------------|----------------------------->|
+Buyer agent                    ACP (Virtuals, Base)                 Cerebrus Pulse
+    |                                  |                                  |
+    |  initiateJob(requirement)        |                                  |
+    |--------------------------------->|  job created                     |
+    |                                  |--------------------------------->|
+    |                                  |  budget proposed (USDC)          |
+    |                                  |<---------------------------------|
+    |  payAndAcceptRequirement()       |                                  |
+    |--------------------------------->|  USDC locked in escrow           |
+    |                                  |--------------------------------->|
+    |                                  |  deliverable (engine JSON)       |
+    |                                  |<---------------------------------|
+    |  job completed, deliverable      |  escrow released                 |
+    |<---------------------------------|--------------------------------->|
 ```
 
 ## Integration Example
 
-```typescript
-import { AcpClient } from "@virtuals-protocol/acp-node";
+With the official SDK, [`@virtuals-protocol/acp-node`](https://www.npmjs.com/package/@virtuals-protocol/acp-node).
+Your buyer agent must be registered in the Virtuals agent registry, with a whitelisted dev wallet and a
+session entity key; see the SDK's README for that setup.
 
-const acp = new AcpClient({
-  walletKey: process.env.AGENT_WALLET_KEY,
-});
-
-// Request a Cerebrus Synthesis (Standard tier)
-const job = await acp.createJob({
-  seller: "cerebrus-pulse",
-  offering: "cerebrus_synthesis",
-  requirements: {
-    query: "Analyze the current Bitcoin market structure and identify key support/resistance levels",
-    domain: "crypto",
-    models_requested: 3,
-  },
-});
-
-// Wait for completion
-const result = await acp.waitForJob(job.id);
-
-console.log(result.deliverable.value.result);
-// → Multi-model synthesis with consensus scoring
+```bash
+npm install @virtuals-protocol/acp-node
 ```
+
+```typescript
+// A CommonJS TypeScript project ("module": "commonjs", "esModuleInterop": true),
+// like the SDK's own examples. In a native ES module the client is the `.default` export.
+import AcpClient, { AcpContractClientV2, AcpJobPhases } from "@virtuals-protocol/acp-node";
+
+async function main() {
+  const acpClient = new AcpClient({
+    acpContractClient: await AcpContractClientV2.build(
+      process.env.WHITELISTED_WALLET_PRIVATE_KEY as `0x${string}`, // the dev wallet whitelisted on your agent
+      Number(process.env.SESSION_ENTITY_KEY_ID), // from the agent registry
+      process.env.BUYER_AGENT_WALLET_ADDRESS as `0x${string}`, // your agent's wallet
+    ),
+    onNewTask: async (job, memoToSign) => {
+      if (job.phase === AcpJobPhases.NEGOTIATION && memoToSign?.nextPhase === AcpJobPhases.TRANSACTION) {
+        await job.payAndAcceptRequirement(); // pays the proposed USDC budget into escrow
+      } else if (job.phase === AcpJobPhases.COMPLETED) {
+        console.log(job.getDeliverable()); // the engine's JSON
+      }
+    },
+  });
+  await acpClient.init();
+
+  const [seller] = await acpClient.browseAgents("cerebrus pulse", { topK: 5 });
+  const offering = seller?.jobOfferings.find((o) => o.name === "cerebrus_lite");
+  if (!offering) throw new Error("No Cerebrus Pulse offering is listed right now");
+
+  const jobId = await offering.initiateJob("ETH"); // the coin to analyze
+  console.log(`job ${jobId} opened`);
+}
+
+main();
+```
+
+Checked against `@virtuals-protocol/acp-node` 0.3.0-beta.40. Check the budget the seller proposes before you
+pay; the handler above pays whatever is proposed.
 
 ## x402 vs ACP — Which Should I Use?
 
 | | x402 (Direct API) | ACP (Virtuals Protocol) |
 |---|---|---|
-| **For** | Developers, bots, scripts | AI agents on Virtuals |
-| **Payment** | USDC on Base or Solana (micropayments) | VIRTUAL token (escrow) |
-| **Auth** | Wallet signature | ACP SDK + agent wallet |
-| **Latency** | Low (single HTTP request) | Higher (negotiation + escrow) |
-| **Data products** | Pulse, Sentiment, Funding, Bundle | Pulse + Synthesis (Lite/Standard/Premium) |
-| **Best for** | High-frequency queries, dashboards | Agent workflows, complex synthesis |
+| **For** | Developers, bots, scripts, agents | Agents on Virtuals |
+| **Payment** | USDC on Base or Solana, per call | USDC on Base, into ACP escrow, per job |
+| **Auth** | Wallet signature | ACP SDK + registered agent wallet |
+| **Latency** | One HTTP request | Job negotiation and escrow |
+| **Data** | Every paid endpoint | The /pulse or /bundle output for one coin |
+| **Status** | Live | Paused |
 
-**Use x402** if you want fast, cheap data queries (technical analysis, sentiment, funding).
-
-**Use ACP** if you're building an autonomous agent that needs AI synthesis or wants to participate in the Virtuals ecosystem.
-
-For agent-to-agent connections using Google's A2A protocol, see the [A2A Protocol Guide](/guides/a2a-agents).
-
-See the full comparison at [x402 vs A2A vs ACP](/reference/x402-vs-acp).
+For agent-to-agent discovery with the A2A protocol, see the [A2A Protocol Guide](/guides/a2a-agents).
+The full comparison is at [x402 vs A2A vs ACP](/reference/x402-vs-acp).

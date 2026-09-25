@@ -1,0 +1,18 @@
+---
+// The ACP v2 offerings and what each delivers, from src/data/acp.json (F009).
+import acp from '../../data/acp.json';
+import { acpRows } from '../../lib/acp.mjs';
+
+const rows = acpRows(acp);
+---
+
+<table>
+  <thead>
+    <tr><th>Offering</th><th>Delivers</th><th>Budget (USDC)</th></tr>
+  </thead>
+  <tbody>
+    {rows.map((r) => (
+      <tr><td><code>{r.name}</code></td><td>{r.delivers}</td><td>${r.budget}</td></tr>
+    ))}
+  </tbody>
+</table>
