@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Astro 7 / Starlight 0.42 / Tailwind 4 is one planned migration with a
+      # visual diff, not a set of separate bot PRs.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Keeps the SHA-pinned actions (and their "# vX.Y.Z" comments) current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
