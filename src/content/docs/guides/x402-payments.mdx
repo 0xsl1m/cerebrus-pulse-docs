@@ -57,7 +57,7 @@ Cerebrus Pulse accepts USDC payments on two chains. The 402 response includes pa
 | **USDC Address** | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` |
 | **Scheme** | Exact EVM | Exact SVM |
 | **Facilitator** | Coinbase CDP | Coinbase CDP |
-| **Gas/Fees** | ~$0.001 ETH per tx | Gasless (CDP fee payer) |
+| **Payer gas** | None: you sign an EIP-3009 authorization and the facilitator submits it | None: the facilitator is the fee payer |
 
 ## Payment Details by Endpoint
 
@@ -89,11 +89,17 @@ Cerebrus Pulse accepts USDC payments on two chains. The 402 response includes pa
 
 ## Wallet Requirements
 
-You need a wallet with USDC on **either** chain:
+You need a wallet with USDC on **either** chain, and nothing else: no ETH and no SOL. The payer only signs;
+the facilitator submits the transfer and pays its network fee. Use a dedicated wallet holding a few dollars
+of USDC, not a main wallet.
+
+There is no card or account-based way to pay: every paid call needs a USDC wallet. The free
+[`/demo/{coin}`](/quickstart#try-the-free-demo-first) endpoint needs none.
 
 ### Option A: Base (EVM)
-1. **USDC on Base** — For payments (as little as $1 gets you 50+ pulse queries)
-2. **A small amount of ETH on Base** — For gas fees (typically < $0.001 per transaction)
+1. **USDC on Base**: each call costs <PriceRange />
+2. **No ETH needed**: the Base payment is an EIP-3009 `transferWithAuthorization` that you sign off-chain
+   and the facilitator submits
 
 **Getting USDC on Base:**
 - Bridge from Ethereum mainnet via the [Base Bridge](https://bridge.base.org)
@@ -102,7 +108,7 @@ You need a wallet with USDC on **either** chain:
 
 ### Option B: Solana
 1. **USDC on Solana** — Same pricing, same endpoints
-2. **No SOL needed for gas** — The CDP facilitator sponsors transaction fees
+2. **No SOL needed**: the CDP facilitator is the fee payer for the transaction
 
 **Getting USDC on Solana:**
 - Purchase directly on exchanges that support Solana withdrawals (Coinbase, Phantom, Jupiter)
@@ -149,7 +155,7 @@ Each call costs <PriceRange />; set the cap just above the most expensive endpoi
 - The x402 facilitator (Coinbase CDP) verifies payments on-chain for both Base and Solana
 - Pulse never sees your private key — only the signed payment proof
 - All paid endpoints are rate-limited to prevent abuse
-- Solana transactions use CDP's fee payer — no SOL needed for gas
+- The payer never needs gas: no ETH on Base, no SOL on Solana
 
 ## Related
 
