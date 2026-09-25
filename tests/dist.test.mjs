@@ -72,3 +72,17 @@ test('F012: internal page links have no trailing slash', { skip }, () => {
     }
   }
 });
+
+// ── F046: GSAP is bundled, not loaded from a CDN ──────────────────────────
+
+test('F046: the landing page loads no third-party script', { skip }, () => {
+  const html = read(join(DIST, 'index.html'));
+  assert.doesNotMatch(html, /cdn\.jsdelivr\.net/);
+  assert.doesNotMatch(html, /<script[^>]*src="https?:/);
+  assert.match(html, /<noscript><style>\[data-reveal\]/);
+});
+
+test('F046: GSAP ScrollTrigger ships in a same-origin bundle', { skip }, () => {
+  const js = walk(join(DIST, '_astro')).filter((p) => p.endsWith('.js'));
+  assert.ok(js.some((p) => /ScrollTrigger/.test(read(p))), 'no bundle contains ScrollTrigger');
+});

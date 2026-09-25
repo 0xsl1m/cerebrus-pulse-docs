@@ -60,6 +60,21 @@ const ogImage = canonicalURL + '/images/og-image.jpg';
       description={description}
       url={canonicalURL}
     />
+
+    <!-- [data-reveal] content starts hidden and is shown by the GSAP reveal
+         engine below. Without JavaScript, show it straight away. -->
+    <noscript><style>[data-reveal]{opacity:1!important;transform:none!important;}</style></noscript>
+    <script is:inline>
+      // Failsafe: if the bundled reveal engine never finished (script blocked
+      // or failed), reveal everything rather than leave the page blank.
+      // Module scripts run before DOMContentLoaded, so no timer is needed.
+      document.addEventListener('DOMContentLoaded', function () {
+        if (document.documentElement.hasAttribute('data-reveal-ready')) return;
+        document.querySelectorAll('[data-reveal]').forEach(function (el) {
+          el.classList.add('revealed');
+        });
+      });
+    </script>
   </head>
   <body class="bg-[#0B0F1A] text-[#E8ECF4] antialiased">
     <div class="cine-grain" aria-hidden="true"></div>
@@ -101,11 +116,13 @@ const ogImage = canonicalURL + '/images/og-image.jpg';
       })();
     </script>
 
-    <!-- GSAP + ScrollTrigger CDN -->
-    <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-    <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+    <script>
+      // GSAP + ScrollTrigger are bundled from the exact-pinned npm package
+      // (same-origin, hashed, immutable cache) instead of a floating gsap@3
+      // CDN tag with no integrity check.
+      import { gsap } from 'gsap';
+      import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-    <script is:inline>
       // Cerebrus Pulse — GSAP-Powered Parallax & Scroll-Reveal Engine
       (function () {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -113,6 +130,7 @@ const ogImage = canonicalURL + '/images/og-image.jpg';
         if (prefersReducedMotion) {
           // Reduced motion: reveal everything immediately, no animations
           document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('revealed'));
+          document.documentElement.setAttribute('data-reveal-ready', '');
           return;
         }
 
@@ -360,6 +378,8 @@ const ogImage = canonicalURL + '/images/og-image.jpg';
           });
         });
 
+        // Every reveal is wired up; tell the head failsafe to stand down.
+        document.documentElement.setAttribute('data-reveal-ready', '');
       })();
     </script>
     <Analytics />
