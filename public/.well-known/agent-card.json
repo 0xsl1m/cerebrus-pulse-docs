@@ -2,7 +2,8 @@
   "name": "Cerebrus Pulse",
   "description": "Institutional-grade crypto derivatives intelligence. Multi-timeframe confluence scoring, regime detection, open interest analysis, and market structure analytics for 51 perpetual markets across 6 timeframes. Quantitative models with battle-tested analytics.",
   "url": "https://api.cerebruspulse.xyz/a2a",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "documentationUrl": "https://cerebruspulse.xyz/overview",
   "protocolVersion": "0.3",
   "provider": {
     "organization": "Cerebrus Pulse",
