@@ -135,6 +135,8 @@
 </section>
 
 <script>
+  import { COUNTUP_MS, countupProgress, easeOutQuart } from '../scripts/countup.js';
+
   // Instrument-style count-up when metrics scroll into view
   (function () {
     const els = document.querySelectorAll('[data-countup]');
@@ -149,15 +151,14 @@
 
     function run(el) {
       const target = parseFloat(el.dataset.countup);
-      if (reduced || !isFinite(target)) {
-        el.textContent = fmt(el, target);
-        return;
-      }
-      const dur = 1400;
-      const t0 = performance.now();
+      // Reduced motion (or a bad target): keep the final value that is
+      // already in the static HTML.
+      if (reduced || !isFinite(target)) return;
+      let t0;
       function tick(t) {
-        const p = Math.min((t - t0) / dur, 1);
-        const eased = 1 - Math.pow(1 - p, 4);
+        if (t0 === undefined) t0 = t;
+        const p = countupProgress(t, t0, COUNTUP_MS);
+        const eased = easeOutQuart(p);
         el.textContent = fmt(el, target * eased);
         if (p < 1) requestAnimationFrame(tick);
       }
