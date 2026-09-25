@@ -1,0 +1,31 @@
+name: IndexNow
+
+# After Vercel reports a successful production deployment, submit the live
+# sitemap's URLs to IndexNow (Bing, Yandex, Seznam, Naver and others) with the
+# key file served from public/. No secrets: the IndexNow key is public by design.
+#
+# Off until the founder sets the repository variable INDEXNOW_ENABLED=true
+# (Settings > Secrets and variables > Actions > Variables).
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    if: >-
+      vars.INDEXNOW_ENABLED == 'true' &&
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Submit sitemap URLs to IndexNow
+        run: node scripts/indexnow.mjs
