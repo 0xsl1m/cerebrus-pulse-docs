@@ -54,13 +54,14 @@ const ROUTE_RE =
 export function parseRoutes(serverPy, config) {
   const block = dictBlock(serverPy, 'routes');
   const configured = config.prices || {};
-  const routes = [...block.matchAll(ROUTE_RE)].map(([, path, key, fallback, description]) => ({
+  // The route description is not copied: the docs write their own, and a
+  // wording change in the gateway must not make the docs look stale.
+  const routes = [...block.matchAll(ROUTE_RE)].map(([, path, key, fallback]) => ({
     route: `GET ${path}`,
     path: path.replace(/:([A-Za-z_]\w*)/g, '{$1}'),
     endpoint: path.split('/')[1],
     config_key: key,
     price: String(configured[key] ?? fallback),
-    gateway_description: description,
   }));
   const declared = (block.match(/"GET \//g) || []).length;
   if (!routes.length || routes.length !== declared) {
