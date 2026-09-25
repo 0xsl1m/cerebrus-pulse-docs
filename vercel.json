@@ -3,6 +3,13 @@
   "outputDirectory": "dist",
   "framework": "astro",
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/subscribe",
+      "destination": "https://github.com/0xsl1m/cerebrus-pulse-mcp/discussions",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
