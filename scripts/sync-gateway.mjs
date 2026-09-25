@@ -27,6 +27,11 @@
 // the gateway's committed HEAD, not its working tree, so someone's unfinished
 // edit there never leaks into the docs; set CEREBRUS_GATEWAY_REF to another
 // ref, or to "worktree" to read the files on disk.
+//
+// HEAD can be a gateway release that is not deployed yet. A production build
+// refuses docs whose api_version differs from the live /health version
+// (scripts/live-version-gate.mjs; `npm run check:live` checks by hand), so
+// push them only once that gateway is live, or resync to the deployed ref.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
