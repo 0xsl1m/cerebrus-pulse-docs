@@ -12,16 +12,16 @@ Cerebrus Pulse enforces rate limits across multiple dimensions to ensure fair ac
 | Dimension | Limit | Window |
 |-----------|-------|--------|
 | **Per IP** | 12 requests | 1 minute |
-| **Per wallet** | 20 requests | 1 minute |
+| **Per wallet** | 20 paid requests | 1 minute |
 | **Concurrent** | 3 requests | Simultaneous |
-| **Daily** | 1,000 requests | 24 hours |
+| **Daily** | 2,000 requests per IP | 24 hours |
 
 ### How Limits Are Tracked
 
 - **IP-based**: Tracked by your client's source IP address
-- **Wallet-based**: Tracked by the `x-x402-payer` header (your wallet address)
-- **Concurrent**: Maximum simultaneous requests being processed
-- **Daily**: Rolling 24-hour window
+- **Wallet-based**: Tracked by the payer of the payment the gateway verified (the EIP-3009 `from` address on Base). A client-supplied header does not count
+- **Concurrent**: Maximum simultaneous requests being processed, across all callers
+- **Daily**: Per IP, reset every 24 hours, with a far higher global backstop
 
 ### Rate Limit Response
 
@@ -40,43 +40,36 @@ Content-Type: application/json
 
 ### Free Endpoints
 
-`GET /health` and `GET /coins` are **not rate limited**.
+`GET /health` and `GET /coins` are **not rate limited**. The free `GET /demo/{coin}` allows 3 requests per minute per IP.
 
 ## Error Codes
 
 | Status | Meaning | When It Happens |
 |--------|---------|-----------------|
-| **400** | Bad Request | Invalid coin ticker, invalid timeframe, or insufficient candle data for the requested coin |
-| **402** | Payment Required | Standard x402 flow — your client needs to sign a USDC payment. The x402 SDK handles this automatically. |
-| **429** | Too Many Requests | Rate limit exceeded. See limits above. |
-| **500** | Internal Server Error | Unexpected engine failure. The analysis engine encountered an error. |
-| **503** | Service Unavailable | Gateway is in maintenance mode (kill switch disabled). Includes `retry_after: 3600`. |
-| **504** | Gateway Timeout | The analysis engine took longer than 15 seconds. Try again. |
+| **400** | Bad Request | An invalid timeframe or integer parameter, refused before any price is quoted; or the engine could not answer (for example no data for the market), which is not charged |
+| **402** | Payment Required | The standard x402 flow: pay with an x402 v2 client. A 402 after paying means the payment was not accepted, and nothing was settled |
+| **404** | Not Found | An unknown coin, refused before any price is quoted |
+| **429** | Too Many Requests | A rate limit above was exceeded |
+| **500** | Internal Server Error | An unexpected engine failure (not charged) |
+| **503** | Service Unavailable | The service is switched off (`retry_after: 3600`), payments are down, or an upstream data feed is missing or stale (`Retry-After: 300`). No price is quoted |
+| **504** | Gateway Timeout | The engine took longer than 15 seconds (not charged). Try again |
+
+A payment settles only after the gateway has an answer: any 4xx or 5xx after you paid is not charged.
 
 ## Error Response Format
 
-All errors return JSON:
+Errors are JSON with a `detail` string. A refused parameter is also named in `param`, often with what is
+allowed:
 
 ```json
-{
-  "detail": "Human-readable error message"
-}
-```
-
-### 400 Examples
-
-```json
-{"detail": "Invalid coin: NOTACOIN"}
-{"detail": "Insufficient data for NEWCOIN on timeframe 4h"}
+{"detail": "Unsupported timeframes: 2h. Allowed: 5m, 15m, 1h, 4h, 1d, 1w.", "param": "timeframes", "allowed": ["5m", "15m", "1h", "4h", "1d", "1w"]}
+{"detail": "Unknown coin 'NOTACOIN'. GET /coins lists the supported symbols.", "param": "coin", "did_you_mean": ["NEAR"], "supported_coins": "/coins"}
 ```
 
 ### 503 Example
 
 ```json
-{
-  "detail": "Service temporarily unavailable",
-  "retry_after": 3600
-}
+{"detail": "Service temporarily disabled", "retry_after": 3600}
 ```
 
 ## Best Practices
@@ -85,5 +78,5 @@ All errors return JSON:
 2. **Use backoff on 429** — Wait the indicated window duration before retrying.
 3. **Don't retry on 400** — These are client errors. Fix the request before retrying.
 4. **Retry on 504** — Engine timeouts are usually transient. A single retry typically succeeds.
-5. **Respect 503** — The gateway is in maintenance. Wait for the `retry_after` period.
+5. **Respect 503** — Wait for the `Retry-After` period before retrying.
 6. **Use `/bundle` for multi-data** — Instead of calling `/pulse` + `/sentiment` + `/funding` separately (3 requests), use `/bundle` (1 request), which uses one rate-limit slot instead of three. [Its page](/api/bundle) shows how its price compares with the three calls.

@@ -2,8 +2,11 @@
 import Brain3D from './Brain3D.astro';
 import prices from '../data/prices.json';
 import { priceOf, usd } from '../lib/pricing.mjs';
+import examples from '../data/response-examples.json';
 
 const pulsePrice = usd(priceOf(prices, 'pulse'));
+// The terminal shows values from a real engine response (F006), not typed-in ones.
+const sample = examples.examples.pulse;
 ---
 
 <section class="landing-hero pt-24">
@@ -147,10 +150,10 @@ const pulsePrice = usd(priceOf(prices, 'pulse'));
 
 <span class="text-[#60A5FA]">&#123;</span>
   <span class="text-[#93C5FD]">"coin"</span>: <span class="text-[#FBBF24]">"BTC"</span>,
-  <span class="text-[#93C5FD]">"price"</span>: &#123; <span class="text-[#93C5FD]">"current"</span>: <span class="text-[#60A5FA]">98765.43</span> &#125;,
+  <span class="text-[#93C5FD]">"price"</span>: &#123; <span class="text-[#93C5FD]">"current"</span>: <span class="text-[#60A5FA]">{sample.price.current}</span> &#125;,
   <span class="text-[#93C5FD]">"confluence"</span>: &#123;
-    <span class="text-[#93C5FD]">"score"</span>: <span class="text-[#60A5FA]">0.75</span>,
-    <span class="text-[#93C5FD]">"bias"</span>: <span class="text-[#FBBF24]">"bullish"</span>
+    <span class="text-[#93C5FD]">"score"</span>: <span class="text-[#60A5FA]">{sample.confluence.score}</span>,
+    <span class="text-[#93C5FD]">"bias"</span>: <span class="text-[#FBBF24]">"{sample.confluence.bias}"</span>
   <span class="text-[#60A5FA]">&#125;</span>
   ...
 <span class="text-[#60A5FA]">&#125;</span></code></pre>

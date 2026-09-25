@@ -160,31 +160,39 @@ async def get_bundle(coin: str, timeframes: str = "1h,4h") -> dict:
 
 ## Working with the Response
 
+Field meanings are on the [/pulse reference](/api/pulse). Three to get right: funding rates are **hourly**,
+open interest is in **contracts** (BTC for BTC, not USD), and `confluence.score` is a **bullish vote share**
+(1 = all bullish, 0 = all bearish), not a confidence.
+
 ```python
 async def analyze_market(coin: str):
     data = await get_pulse(coin, timeframes="1h,4h")
 
-    price = data["price"]["current"]
+    price = data["price"].get("current")
     confluence = data["confluence"]
     regime = data["regime"]["current"]
 
     print(f"\n{'='*50}")
     print(f"{coin} @ ${price:,.2f}  |  Regime: {regime}")
-    print(f"Confluence: {confluence['score']:.0%} {confluence['bias']}")
+    print(f"Confluence: {confluence['bias']} (bullish share {confluence['score']})")
     print(f"{'='*50}")
 
     for tf, analysis in data["timeframes"].items():
+        if "error" in analysis:
+            print(f"\n  [{tf}] {analysis['error']}")
+            continue
         ind = analysis["indicators"]
-        print(f"\n  [{tf}]")
-        print(f"    RSI:    {ind['rsi_14']:.1f} ({ind['rsi_zone']})")
-        print(f"    Trend:  {ind['trend']['label']} ({ind['trend']['ema_stack']})")
-        print(f"    BB Pos: {ind['bollinger']['position_pct']:.0%}")
-        print(f"    Z-Score: {ind['zscore_100']:.2f}")
+        print(f"\n  [{tf}] closed at {analysis['last_closed_candle_time']}")
+        print(f"    RSI:     {ind['rsi_14']} ({ind['rsi_zone']})")
+        print(f"    Trend:   {ind['trend']['label']} ({ind['trend']['ema_stack']})")
+        print(f"    BB Pos:  {ind['bollinger']['position_pct']:.0%}")
+        print(f"    Z-Score: {ind['zscore_100']}")
 
     deriv = data["derivatives"]
-    print(f"\n  Funding: {deriv['funding_annualized_pct']:.1f}% annualized")
-    print(f"  OI: ${deriv['open_interest']:,.0f}")
-    print(f"  Spread: {deriv['spread_bps']:.1f} bps")
+    oi_usd = deriv["open_interest"] * price  # open interest is in contracts
+    print(f"\n  Funding: {deriv['funding_rate']:.7f}/h = {deriv['funding_annualized_pct']:.2f}% annualized")
+    print(f"  OI: {deriv['open_interest']:,.0f} {data['price_unit'].split()[-1]} (${oi_usd:,.0f})")
+    print(f"  Impact spread: {deriv['impact_spread_bps']:.2f} bps")
 ```
 
 ## Error Handling
@@ -200,13 +208,17 @@ async def safe_pulse(coin: str) -> dict | None:
             return resp.json()
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 400:
-            print(f"Invalid coin: {coin}")
+            print(f"Invalid input (not charged): {e.response.json().get('detail')}")
+        elif e.response.status_code == 402:
+            print("Payment not accepted, e.g. not enough USDC (nothing settled)")
+        elif e.response.status_code == 404:
+            print(f"Unknown coin: {coin} (GET /coins lists them)")
         elif e.response.status_code == 429:
             print("Rate limited — wait and retry")
         elif e.response.status_code == 503:
-            print("Service unavailable — gateway in maintenance")
+            print(f"Unavailable; retry after {e.response.headers.get('Retry-After')} s")
         elif e.response.status_code == 504:
-            print("Engine timeout — try again")
+            print("Engine timeout (not charged) — try again")
         else:
             print(f"Error {e.response.status_code}: {e.response.text}")
         return None
@@ -228,7 +240,7 @@ async def scan_all_coins():
         data = await safe_pulse(coin)
         if data:
             c = data["confluence"]
-            print(f"  {coin}: {c['bias']} ({c['score']:.0%})")
+            print(f"  {coin}: {c['bias']} (bullish share {c['score']})")
 ```
 
 ## Tips
@@ -236,7 +248,7 @@ async def scan_all_coins():
 - **Reuse the client** within a session to avoid reconnection overhead
 - **Use `/bundle`** to get `/pulse`, 24h `/funding` and `/sentiment` in one request (one rate-limit slot instead of three); [its page](/api/bundle) shows how its price compares
 - **Check `/health`** before batch operations to avoid wasting payments on a degraded gateway
-- **Handle stale data** — check `meta.warning` for `"stale_data"` which means the underlying market data is >2 hours old
+- **Handle stale data** — `meta.warning` is `"stale_data"` when the price feed is more than 15 minutes old, and `meta.warnings` lists stalled inputs such as `"stale_candles"`
 
 ## Related
 

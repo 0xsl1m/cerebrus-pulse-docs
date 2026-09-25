@@ -13,14 +13,15 @@ Cerebrus Pulse is an API that delivers institutional-grade technical indicators,
 
 ## Key Features
 
-- **7 indicator families** — RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score, trend detection
-- **Multi-signal confluence** — Automated scoring (0.0–1.0) combining all indicators into a directional bias
-- **Derivatives data** — Funding rates, open interest, impact bid/ask, spread (bps)
-- **Market regime** — Current regime classification (RISK_ON, RISK_OFF, etc.)
-- **Chainlink basis analysis** — HL perpetual oracle vs Chainlink aggregated spot price, measuring exchange premium/discount
-- **USDC collateral health** — Real-time depeg monitoring via Chainlink oracle with risk classification
-- **Market Stress Index** — Cross-chain arbitrage-derived stress signal (LOW/MODERATE/HIGH/EXTREME)
-- **CEX-DEX divergence** — Real-time price comparison across centralized and decentralized exchanges for 13 tokens
+- **7 indicator families** — RSI, EMAs (20/50/200), ATR, Bollinger Bands, VWAP, Z-score and EMA trend, on closed candles only
+- **Confluence vote share** — Four indicators vote on each timeframe; the score (0–1) is the bullish share. A heuristic, not a validated signal
+- **Derivatives data** — Hourly funding (annualized ×24×365), open interest in contracts, impact prices and spread
+- **Market regime** — The trading system's regime label (for example `risk_on`), flagged when stale
+- **Perp basis** — Hyperliquid's perp premium to its oracle, plus how far the oracle sits from Chainlink spot
+- **USDC collateral health** — USDC peg status from the Chainlink feed on Arbitrum
+- **Market Stress Index** — A stress level from cross-chain arbitrage scans (LOW/MODERATE/HIGH/EXTREME)
+- **CEX-DEX divergence** — Coinbase against on-chain prices for the tokens the scanner covers (15 on 2026-09-24)
+- **Liquidation zones** — A model of where liquidations cluster by leverage tier, with its assumptions stated
 - **6 timeframes** — 5-minute, 15-minute, 1-hour, 4-hour, daily, weekly analysis
 - **50+ coins** — Major Hyperliquid perpetuals (BTC, ETH, SOL, and more)
 - **Dual-chain payments** — Pay with USDC on Base or Solana via x402
