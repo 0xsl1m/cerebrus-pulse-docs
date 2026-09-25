@@ -157,7 +157,7 @@ export function buildLlms(data = loadData()) {
     '',
     '## Try it free',
     '',
-    `- [Free demo](${API}/demo/BTC): \`GET /demo/{coin}\` returns the live /pulse analysis (1h, 4h), cached 60 s, 3 requests a minute, no wallet.`,
+    `- [Free demo](${API}/demo/BTC): \`GET /demo/{coin}\` returns the full /pulse analysis (1h, 4h) for BTC or ETH, cached 60 s, 3 requests a minute, no wallet.`,
     `- [Coin list](${API}/coins): \`GET /coins\`, free.`,
     `- [Health](${API}/health): \`GET /health\`, free.`,
     '',

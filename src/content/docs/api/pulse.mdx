@@ -14,8 +14,9 @@ Multi-timeframe technical analysis for one Hyperliquid perpetual: indicators com
 each requested timeframe, a derivatives snapshot, the market regime and a confluence vote share.
 
 :::tip[Try it free first]
-`GET /demo/{coin}` returns this response for 1h and 4h, cached for 60 seconds, 3 requests per minute, no
-wallet. It adds `meta.demo`, `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and `meta.why_join`.
+`GET /demo/BTC` and `GET /demo/ETH` return this response for 1h and 4h, cached for 60 seconds, 3 requests per
+minute, no wallet. Other coins answer 403 with the paid route. The demo adds `meta.demo`, `meta.demo_coins`,
+`meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and `meta.why_join`.
 :::
 
 ## Request

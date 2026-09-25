@@ -134,11 +134,12 @@ export function buildOpenApi(prices, examples, serverPy) {
   paths['/coins'] = { get: { summary: 'Supported perpetuals', responses: { 200: { description: 'OK' } } } };
   paths['/demo/{coin}'] = {
     get: {
-      summary: 'Free demo: live pulse analysis (1h, 4h), cached 60 s',
-      description: 'No payment. Rate limited to 3 requests per minute per IP.',
-      parameters: [{ name: 'coin', in: 'path', required: true, schema: { type: 'string' }, description: 'Perpetual market symbol (e.g. BTC); see /coins' }],
+      summary: 'Free demo: full pulse analysis (1h, 4h) for BTC and ETH, cached 60 s',
+      description: 'No payment. BTC and ETH only; other coins are served by the paid /pulse/{coin}. Rate limited to 3 requests per minute per IP.',
+      parameters: [{ name: 'coin', in: 'path', required: true, schema: { type: 'string', enum: ['BTC', 'ETH'] }, description: 'BTC or ETH' }],
       responses: {
         200: { description: 'Pulse analysis with demo metadata', content: json(examples.examples.pulse) },
+        403: { description: 'A supported coin outside the demo; names the paid route' },
         404: { description: 'Unknown coin, with suggestions' },
         429: error('Demo rate limit exceeded (3/min/IP)'),
       },

@@ -1,6 +1,7 @@
 ---
 // Interactive API demo — fetches live data from the free /demo endpoint
-const sampleCoins = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'AVAX', 'LINK'];
+// The free demo serves BTC and ETH only (gateway 3d61f2a); other coins answer 403.
+const sampleCoins = ['BTC', 'ETH'];
 ---
 
 <div class="section-divider"></div>
@@ -58,7 +59,7 @@ const sampleCoins = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'AVAX', 'LINK'];
       <!-- Bottom CTA -->
       <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p class="text-sm text-[#64748B]">
-          Demo returns <span class="text-[#60A5FA]">1h + 4h timeframes</span>. Paid endpoints unlock <span class="text-[#FBBF24]">all 6 timeframes</span> and <span class="text-[#22C55E]">higher rate limits</span>.
+          The free demo covers <span class="text-[#60A5FA]">BTC and ETH, 1h + 4h</span>. Paid endpoints unlock <span class="text-[#FBBF24]">every supported coin, all 6 timeframes</span> and <span class="text-[#22C55E]">higher rate limits</span>.
         </p>
         <a href="/api/pulse" class="btn-primary whitespace-nowrap" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
           Full API Docs

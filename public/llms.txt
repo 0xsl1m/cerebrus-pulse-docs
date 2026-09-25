@@ -7,7 +7,7 @@
 
 ## Try it free
 
-- [Free demo](https://api.cerebruspulse.xyz/demo/BTC): `GET /demo/{coin}` returns the live /pulse analysis (1h, 4h), cached 60 s, 3 requests a minute, no wallet.
+- [Free demo](https://api.cerebruspulse.xyz/demo/BTC): `GET /demo/{coin}` returns the full /pulse analysis (1h, 4h) for BTC or ETH, cached 60 s, 3 requests a minute, no wallet.
 - [Coin list](https://api.cerebruspulse.xyz/coins): `GET /coins`, free.
 - [Health](https://api.cerebruspulse.xyz/health): `GET /health`, free.
 
@@ -38,7 +38,7 @@ with a 4xx or failing with a 5xx is not charged.
 | `GET /cex-dex/{token}` | $0.02 USDC | Coinbase vs DEX/Chainlink price divergence for one token |
 | `GET /liquidations/{coin}` | $0.03 USDC | Modelled liquidation zones by leverage tier, with cascade risk |
 | `GET /bundle/{coin}` | $0.05 USDC | /pulse output plus 24h funding statistics and sentiment in one call |
-| `GET /demo/{coin}` | Free | Live /pulse analysis (1h, 4h), cached 60 s, 3 requests/min, no wallet |
+| `GET /demo/{coin}` | Free | Full /pulse analysis (1h, 4h) for BTC and ETH, cached 60 s, 3 requests/min, no wallet |
 | `GET /health` | Free | Gateway health status |
 | `GET /coins` | Free | List the supported perpetuals |
 

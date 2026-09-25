@@ -80,7 +80,7 @@ export const ENDPOINT_ORDER = [
 ];
 
 export const FREE_ENDPOINTS = [
-  { path: '/demo/{coin}', summary: 'Live /pulse analysis (1h, 4h), cached 60 s, 3 requests/min, no wallet' },
+  { path: '/demo/{coin}', summary: 'Full /pulse analysis (1h, 4h) for BTC and ETH, cached 60 s, 3 requests/min, no wallet' },
   { path: '/health', summary: 'Gateway health status' },
   { path: '/coins', summary: 'List the supported perpetuals' },
 ];

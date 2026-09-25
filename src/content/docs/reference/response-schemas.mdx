@@ -66,8 +66,8 @@ The engine computes each response; the gateway passes it through unchanged excep
 - `meta.disclaimer`, on every engine response while the operator leaves it on.
 - `regime.stale`, `regime.age_seconds` and `regime.note`, plus `stale_regime` in `meta.warnings`, when the
   market regime is more than 6 hours old.
-- On the free `/demo/{coin}`: `meta.demo`, `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and
-  `meta.why_join`.
+- On the free `/demo/{coin}` (BTC and ETH only): `meta.demo`, `meta.demo_coins`, `meta.cache_ttl_seconds`,
+  `meta.upgrade`, `meta.join` and `meta.why_join`.
 
 A paid response also carries the x402 settlement receipt in the `PAYMENT-RESPONSE` header.
 

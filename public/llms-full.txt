@@ -60,7 +60,7 @@ Prices come from the gateway's payment routes; the 402 response always states th
 | `GET /cex-dex/{token}` | $0.02 USDC | Coinbase vs DEX/Chainlink price divergence for one token |
 | `GET /liquidations/{coin}` | $0.03 USDC | Modelled liquidation zones by leverage tier, with cascade risk |
 | `GET /bundle/{coin}` | $0.05 USDC | /pulse output plus 24h funding statistics and sentiment in one call |
-| `GET /demo/{coin}` | Free | Live /pulse analysis (1h, 4h), cached 60 s, 3 requests/min, no wallet |
+| `GET /demo/{coin}` | Free | Full /pulse analysis (1h, 4h) for BTC and ETH, cached 60 s, 3 requests/min, no wallet |
 | `GET /health` | Free | Gateway health status |
 | `GET /coins` | Free | List the supported perpetuals |
 
@@ -92,13 +92,13 @@ Get real-time technical analysis data from Cerebrus Pulse in under 5 minutes.
 
 ## Try the Free Demo First
 
-No wallet needed — the `/demo/{coin}` endpoint returns live 1h + 4h analysis for free (3 requests/min):
+No wallet needed — the `/demo/{coin}` endpoint returns the full 1h + 4h analysis for **BTC and ETH**, free (3 requests/min):
 
 ```bash
 curl https://api.cerebruspulse.xyz/demo/BTC
 ```
 
-Ready for full access with all 6 timeframes and higher rate limits? Set up x402 payments below.
+Ready for every supported coin, all 6 timeframes and higher rate limits? Set up x402 payments below.
 
 ## Prerequisites
 
@@ -571,8 +571,9 @@ Multi-timeframe technical analysis for one Hyperliquid perpetual: indicators com
 each requested timeframe, a derivatives snapshot, the market regime and a confluence vote share.
 
 > **Try it free first:**
-> `GET /demo/{coin}` returns this response for 1h and 4h, cached for 60 seconds, 3 requests per minute, no
-> wallet. It adds `meta.demo`, `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and `meta.why_join`.
+> `GET /demo/BTC` and `GET /demo/ETH` return this response for 1h and 4h, cached for 60 seconds, 3 requests per
+> minute, no wallet. Other coins answer 403 with the paid route. The demo adds `meta.demo`, `meta.demo_coins`,
+> `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and `meta.why_join`.
 
 ## Request
 
@@ -3727,8 +3728,8 @@ The engine computes each response; the gateway passes it through unchanged excep
 - `meta.disclaimer`, on every engine response while the operator leaves it on.
 - `regime.stale`, `regime.age_seconds` and `regime.note`, plus `stale_regime` in `meta.warnings`, when the
   market regime is more than 6 hours old.
-- On the free `/demo/{coin}`: `meta.demo`, `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and
-  `meta.why_join`.
+- On the free `/demo/{coin}` (BTC and ETH only): `meta.demo`, `meta.demo_coins`, `meta.cache_ttl_seconds`,
+  `meta.upgrade`, `meta.join` and `meta.why_join`.
 
 A paid response also carries the x402 settlement receipt in the `PAYMENT-RESPONSE` header.
 
@@ -3899,7 +3900,7 @@ Content-Type: application/json
 
 ### Free Endpoints
 
-`GET /health` and `GET /coins` are **not rate limited**. The free `GET /demo/{coin}` allows 3 requests per minute per IP.
+`GET /health` and `GET /coins` are **not rate limited**. The free `GET /demo/{coin}` (BTC and ETH only) allows 3 requests per minute per IP.
 
 ## Error Codes
 
@@ -3982,7 +3983,7 @@ Cerebrus services are available through three protocols. Choose based on your us
 | `GET /cex-dex/{token}` | $0.02 USDC | Coinbase vs DEX/Chainlink price divergence for one token |
 | `GET /liquidations/{coin}` | $0.03 USDC | Modelled liquidation zones by leverage tier, with cascade risk |
 | `GET /bundle/{coin}` | $0.05 USDC | /pulse output plus 24h funding statistics and sentiment in one call |
-| `GET /demo/{coin}` | Free | Live /pulse analysis (1h, 4h), cached 60 s, 3 requests/min, no wallet |
+| `GET /demo/{coin}` | Free | Full /pulse analysis (1h, 4h) for BTC and ETH, cached 60 s, 3 requests/min, no wallet |
 | `GET /health` | Free | Gateway health status |
 | `GET /coins` | Free | List the supported perpetuals |
 
