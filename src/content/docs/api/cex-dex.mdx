@@ -1,88 +1,69 @@
 ---
-title: GET /cex-dex/{'{token}'}
-description: Real-time CEX-DEX price divergence for a specific token.
+title: GET /cex-dex/{token}
+description: Coinbase spot price against a DEX or Chainlink price for one token, from a snapshot refreshed every 5 minutes.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
-# GET /cex-dex/{'{token}'}
+# GET /cex-dex/\{token\}
 
 <PriceBadge endpoint="cex-dex" />
 
-Compares the centralized exchange (Coinbase) price against decentralized exchange (Chainlink/DeFiLlama) prices for a specific token in real time. Returns the divergence in basis points with directional bias.
+The divergence between Coinbase's price for a token and an on-chain price, from a snapshot the scanner
+refreshes every 5 minutes. The on-chain side is Chainlink where a feed exists; `dex_source` says which
+source it was.
+
+:::caution[Fallback prices]
+When no on-chain price was found, the scanner falls back to another source. A `dex_source` of `coinbase`
+means both sides are Coinbase's own price: the divergence then reads 0 and says nothing.
+:::
+
+This endpoint can be withdrawn: while Coinbase-derived data is switched off it answers 503 and quotes no price.
 
 ## Request
 
 ```
-GET https://api.cerebruspulse.xyz/cex-dex/{'{token}'}
+GET https://api.cerebruspulse.xyz/cex-dex/{token}
 ```
 
 ### Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `token` | string | Token symbol (e.g., `ETH`, `BTC`, `SOL`) |
-
-### Supported Tokens
-
-`ETH`, `BTC`, `LINK`, `UNI`, `AAVE`, `ARB`, `OP`, `SOL`, `AVAX`, `NEAR`, `SUI`, `DOGE`, `CRV`
-
-Aliases are supported: `WETH` → `ETH`, `WBTC` → `BTC`, `CHAINLINK` → `LINK`
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `token` | string | Yes | Token symbol, case-insensitive. Aliases: `WETH` → `ETH`, `WBTC` → `BTC`, `BITCOIN` → `BTC`, `ETHEREUM` → `ETH`. The snapshot on 2026-09-24 covered 15 tokens: AAVE, ARB, AVAX, BTC, CRV, DOGE, ETH, FIL, LINK, NEAR, OP, SEI, SOL, SUI, UNI. Another token gets a 400 listing the available ones, not charged. |
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `token` | string | Normalized token symbol |
-| `cex_price` | number | Coinbase price (USD) |
-| `dex_price` | number | On-chain price (USD) |
-| `dex_source` | string | DEX price source (e.g., `chainlink`, `defillama`) |
-| `divergence_bps` | number | Price divergence in basis points |
-| `direction` | string | `cex_premium` or `dex_premium` |
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `data_age_seconds` | number | Age of underlying snapshot |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `cex-dex` |
+| `token` | string | The token, after aliases |
+| `timestamp_iso` | string | When the snapshot was taken (ISO 8601) |
+| `divergence.cex_price` | number | Coinbase price (USD) |
+| `divergence.dex_price` | number | The on-chain price (USD) |
+| `divergence.dex_source` | string | Where `dex_price` came from: `chainlink`, or a fallback such as `coinbase` or `defillama` |
+| `divergence.spread_bps` | number | The divergence in basis points, as the scanner reports it |
+| `divergence.spread_pct` | number | The same in percent |
+| `divergence.direction` | string | `cex_premium` or `dex_premium` |
+| `divergence.interpretation` | string | The direction in words |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)); `data_age_seconds` is the snapshot's age, and above 600 seconds `meta.warning` is `stale_data` |
+| `meta.offering` | string | `pulse_cex_dex` |
+| `meta.refresh_interval_minutes` | number | `5` |
+| `meta.cex_source` | string | `coinbase` |
 
 ## Example
 
-```bash
-GET /cex-dex/ETH
-```
-
-```json
-{
-  "token": "ETH",
-  "cex_price": 3842.50,
-  "dex_price": 3839.20,
-  "dex_source": "chainlink",
-  "divergence_bps": 8.6,
-  "direction": "cex_premium",
-  "timestamp_iso": "2026-03-07T06:00:00Z",
-  "data_age_seconds": 95,
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 32
-  }
-}
-```
-
-:::tip[Divergence interpretation]
-- **< 10 bps**: Normal spread, markets well-aligned
-- **10–30 bps**: Mild divergence, may indicate directional flow
-- **30–100 bps**: Significant divergence, potential arb or stress signal
-- **> 100 bps**: Extreme divergence, likely market dislocation event
-:::
-
-:::note[Screener integration]
-The `/screener` endpoint now includes a `cex_dex_spread_bps` column for each token, giving you market-wide divergence data in a single call.
-:::
+<ResponseExample endpoint="cex-dex" />
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 402 | Payment required (standard x402 flow) |
-| 404 | Token not supported |
+| 400 | Invalid symbol (before any price is quoted), or a token the snapshot does not cover (not charged) |
+| 402 | Payment required (the standard x402 flow) |
 | 429 | Rate limit exceeded |
-| 503 | Data freshness guarantee exceeded |
+| 503 | Withdrawn, service disabled, payments down, or the CEX-DEX feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+The [/screener](/api/screener) carries the same divergence per market in `cex_dex_spread_bps`.

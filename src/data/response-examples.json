@@ -1,0 +1,936 @@
+{
+  "_meta": {
+    "generated_by": "scripts/build_response_examples.py",
+    "engine": "engine/pulse_engine.py",
+    "engine_clock": "2026-09-24T17:05:00Z",
+    "requests": {
+      "pulse": {
+        "endpoint": "pulse",
+        "coin": "BTC",
+        "timeframes": [
+          "1h",
+          "4h"
+        ]
+      },
+      "sentiment": {
+        "endpoint": "sentiment"
+      },
+      "funding": {
+        "endpoint": "funding",
+        "coin": "BTC",
+        "lookback_hours": 24
+      },
+      "bundle": {
+        "endpoint": "bundle",
+        "coin": "BTC",
+        "timeframes": [
+          "1h",
+          "4h"
+        ]
+      },
+      "screener": {
+        "endpoint": "screener",
+        "top_n": 3
+      },
+      "oi": {
+        "endpoint": "oi",
+        "coin": "BTC"
+      },
+      "spread": {
+        "endpoint": "spread",
+        "coin": "BTC"
+      },
+      "correlation": {
+        "endpoint": "correlation"
+      },
+      "basis": {
+        "endpoint": "basis",
+        "coin": "BTC"
+      },
+      "cex-dex": {
+        "endpoint": "cex-dex",
+        "coin": "ETH"
+      },
+      "depeg": {
+        "endpoint": "depeg"
+      },
+      "liquidations": {
+        "endpoint": "liquidations",
+        "coin": "BTC"
+      },
+      "arb": {
+        "endpoint": "arb",
+        "limit": 10
+      }
+    },
+    "no_example": {
+      "arb": "Stress index data not yet available"
+    },
+    "note": "Real engine output on captured feeds; lists cut to 3 items, meta.sources kept whole. Do not edit by hand."
+  },
+  "examples": {
+    "pulse": {
+      "coin": "BTC",
+      "market_symbol": "BTC",
+      "price_unit": "1 BTC",
+      "timestamp_iso": "2026-09-24T17:05:00Z",
+      "price": {
+        "current": 84512.5
+      },
+      "timeframes": {
+        "1h": {
+          "indicators": {
+            "rsi_14": 49.16,
+            "rsi_zone": "neutral",
+            "atr_14": 495.286126,
+            "atr_pct": 0.5881,
+            "ema_20": 84134.27882,
+            "ema_50": 84555.185241,
+            "ema_200": 82476.178645,
+            "vwap_20": 84001.13142,
+            "zscore_100": -0.173,
+            "bollinger": {
+              "upper": 84796.137043,
+              "middle": 84040.55,
+              "lower": 83284.962957,
+              "width_pct": 1.7981,
+              "position_pct": 0.6194
+            },
+            "trend": {
+              "direction": 1,
+              "label": "weak_bullish",
+              "ema_stack": "mixed"
+            }
+          },
+          "candle_freshness_seconds": 300.8,
+          "last_closed_candle_time": "2026-09-24T17:00:00Z",
+          "stale": false
+        },
+        "4h": {
+          "indicators": {
+            "rsi_14": 47.17,
+            "rsi_zone": "neutral",
+            "atr_14": 727.64216,
+            "atr_pct": 0.8715,
+            "ema_20": 84338.703076,
+            "ema_50": 82423.649073,
+            "ema_200": 77957.991913,
+            "vwap_20": 84859.417592,
+            "zscore_100": 1.1847,
+            "bollinger": {
+              "upper": 87855.263546,
+              "middle": 85270.85,
+              "lower": 82686.436454,
+              "width_pct": 6.0617,
+              "position_pct": 0.1557
+            },
+            "trend": {
+              "direction": 1,
+              "label": "weak_bullish",
+              "ema_stack": "mixed"
+            }
+          },
+          "candle_freshness_seconds": 3900.8,
+          "last_closed_candle_time": "2026-09-24T16:00:00Z",
+          "stale": false
+        }
+      },
+      "derivatives": {
+        "funding_rate": 0.0000125,
+        "funding_annualized_pct": 10.95,
+        "funding_interval_hours": 1,
+        "open_interest": 39370.3015,
+        "impact_bid": 84485.4,
+        "impact_ask": 84500,
+        "impact_spread_bps": 1.73,
+        "spread_bps": 1.73
+      },
+      "regime": {
+        "current": "unknown",
+        "as_of": 0
+      },
+      "confluence": {
+        "score": 0.62,
+        "bias": "bullish",
+        "signals": {
+          "rsi": "neutral",
+          "trend": "bullish",
+          "bollinger": "neutral",
+          "zscore": "neutral"
+        },
+        "bullish_count": 1,
+        "bearish_count": 0,
+        "per_timeframe": {
+          "1h": {
+            "score": 0.62,
+            "bull_fraction": 0.625,
+            "family_scores": {
+              "trend_following": 0.75,
+              "mean_reversion": 0.5
+            },
+            "bias": "bullish",
+            "signals": {
+              "rsi": "neutral",
+              "trend": "bullish",
+              "bollinger": "neutral",
+              "zscore": "neutral"
+            },
+            "bullish_count": 1,
+            "bearish_count": 0
+          },
+          "4h": {
+            "score": 0.75,
+            "bull_fraction": 0.75,
+            "family_scores": {
+              "trend_following": 0.75,
+              "mean_reversion": 0.75
+            },
+            "bias": "bullish",
+            "signals": {
+              "rsi": "neutral",
+              "trend": "bullish",
+              "bollinger": "bullish",
+              "zscore": "neutral"
+            },
+            "bullish_count": 2,
+            "bearish_count": 0
+          }
+        },
+        "aligned": true,
+        "alignment_score": 1,
+        "bull_fraction": 0.625,
+        "family_scores": {
+          "trend_following": 0.75,
+          "mean_reversion": 0.5
+        },
+        "primary_timeframe": "1h",
+        "score_type": "heuristic_vote_share",
+        "validated": false,
+        "definition": "score = bull_fraction = (bullish + 0.5*neutral) / votes on primary_timeframe; an unvalidated heuristic, not a confidence or probability"
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "cerebrus_pulse",
+        "execution_ms": 0,
+        "coins_available": 51,
+        "data_age_seconds": 60,
+        "as_of": {
+          "market_data": "2026-09-24T17:04:00Z",
+          "candles_1h": "2026-09-24T17:00:00Z",
+          "candles_4h": "2026-09-24T16:00:00Z"
+        },
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          }
+        ]
+      }
+    },
+    "sentiment": {
+      "endpoint": "sentiment",
+      "sentiment": {
+        "label": "bullish",
+        "as_of": 1790269024.020345,
+        "composite_method": "live_mean",
+        "sources_live": "5/8",
+        "live_sources": [
+          "fear_greed",
+          "news_vader",
+          "onchain"
+        ]
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_sentiment",
+        "execution_ms": 0,
+        "sources_live": "5/8",
+        "sources": [
+          {
+            "name": "Crypto Fear & Greed Index by alternative.me",
+            "url": "https://alternative.me/crypto/fear-and-greed-index/"
+          },
+          {
+            "name": "News headlines from Cointelegraph, CoinDesk and Crypto News RSS feeds, scored for sentiment by Cerebrus Pulse"
+          },
+          {
+            "name": "DefiLlama",
+            "url": "https://defillama.com"
+          },
+          {
+            "name": "FRED, Federal Reserve Bank of St. Louis",
+            "url": "https://fred.stlouisfed.org",
+            "notice": "This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis."
+          },
+          {
+            "name": "CoinGecko",
+            "url": "https://www.coingecko.com",
+            "notice": "Powered by CoinGecko"
+          }
+        ]
+      }
+    },
+    "funding": {
+      "coin": "BTC",
+      "records": 23,
+      "lookback_hours": 24,
+      "avg_funding_rate": 0.0000081,
+      "annualized_pct": 7.09,
+      "funding_interval_hours": 1,
+      "current": 0.0000125,
+      "min": -0.00000723,
+      "max": 0.0000125,
+      "positive_pct": 82.6,
+      "endpoint": "funding",
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_funding",
+        "execution_ms": 0,
+        "as_of": {
+          "funding": "2026-09-24T16:00:00Z"
+        },
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          }
+        ]
+      }
+    },
+    "bundle": {
+      "endpoint": "bundle",
+      "coin": "BTC",
+      "market_symbol": "BTC",
+      "price_unit": "1 BTC",
+      "timestamp_iso": "2026-09-24T17:05:00Z",
+      "price": {
+        "current": 84512.5
+      },
+      "timeframes": {
+        "1h": {
+          "indicators": {
+            "rsi_14": 49.16,
+            "rsi_zone": "neutral",
+            "atr_14": 495.286126,
+            "atr_pct": 0.5881,
+            "ema_20": 84134.27882,
+            "ema_50": 84555.185241,
+            "ema_200": 82476.178645,
+            "vwap_20": 84001.13142,
+            "zscore_100": -0.173,
+            "bollinger": {
+              "upper": 84796.137043,
+              "middle": 84040.55,
+              "lower": 83284.962957,
+              "width_pct": 1.7981,
+              "position_pct": 0.6194
+            },
+            "trend": {
+              "direction": 1,
+              "label": "weak_bullish",
+              "ema_stack": "mixed"
+            }
+          },
+          "candle_freshness_seconds": 300.8,
+          "last_closed_candle_time": "2026-09-24T17:00:00Z",
+          "stale": false
+        },
+        "4h": {
+          "indicators": {
+            "rsi_14": 47.17,
+            "rsi_zone": "neutral",
+            "atr_14": 727.64216,
+            "atr_pct": 0.8715,
+            "ema_20": 84338.703076,
+            "ema_50": 82423.649073,
+            "ema_200": 77957.991913,
+            "vwap_20": 84859.417592,
+            "zscore_100": 1.1847,
+            "bollinger": {
+              "upper": 87855.263546,
+              "middle": 85270.85,
+              "lower": 82686.436454,
+              "width_pct": 6.0617,
+              "position_pct": 0.1557
+            },
+            "trend": {
+              "direction": 1,
+              "label": "weak_bullish",
+              "ema_stack": "mixed"
+            }
+          },
+          "candle_freshness_seconds": 3900.8,
+          "last_closed_candle_time": "2026-09-24T16:00:00Z",
+          "stale": false
+        }
+      },
+      "confluence": {
+        "score": 0.62,
+        "bias": "bullish",
+        "signals": {
+          "rsi": "neutral",
+          "trend": "bullish",
+          "bollinger": "neutral",
+          "zscore": "neutral"
+        },
+        "bullish_count": 1,
+        "bearish_count": 0,
+        "per_timeframe": {
+          "1h": {
+            "score": 0.62,
+            "bull_fraction": 0.625,
+            "family_scores": {
+              "trend_following": 0.75,
+              "mean_reversion": 0.5
+            },
+            "bias": "bullish",
+            "signals": {
+              "rsi": "neutral",
+              "trend": "bullish",
+              "bollinger": "neutral",
+              "zscore": "neutral"
+            },
+            "bullish_count": 1,
+            "bearish_count": 0
+          },
+          "4h": {
+            "score": 0.75,
+            "bull_fraction": 0.75,
+            "family_scores": {
+              "trend_following": 0.75,
+              "mean_reversion": 0.75
+            },
+            "bias": "bullish",
+            "signals": {
+              "rsi": "neutral",
+              "trend": "bullish",
+              "bollinger": "bullish",
+              "zscore": "neutral"
+            },
+            "bullish_count": 2,
+            "bearish_count": 0
+          }
+        },
+        "aligned": true,
+        "alignment_score": 1,
+        "bull_fraction": 0.625,
+        "family_scores": {
+          "trend_following": 0.75,
+          "mean_reversion": 0.5
+        },
+        "primary_timeframe": "1h",
+        "score_type": "heuristic_vote_share",
+        "validated": false,
+        "definition": "score = bull_fraction = (bullish + 0.5*neutral) / votes on primary_timeframe; an unvalidated heuristic, not a confidence or probability"
+      },
+      "derivatives": {
+        "funding_rate": 0.0000125,
+        "funding_annualized_pct": 10.95,
+        "funding_interval_hours": 1,
+        "open_interest": 39370.3015,
+        "impact_bid": 84485.4,
+        "impact_ask": 84500,
+        "impact_spread_bps": 1.73,
+        "spread_bps": 1.73
+      },
+      "funding_24h": {
+        "coin": "BTC",
+        "records": 23,
+        "lookback_hours": 24,
+        "avg_funding_rate": 0.0000081,
+        "annualized_pct": 7.09,
+        "funding_interval_hours": 1,
+        "current": 0.0000125,
+        "min": -0.00000723,
+        "max": 0.0000125,
+        "positive_pct": 82.6
+      },
+      "sentiment": {
+        "label": "bullish",
+        "as_of": 1790269024.020345,
+        "composite_method": "live_mean",
+        "sources_live": "5/8",
+        "live_sources": [
+          "fear_greed",
+          "news_vader",
+          "onchain"
+        ]
+      },
+      "regime": {
+        "current": "unknown",
+        "as_of": 0
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_bundle",
+        "execution_ms": 0,
+        "data_age_seconds": 60,
+        "as_of": {
+          "market_data": "2026-09-24T17:04:00Z",
+          "candles_1h": "2026-09-24T17:00:00Z",
+          "candles_4h": "2026-09-24T16:00:00Z",
+          "funding": "2026-09-24T16:00:00Z"
+        },
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          },
+          {
+            "name": "Crypto Fear & Greed Index by alternative.me",
+            "url": "https://alternative.me/crypto/fear-and-greed-index/"
+          },
+          {
+            "name": "News headlines from Cointelegraph, CoinDesk and Crypto News RSS feeds, scored for sentiment by Cerebrus Pulse"
+          },
+          {
+            "name": "DefiLlama",
+            "url": "https://defillama.com"
+          },
+          {
+            "name": "FRED, Federal Reserve Bank of St. Louis",
+            "url": "https://fred.stlouisfed.org",
+            "notice": "This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis."
+          },
+          {
+            "name": "CoinGecko",
+            "url": "https://www.coingecko.com",
+            "notice": "Powered by CoinGecko"
+          }
+        ]
+      }
+    },
+    "screener": {
+      "endpoint": "screener",
+      "coins_scanned": 3,
+      "top_n": 3,
+      "results": [
+        {
+          "coin": "ETH",
+          "market_symbol": "ETH",
+          "price_unit": "1 ETH",
+          "signal_strength": 0.952,
+          "rsi_14": 48.53,
+          "rsi_zone": "neutral",
+          "trend": "weak_bullish",
+          "zscore": -0.597,
+          "atr_pct": 0.6224,
+          "vol_regime": "LOW",
+          "funding_rate": 0.0000125,
+          "funding_bias": "neutral",
+          "confluence_bias": "bullish",
+          "confluence_score": 0.62,
+          "oi_trend": "FLAT",
+          "cex_dex_spread_bps": 4,
+          "cex_dex_direction": "cex_premium",
+          "price": 2688.45
+        },
+        {
+          "coin": "DOGE",
+          "market_symbol": "DOGE",
+          "price_unit": "1 DOGE",
+          "signal_strength": 0.795,
+          "rsi_14": 54.21,
+          "rsi_zone": "neutral",
+          "trend": "weak_bullish",
+          "zscore": 0.012,
+          "atr_pct": 1.0226,
+          "vol_regime": "NORMAL",
+          "funding_rate": 0.0000125,
+          "funding_bias": "neutral",
+          "confluence_bias": "neutral",
+          "confluence_score": 0.5,
+          "oi_trend": "FLAT",
+          "cex_dex_spread_bps": -1.4,
+          "cex_dex_direction": "dex_premium",
+          "price": 0.096249
+        },
+        {
+          "coin": "BTC",
+          "market_symbol": "BTC",
+          "price_unit": "1 BTC",
+          "signal_strength": 0.721,
+          "rsi_14": 49.16,
+          "rsi_zone": "neutral",
+          "trend": "weak_bullish",
+          "zscore": -0.173,
+          "atr_pct": 0.5881,
+          "vol_regime": "LOW",
+          "funding_rate": 0.0000125,
+          "funding_bias": "neutral",
+          "confluence_bias": "bullish",
+          "confluence_score": 0.62,
+          "oi_trend": "RISING",
+          "cex_dex_spread_bps": 4.3,
+          "cex_dex_direction": "cex_premium",
+          "price": 84512.5
+        }
+      ],
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_screener",
+        "execution_ms": 0,
+        "data_age_seconds": 60,
+        "as_of": {
+          "market_data": "2026-09-24T17:04:00Z",
+          "candles_1h": "2026-09-24T17:00:00Z",
+          "candles_4h": "2026-09-24T16:00:00Z",
+          "oi_history": "2026-09-24T16:45:00Z",
+          "cex_dex": "2026-09-24T16:59:05Z"
+        },
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          },
+          {
+            "name": "Coinbase Exchange",
+            "url": "https://www.coinbase.com"
+          },
+          {
+            "name": "Chainlink Data Feeds (Arbitrum One)",
+            "url": "https://data.chain.link"
+          }
+        ],
+        "cex_dex_data_age_seconds": 355.4,
+        "cex_dex_tokens_available": 15
+      }
+    },
+    "oi": {
+      "endpoint": "oi",
+      "coin": "BTC",
+      "market_symbol": "BTC",
+      "price_unit": "1 BTC",
+      "timestamp_iso": "2026-09-24T17:05:00Z",
+      "open_interest": {
+        "current": 39370.3015,
+        "delta_1h": 0.0154,
+        "delta_4h": 0.0312,
+        "delta_24h": 0.0063,
+        "delta_windows_seconds": {
+          "1h": 3901,
+          "4h": 14701,
+          "24h": 86701
+        },
+        "history_age_seconds": 1200.8,
+        "percentile": 88.5,
+        "percentile_window_hours": 25.8,
+        "trend": "RISING",
+        "price_change_4h": 0.0138,
+        "price_oi_divergence": "NONE"
+      },
+      "price": 84512.5,
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_oi",
+        "execution_ms": 0,
+        "data_age_seconds": 60,
+        "as_of": {
+          "market_data": "2026-09-24T17:04:00Z",
+          "oi_history": "2026-09-24T16:45:00Z",
+          "candles_1h": "2026-09-24T13:00:00Z"
+        },
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          }
+        ]
+      }
+    },
+    "spread": {
+      "endpoint": "spread",
+      "coin": "BTC",
+      "market_symbol": "BTC",
+      "price_unit": "1 BTC",
+      "timestamp_iso": "2026-09-24T17:05:00Z",
+      "spread": {
+        "impact_spread_bps": 1.73,
+        "bid_ask_spread_bps": 1.73,
+        "impact_bid": 84485.4,
+        "impact_ask": 84500,
+        "mid_price": 84492.7,
+        "mid_price_source": "impact_prices",
+        "estimated_slippage_bps": {
+          "$10k": 0.09,
+          "$50k": 0.19,
+          "$100k": 0.27,
+          "$500k": 0.61
+        },
+        "slippage_model": {
+          "formula": "impact_spread_bps / 2 * sqrt(notional_usd / 1e6)",
+          "calibrated": false,
+          "side_aware": false
+        },
+        "liquidity_score": 10
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_spread",
+        "execution_ms": 0,
+        "data_age_seconds": 60,
+        "deprecated": {
+          "spread.bid_ask_spread_bps": "the impact spread, not the top-of-book bid-ask; read spread.impact_spread_bps"
+        },
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          }
+        ]
+      }
+    },
+    "correlation": {
+      "endpoint": "correlation",
+      "timestamp_iso": "2026-09-24T17:05:00Z",
+      "btc_correlation": {
+        "BTC": 1,
+        "ETH": 0.9319,
+        "SOL": null,
+        "DOGE": 0.8839,
+        "XRP": null,
+        "AVAX": null,
+        "LINK": null,
+        "ARB": null,
+        "OP": null,
+        "SUI": null,
+        "NEAR": null,
+        "INJ": null,
+        "APT": null,
+        "ADA": null,
+        "PEPE": null
+      },
+      "correlation_stats": {
+        "ETH": {
+          "n": 30,
+          "stderr": 0.0244
+        },
+        "DOGE": {
+          "n": 30,
+          "stderr": 0.0406
+        }
+      },
+      "average_correlation": 0.9079,
+      "regime": "CORRELATED",
+      "sector_averages": {
+        "L1": 0.9319,
+        "Meme": 0.8839
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_correlation",
+        "execution_ms": 0,
+        "coins_analyzed": 3,
+        "window": "30h",
+        "lookback_bars": 30,
+        "timeframe": "1h",
+        "method": "Pearson r of 1h returns joined on candle time; stderr = (1 - r^2) / sqrt(n - 1)",
+        "lagging_coins": [],
+        "as_of": {
+          "candles_1h": "2026-09-24T17:00:00Z"
+        },
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          }
+        ]
+      }
+    },
+    "basis": {
+      "endpoint": "basis",
+      "coin": "BTC",
+      "market_symbol": "BTC",
+      "price_unit": "1 BTC",
+      "timestamp_iso": "2026-09-24T17:05:00Z",
+      "basis": {
+        "hl_mark_px": 84517,
+        "hl_oracle_px": 84539,
+        "chainlink_spot_px": 84501.01946422,
+        "basis_bps": -2.6,
+        "basis_pct": -0.026,
+        "premium_index_bps": -4.61,
+        "oracle_divergence_bps": 4.49,
+        "direction": "hl_discount",
+        "signal": "neutral",
+        "interpretation": "Perp trades at its oracle price: no significant premium"
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_basis",
+        "execution_ms": 0,
+        "basis_definition": "basis_bps: Hyperliquid mark vs its oracle (perp premium); oracle_divergence_bps: Hyperliquid oracle vs Chainlink spot",
+        "data_age_seconds": 60,
+        "chainlink_data_age_seconds": 55.6,
+        "chainlink_round_age_seconds": null,
+        "chainlink_feed_network": "arbitrum",
+        "hl_source": "mark_and_oracle",
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          },
+          {
+            "name": "Chainlink Data Feeds (Arbitrum One)",
+            "url": "https://data.chain.link"
+          }
+        ]
+      }
+    },
+    "cex-dex": {
+      "endpoint": "cex-dex",
+      "token": "ETH",
+      "timestamp_iso": "2026-09-24T16:59:05.418496+00:00",
+      "divergence": {
+        "cex_price": 2687.75,
+        "dex_price": 2686.6836,
+        "dex_source": "chainlink",
+        "spread_bps": 4,
+        "spread_pct": 0.04,
+        "direction": "cex_premium",
+        "interpretation": "CEX trading at premium to DEX"
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_cex_dex",
+        "execution_ms": 0,
+        "data_age_seconds": 355.4,
+        "refresh_interval_minutes": 5,
+        "cex_source": "coinbase",
+        "sources": [
+          {
+            "name": "Coinbase Exchange",
+            "url": "https://www.coinbase.com"
+          },
+          {
+            "name": "Chainlink Data Feeds (Arbitrum One)",
+            "url": "https://data.chain.link"
+          }
+        ]
+      }
+    },
+    "depeg": {
+      "endpoint": "depeg",
+      "timestamp_iso": "2026-09-24T17:05:00Z",
+      "usdc": {
+        "price_usd": 0.99988061,
+        "deviation_bps": 1.19,
+        "deviation_pct": 0.0119,
+        "peg_status": "HEALTHY",
+        "risk_level": "low",
+        "interpretation": "USDC trading within 10bps of peg — normal conditions"
+      },
+      "infrastructure": {
+        "arbitrum_sequencer": "up",
+        "chainlink_feeds_active": 38
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_depeg",
+        "execution_ms": 0,
+        "chainlink_data_age_seconds": 55.6,
+        "chainlink_round_age_seconds": null,
+        "oracle_network": "arbitrum",
+        "feed_address": "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3",
+        "sources": [
+          {
+            "name": "Chainlink Data Feeds (Arbitrum One)",
+            "url": "https://data.chain.link"
+          }
+        ]
+      }
+    },
+    "liquidations": {
+      "endpoint": "liquidations",
+      "coin": "BTC",
+      "market_symbol": "BTC",
+      "price_unit": "1 BTC",
+      "timestamp_iso": "2026-09-24T17:05:00Z",
+      "model_estimate": true,
+      "price": 84512.5,
+      "liquidation_zones": {
+        "longs": [
+          {
+            "price": 81670,
+            "leverage": "25x",
+            "estimated_liq_usd": 462159554,
+            "proximity_pct": 3.36
+          },
+          {
+            "price": 76566,
+            "leverage": "10x",
+            "estimated_liq_usd": 554491646,
+            "proximity_pct": 9.4
+          },
+          {
+            "price": 68059,
+            "leverage": "5x",
+            "estimated_liq_usd": 462159554,
+            "proximity_pct": 19.47
+          }
+        ],
+        "shorts": [
+          {
+            "price": 86292,
+            "leverage": "25x",
+            "estimated_liq_usd": 462159554,
+            "proximity_pct": 2.11
+          },
+          {
+            "price": 91270,
+            "leverage": "10x",
+            "estimated_liq_usd": 554491646,
+            "proximity_pct": 8
+          },
+          {
+            "price": 99567,
+            "leverage": "5x",
+            "estimated_liq_usd": 462159554,
+            "proximity_pct": 17.81
+          }
+        ]
+      },
+      "summary": {
+        "cascade_risk": "MODERATE",
+        "total_oi_usd": 3327282606,
+        "long_short_ratio": "50:50",
+        "total_at_risk_5pct": 924319108,
+        "nearest_cluster": {
+          "side": "short",
+          "price": 86292,
+          "distance_pct": 2.11,
+          "estimated_volume": 462159554
+        }
+      },
+      "meta": {
+        "provider": "Cerebrus Pulse",
+        "offering": "pulse_liquidations",
+        "execution_ms": 0,
+        "data_age_seconds": 60,
+        "methodology": "model estimate, not observed liquidations: assumed leverage tiers and OI shares, Hyperliquid maintenance margin 1/(2*maxLeverage), 24h VWAP as entry",
+        "assumptions": {
+          "max_leverage": 40,
+          "maintenance_margin_rate": 0.0125,
+          "assumed_oi_share_by_leverage": {
+            "3x": 0.1111,
+            "5x": 0.2778,
+            "10x": 0.3333,
+            "25x": 0.2778
+          },
+          "entry_price": 84010,
+          "long_short_split": "50:50 (open interest is equal on both sides of a perp)"
+        },
+        "as_of": {
+          "market_data": "2026-09-24T17:04:00Z",
+          "candles_1h": "2026-09-24T17:00:00Z"
+        },
+        "sources": [
+          {
+            "name": "Hyperliquid",
+            "url": "https://hyperliquid.xyz"
+          }
+        ]
+      }
+    }
+  }
+}

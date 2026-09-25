@@ -1,115 +1,109 @@
 ---
 title: Response Schemas
-description: Complete response schemas and field definitions for all Cerebrus Pulse endpoints.
+description: Units, conventions, enums and the common meta fields of every Cerebrus Pulse response, as the engine returns them.
 ---
 
 # Response Schemas
 
-Detailed field definitions and value ranges for all Pulse API responses.
+Every paid endpoint's page lists its own fields and shows a real engine response. This page covers what
+they share: units, the common `meta` block, enums, and what the gateway adds.
 
-## Pulse Response Schema
+The examples are real engine output on market data captured on 2026-09-24, copied from the gateway (the
+same examples it publishes to the x402 Bazaar and in `/openapi.json`). Nothing in them is hand-written.
 
-Returned by `GET /pulse/{coin}` and within the `pulse` key of `GET /bundle/{coin}`.
+## Units and conventions
 
-### Indicators
+| Convention | Detail |
+|------------|--------|
+| Prices | USD per `price_unit`. For most markets that is one token (`1 BTC`). Hyperliquid lists some tokens only as 1000-token markets: `PEPE` is the `kPEPE` market, so its prices are per `1000 PEPE` and `market_symbol` is `kPEPE`. `/basis` converts to per-token prices |
+| Open interest | Counted in contracts of `price_unit` (`derivatives.open_interest`, `open_interest.current`), **not USD**. Multiply by the price for USD. `/liquidations` reports USD (`total_oi_usd`) |
+| Funding | Hyperliquid funding rates are **hourly**. Annualized figures are `rate × 24 × 365 × 100`; `funding_interval_hours` is `1` |
+| Fractions | `open_interest.delta_*` and `price_change_4h` (`0.0312` = +3.12%), `bollinger.position_pct` (0 = lower band, 1 = upper band, outside 0–1 when the close is outside the bands), confluence scores (0–1) |
+| Percentages | Other `*_pct` fields are percentages: `atr_pct`, `width_pct`, `funding_annualized_pct`, `annualized_pct`, `positive_pct`, `basis_pct`, `spread_pct`, `deviation_pct`, `proximity_pct`, `distance_pct` |
+| Basis points | `*_bps` fields: 1 bp = 0.01% |
+| Times | `timestamp_iso` and every `meta.as_of` entry are ISO 8601 UTC strings. `regime.as_of` and `sentiment.as_of` are Unix seconds (numbers, possibly fractional; `0` when unknown) |
+| Candles | Indicators use closed candles only. `last_closed_candle_time` says when the newest one closed |
+| Missing values | A value that could not be computed is `null`, or the field is absent; never a made-up `0` |
 
-| Field | Type | Range | Description |
-|-------|------|-------|-------------|
-| `rsi_14` | number | 0–100 | Relative Strength Index (14-period) |
-| `rsi_zone` | string | enum | RSI classification (see below) |
-| `atr_14` | number | ≥0 | Average True Range, absolute price units |
-| `atr_pct` | number | ≥0 | ATR as percentage of current price |
-| `ema_20` | number | >0 | 20-period Exponential Moving Average |
-| `ema_50` | number | >0 | 50-period EMA |
-| `ema_200` | number | >0 | 200-period EMA |
-| `vwap_20` | number | >0 | Volume-Weighted Average Price (20-period) |
-| `zscore_100` | number | any | Standard deviations from 100-period mean |
+## Meta
 
-### RSI Zones
-
-| Zone | RSI Range | Meaning |
-|------|-----------|---------|
-| `overbought` | ≥ 70 | Potential reversal downward |
-| `bullish` | 60–70 | Upward momentum |
-| `neutral` | 40–60 | No clear directional bias |
-| `bearish` | 30–40 | Downward momentum |
-| `oversold` | ≤ 30 | Potential reversal upward |
-
-### Bollinger Bands
-
-| Field | Type | Range | Description |
-|-------|------|-------|-------------|
-| `upper` | number | >0 | Upper band (SMA + 2σ) |
-| `middle` | number | >0 | Middle band (20-period SMA) |
-| `lower` | number | >0 | Lower band (SMA - 2σ) |
-| `width_pct` | number | ≥0 | Band width as % of middle band |
-| `position_pct` | number | 0–1+ | Price position within bands. 0.0 = at lower band, 0.5 = middle, 1.0 = upper band. Can exceed 0–1 range when price is outside bands. |
-
-### Trend
-
-| Field | Type | Values | Description |
-|-------|------|--------|-------------|
-| `direction` | number | -1, 0, 1 | -1 = bearish, 0 = neutral, 1 = bullish |
-| `label` | string | `bullish`, `bearish`, `neutral` | Human-readable direction |
-| `ema_stack` | string | see below | EMA alignment classification |
-
-**EMA Stack Values:**
-
-| Value | Meaning |
-|-------|---------|
-| `bull_aligned` | EMA 20 > EMA 50 > EMA 200 — strong bullish structure |
-| `bear_aligned` | EMA 20 < EMA 50 < EMA 200 — strong bearish structure |
-| `mixed` | EMAs are crossing — transitional period |
-| `flat` | EMAs are converged — low volatility, directionless |
-
-### Derivatives
+Most responses carry these fields in `meta`. Endpoint-specific `meta` fields are on each endpoint's page.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `funding_rate` | number | Current 8-hour funding rate (raw decimal, e.g., 0.0001 = 0.01%) |
-| `funding_annualized_pct` | number | Annualized funding rate percentage |
-| `open_interest` | number | Total open interest in USD notional |
-| `impact_bid` | number | Impact bid price (large sell order) |
-| `impact_ask` | number | Impact ask price (large buy order) |
-| `spread_bps` | number | Bid-ask spread in basis points |
+| `meta.provider` | string | `Cerebrus Pulse` |
+| `meta.offering` | string | Which analysis produced the response (see the table below) |
+| `meta.execution_ms` | number | Engine time for this request, in milliseconds (0 in the captured examples) |
+| `meta.data_age_seconds` | number | Age of the main input feed when the response was computed |
+| `meta.as_of.<input>` | string | When each input the response used was current, keyed by input: `market_data`, `candles_<tf>`, `funding`, `oi_history`, `cex_dex`, `arb_log` |
+| `meta.sources[].name` | string | A third party whose data the response is built from: Hyperliquid, Chainlink Data Feeds, DefiLlama, CoinGecko, alternative.me, FRED, the news RSS feeds or Coinbase Exchange |
+| `meta.sources[].url` | string | That provider's site, where it has one |
+| `meta.sources[].notice` | string | Optional. An attribution notice the provider requires (for example "Powered by CoinGecko") |
+| `meta.warning` | string | Optional. `stale_data` (the price feed is more than 15 minutes old, or the CEX-DEX snapshot more than 10) or `stale_chainlink_data` (the Chainlink snapshot is more than 2 minutes old) |
+| `meta.warnings` | array | Optional. `stale_candles`, `stale_oi_history`, `lagging_coins`, `chainlink_price_implausible`, `stale_data`, and `stale_regime` (added by the gateway) |
+| `meta.disclaimer` | string | Optional. A not-financial-advice notice the gateway adds to live responses |
 
-### Confluence
+| Endpoint | `meta.offering` |
+|----------|-----------------|
+| `/pulse`, `/demo` | `cerebrus_pulse` |
+| `/bundle` | `pulse_bundle` |
+| `/screener` | `pulse_screener` |
+| `/sentiment` | `pulse_sentiment` |
+| `/funding` | `pulse_funding` |
+| `/oi` | `pulse_oi` |
+| `/spread` | `pulse_spread` |
+| `/correlation` | `pulse_correlation` |
+| `/basis` | `pulse_basis` |
+| `/cex-dex` | `pulse_cex_dex` |
+| `/depeg` | `pulse_depeg` |
+| `/liquidations` | `pulse_liquidations` |
+| `/arb` | `pulse_stress` |
 
-| Field | Type | Range | Description |
-|-------|------|-------|-------------|
-| `score` | number | 0.0–1.0 | Multi-signal confidence. Higher = stronger signal. |
-| `bias` | string | enum | `bullish`, `bearish`, or `neutral` |
-| `signals` | object | — | Per-indicator signal directions |
-| `bullish_count` | number | 0–4 | Number of indicators signaling bullish |
-| `bearish_count` | number | 0–4 | Number of indicators signaling bearish |
+## What the gateway adds
 
-**Signal sources:** `rsi`, `trend`, `bollinger`, `zscore` — each can be `bullish`, `bearish`, or `neutral`.
+The engine computes each response; the gateway passes it through unchanged except for:
 
-### Regime
+- `meta.disclaimer`, on every engine response while the operator leaves it on.
+- `regime.stale`, `regime.age_seconds` and `regime.note`, plus `stale_regime` in `meta.warnings`, when the
+  market regime is more than 6 hours old.
+- On the free `/demo/{coin}`: `meta.demo`, `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and
+  `meta.why_join`.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `current` | string | Market regime label (e.g., `RISK_ON`, `RISK_OFF`) |
-| `as_of` | number | Unix timestamp when regime was last calculated |
+A paid response also carries the x402 settlement receipt in the `PAYMENT-RESPONSE` header.
 
-### Meta
+## The confluence score
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `provider` | string | Always `"Cerebrus Pulse"` |
-| `offering` | string | Always `"cerebrus_pulse"` |
-| `execution_ms` | number | Server processing time in milliseconds |
-| `coins_available` | number | Total coins supported |
-| `data_age_seconds` | number | Age of the underlying market data |
-| `warning` | string? | Optional. `"stale_data"` if market data is older than 2 hours. |
+`confluence.score` (in `/pulse`, `/bundle` and the screener's `confluence_score`) is a **vote share**:
+four indicators vote bullish (1), neutral (0.5) or bearish (0) on the primary timeframe, and the score is the
+average. 1 means every vote is bullish, 0.5 balanced or neutral, 0 every vote bearish. It is not a confidence
+or a probability, and it has not been validated as predictive (`confluence.validated` is `false`). Two votes
+follow the trend (RSI, EMA trend) and two fade it (Bollinger position, z-score); `family_scores` shows each
+pair on its own. The top-level fields describe `primary_timeframe` only; `per_timeframe` has the rest.
 
-## Candle Freshness
+## Enums
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `candle_freshness_seconds` | number | Seconds since the most recent candle closed. Lower = more recent data. |
+| Field | Values |
+|-------|--------|
+| `rsi_zone` | `overbought`, `bullish`, `neutral`, `bearish`, `oversold`, `unknown` |
+| `trend.label`, screener `trend` | `bullish`, `weak_bullish`, `neutral`, `weak_bearish`, `bearish`, `insufficient_data` |
+| `trend.ema_stack` | `bull_aligned`, `bear_aligned`, `mixed`, `flat`, `unknown` |
+| `confluence.bias`, `confluence_bias` | `bullish`, `bearish`, `neutral`, `unknown` |
+| `regime.current` | A lower-case label from the trading system (e.g. `risk_on`, `risk_off`) or `unknown`; treat unrecognized values as opaque |
+| `sentiment.label` | `very_bearish`, `bearish`, `neutral`, `bullish`, `very_bullish`, `unknown` |
+| `vol_regime` | `LOW`, `NORMAL`, `HIGH`, `EXTREME`, `UNKNOWN` |
+| `funding_bias` | `long_pays`, `short_pays`, `neutral` |
+| `oi_trend`, `open_interest.trend` | `RISING`, `FALLING`, `FLAT`, `UNKNOWN` |
+| `price_oi_divergence` | `BEARISH_DIV`, `BULLISH_DIV`, `NONE`, `UNKNOWN` |
+| correlation `regime` | `CORRELATED`, `MIXED`, `DECORRELATED`, `UNKNOWN` |
+| `basis.direction` | `hl_premium`, `hl_discount`, `aligned` |
+| `basis.signal` | `neutral`, `mildly_bullish`, `mildly_bearish`, `bearish_contrarian`, `bullish_contrarian` |
+| `divergence.direction`, `cex_dex_direction` | `cex_premium`, `dex_premium` |
+| `usdc.peg_status` | `HEALTHY`, `ELEVATED`, `WARNING`, `CRITICAL` |
+| `infrastructure.arbitrum_sequencer` | `up`, `down`, `unknown` |
+| `summary.cascade_risk` | `EXTREME`, `HIGH`, `MODERATE`, `LOW`, `UNKNOWN` |
+| `stress_index.level` | `LOW`, `MODERATE`, `HIGH`, `EXTREME` |
 
-Freshness varies by timeframe:
-- **15m**: Typically 0–900 seconds
-- **1h**: Typically 0–3600 seconds
-- **4h**: Typically 0–14400 seconds
+## Errors
+
+Errors are JSON with a `detail` string; a refused parameter also names it in `param`. See
+[Rate Limits & Errors](/reference/rate-limits).

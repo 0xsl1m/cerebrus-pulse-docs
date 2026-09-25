@@ -1,18 +1,24 @@
 ---
 title: GET /liquidations/{coin}
-description: Liquidation heatmap API — estimated liquidation zones, cascade risk scoring, and long/short ratio for Hyperliquid perpetuals.
+description: Modelled liquidation zones for one Hyperliquid perpetual by leverage tier, from open interest, Hyperliquid's maintenance margin and a 24h VWAP entry, with cascade risk and the nearest cluster.
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /liquidations/\{coin\}
 
-<PriceBadge endpoint="liquidations" /> <Badge text="New" variant="note" />
+<PriceBadge endpoint="liquidations" /> <Badge text="Model estimate" variant="caution" />
 
-Returns estimated liquidation zones across 5 leverage tiers (3x, 5x, 10x, 25x, 50x) for both longs and shorts. Includes cascade risk scoring, long/short ratio derived from funding skew, and nearest cluster alerts.
+Where liquidations would cluster if open interest were spread across leverage tiers the way the model
+assumes. This is a **model, not observed liquidations**: Hyperliquid publishes no per-leverage open
+interest, so the shares per tier are assumptions, stated in `meta.assumptions`.
 
-**Why it matters:** Liquidation clusters act as magnets for price action. When price approaches a dense zone, forced liquidations can trigger cascading moves. This endpoint maps those zones so agents and traders can anticipate volatility events.
+How it is built: every position is assumed to have entered at the 24-hour VWAP. For each leverage tier from
+3x up to the market's maximum leverage, the liquidation price follows Hyperliquid's isolated-margin rule with
+its maintenance margin of `1 / (2 × max leverage)`. The USD open interest is split 50:50 between longs and
+shorts (every perp position has a counterparty) and across the tiers by the assumed shares.
 
 ## Request
 
@@ -24,88 +30,55 @@ GET https://api.cerebruspulse.xyz/liquidations/{coin}
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`, `SOL`). Case-insensitive. |
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](/api/coins) lists them. |
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `coin` | string | Coin ticker |
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `price` | number | Current mid price (USD) |
-| `zones` | object | Liquidation zones grouped by side |
-| `zones.longs` | array | Long liquidation zones (descending by estimated notional) |
-| `zones.shorts` | array | Short liquidation zones (ascending by estimated notional) |
-| `zones.longs[].price` | number | Estimated liquidation price |
-| `zones.longs[].leverage` | string | Leverage tier (e.g., `"10x"`) |
-| `zones.longs[].estimated_notional` | number | Estimated notional at risk (USD) |
-| `cascade_risk` | object | Cascade risk assessment |
-| `cascade_risk.score` | number | Cascade risk score (0.0–1.0) |
-| `cascade_risk.level` | string | `LOW`, `MODERATE`, `HIGH`, `EXTREME` |
-| `cascade_risk.nearest_cluster` | object | Nearest significant liquidation cluster |
-| `cascade_risk.nearest_cluster.side` | string | `long` or `short` |
-| `cascade_risk.nearest_cluster.price` | number | Cluster price level |
-| `cascade_risk.nearest_cluster.distance_pct` | number | Distance from current price (%) |
-| `long_short_ratio` | number | Estimated long/short ratio from funding skew |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `liquidations` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | What prices are quoted per: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `model_estimate` | boolean | `true`: every figure below is modelled |
+| `price` | number | Hyperliquid mid price |
+| `liquidation_zones.longs[].price` | number | Liquidation price of long positions at this tier, below the current price (5 significant figures) |
+| `liquidation_zones.longs[].leverage` | string | The tier, e.g. `25x` |
+| `liquidation_zones.longs[].estimated_liq_usd` | number | USD open interest the model places at this tier on this side |
+| `liquidation_zones.longs[].proximity_pct` | number | Distance from the current price, in percent. Zones are sorted nearest first |
+| `liquidation_zones.shorts[].price` | number | Liquidation price of short positions at this tier, above the current price |
+| `liquidation_zones.shorts[].leverage` | string | The tier |
+| `liquidation_zones.shorts[].estimated_liq_usd` | number | USD open interest placed at this tier on this side |
+| `liquidation_zones.shorts[].proximity_pct` | number | Distance from the current price, in percent |
+| `summary.cascade_risk` | string | From the nearest zone's distance: `EXTREME` (< 1%), `HIGH` (< 2%), `MODERATE` (< 5%), `LOW`, or `UNKNOWN` with no zone |
+| `summary.total_oi_usd` | number | Open interest in USD: contracts × price |
+| `summary.long_short_ratio` | string | Always `50:50`: open interest is equal on both sides of a perp |
+| `summary.total_at_risk_5pct` | number | Modelled USD in zones within 5% of the price |
+| `summary.nearest_cluster.side` | string | `long` or `short` |
+| `summary.nearest_cluster.price` | number | The nearest zone's price |
+| `summary.nearest_cluster.distance_pct` | number | Its distance in percent |
+| `summary.nearest_cluster.estimated_volume` | number | Its modelled USD. `nearest_cluster` is null when there is no zone |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_liquidations` |
+| `meta.methodology` | string | The model in one sentence |
+| `meta.assumptions.max_leverage` | number | The market's maximum leverage on Hyperliquid |
+| `meta.assumptions.maintenance_margin_rate` | number | `1 / (2 × max_leverage)` |
+| `meta.assumptions.assumed_oi_share_by_leverage.<leverage>` | number | The assumed share of open interest per tier (`3x`, `5x`, `10x`, `25x`, `50x`, up to the maximum), summing to 1 |
+| `meta.assumptions.entry_price` | number | The 24-hour VWAP used as every position's entry |
+| `meta.assumptions.long_short_split` | string | `50:50`, with the reason |
 
 ## Example
 
-```bash
-GET /liquidations/BTC
-```
-
-```json
-{
-  "coin": "BTC",
-  "timestamp_iso": "2026-03-20T10:00:00Z",
-  "price": 87250.00,
-  "zones": {
-    "longs": [
-      { "price": 85000.00, "leverage": "10x", "estimated_notional": 45000000 },
-      { "price": 82500.00, "leverage": "5x", "estimated_notional": 28000000 },
-      { "price": 80000.00, "leverage": "3x", "estimated_notional": 12000000 }
-    ],
-    "shorts": [
-      { "price": 89500.00, "leverage": "10x", "estimated_notional": 38000000 },
-      { "price": 92000.00, "leverage": "5x", "estimated_notional": 22000000 },
-      { "price": 95000.00, "leverage": "3x", "estimated_notional": 9000000 }
-    ]
-  },
-  "cascade_risk": {
-    "score": 0.62,
-    "level": "MODERATE",
-    "nearest_cluster": {
-      "side": "long",
-      "price": 85000.00,
-      "distance_pct": 2.58
-    }
-  },
-  "long_short_ratio": 1.35,
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 210
-  }
-}
-```
-
-:::tip[Usage]
-Pair `/liquidations` with `/oi` for a complete picture of positioning risk. Rising OI + dense nearby liquidation clusters = elevated cascade probability.
-:::
-
-## Next Steps
-
-- **[GET /oi/\{coin\}](/api/oi)** — Open interest analysis to complement liquidation data
-- **[GET /pulse/\{coin\}](/api/pulse)** — Full technical analysis with regime detection
-- **[GET /screener](/api/screener)** — Scan all coins for the strongest setups
-- **[x402 Payments](/guides/x402-payments)** — Understand the payment flow
+<ResponseExample endpoint="liquidations" />
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 400 | Invalid coin |
-| 402 | Payment required (standard x402 flow) |
+| 400 | No price, open interest or maximum leverage for the market (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
 | 429 | Rate limit exceeded |
-| 503 | Data freshness guarantee exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |

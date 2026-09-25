@@ -9,6 +9,11 @@
 // A2A agent card in public/.well-known/ gets its prices and version filled in
 // from the same data, as the gateway fills its own card.
 //
+// Response examples: service/response_examples.json is real engine output on
+// captured feeds (the gateway's scripts/build_response_examples.py), the same
+// file the gateway publishes as Bazaar and OpenAPI examples. It is copied to
+// src/data/response-examples.json and the API reference renders it (F006).
+//
 // The gateway repo is local-only, so this runs on a machine that has it:
 //
 //   node scripts/sync-gateway.mjs           regenerate the generated files
@@ -27,6 +32,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 export const PRICES_FILE = join(ROOT, 'src', 'data', 'prices.json');
+export const EXAMPLES_FILE = join(ROOT, 'src', 'data', 'response-examples.json');
 
 export function gatewayDir(env = process.env) {
   return resolve(env.CEREBRUS_GATEWAY_DIR || join(ROOT, '..', 'gateway'));
@@ -156,8 +162,10 @@ export function expectedFiles(dir = gatewayDir()) {
   const card = serialize(
     withGeneratedCardFields(JSON.parse(readFileSync(AGENT_CARD_FILE, 'utf8')), prices)
   );
+  const examples = JSON.parse(readGatewayFile(dir, 'service/response_examples.json'));
   return {
     [PRICES_FILE]: serialize(prices),
+    [EXAMPLES_FILE]: serialize(examples),
     [AGENT_CARD_FILE]: card,
     [AGENT_JSON_FILE]: card,
   };

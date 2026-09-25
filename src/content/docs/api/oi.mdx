@@ -1,15 +1,18 @@
 ---
 title: GET /oi/{coin}
-description: Open interest analysis with delta tracking and divergence detection.
+description: Hyperliquid open interest for one perpetual, in contracts, with 1h/4h/24h changes measured over their stated windows, a percentile, the trend and price-OI divergence.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /oi/\{coin\}
 
 <PriceBadge endpoint="oi" />
 
-Returns open interest analysis for a Hyperliquid perpetual — current OI, delta over multiple timeframes, percentile rank, trend direction, and price-OI divergence signals.
+Open interest for one Hyperliquid perpetual and how it has moved. Open interest is counted in contracts of
+the market's `price_unit` (BTC for BTC), **not in USD**: multiply by `price` for the USD notional. Changes are
+**fractions** (`0.0312` = +3.12%), each measured against the stored reading closest to that age.
 
 ## Request
 
@@ -21,58 +24,47 @@ GET https://api.cerebruspulse.xyz/oi/{coin}
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`). Case-insensitive. |
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](/api/coins) lists them. |
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `coin` | string | Coin ticker |
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `oi` | object | Open interest data |
-| `oi.current` | number | Current open interest (contracts) |
-| `oi.delta_1h` | number | OI change over 1 hour (%) |
-| `oi.delta_4h` | number | OI change over 4 hours (%) |
-| `oi.delta_24h` | number | OI change over 24 hours (%) |
-| `oi.percentile` | number | OI percentile rank (0–100) |
-| `oi.trend` | string | `RISING`, `FALLING`, or `FLAT` |
-| `oi.price_oi_divergence` | string | `BULLISH_DIV`, `BEARISH_DIV`, or `NONE` |
-| `price` | number | Current mark price |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `oi` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | The contract unit: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `price` | number \| null | Hyperliquid mid price in USD per `price_unit` |
+| `open_interest.current` | number | Open interest in contracts of `price_unit`, not USD |
+| `open_interest.delta_1h` | number \| null | Change over about 1 hour, as a fraction; null when no stored reading is within ±25% of that age |
+| `open_interest.delta_4h` | number \| null | Change over about 4 hours, as a fraction |
+| `open_interest.delta_24h` | number \| null | Change over about 24 hours, as a fraction |
+| `open_interest.delta_windows_seconds.<window>` | number \| null | How old the reading each delta compares against actually was, for `1h`, `4h` and `24h` |
+| `open_interest.history_age_seconds` | number \| null | Age of the newest stored reading |
+| `open_interest.percentile` | number \| null | Where current OI ranks among the stored readings (up to the last 500), 0–100; null with fewer than 20 |
+| `open_interest.percentile_window_hours` | number \| null | The span of history the percentile covers, in hours (about a day today) |
+| `open_interest.trend` | string | From `delta_4h`: `RISING` (> +3%), `FALLING` (< −3%), `FLAT`, or `UNKNOWN` |
+| `open_interest.price_change_4h` | number \| null | Price change over the same window as `delta_4h`, as a fraction |
+| `open_interest.price_oi_divergence` | string | `BEARISH_DIV` (price up > 1% while OI fell > 2%), `BULLISH_DIV` (price down > 1% while OI rose > 2%), `NONE`, or `UNKNOWN` |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_oi` |
+
+`meta.as_of` holds `market_data`, `oi_history` (the newest stored reading) and, when the 4-hour reference
+price came from a candle, `candles_1h`. `meta.warnings` carries `stale_oi_history` when the newest stored
+reading is more than an hour old.
 
 ## Example
 
-```bash
-GET /oi/BTC
-```
-
-```json
-{
-  "coin": "BTC",
-  "timestamp_iso": "2026-03-04T10:00:00Z",
-  "oi": {
-    "current": 24505.52,
-    "delta_1h": 0.32,
-    "delta_4h": 1.15,
-    "delta_24h": 3.78,
-    "percentile": 88.4,
-    "trend": "RISING",
-    "price_oi_divergence": "NONE"
-  },
-  "price": 72519.5,
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 85
-  }
-}
-```
+<ResponseExample endpoint="oi" />
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 400 | Invalid coin ticker |
-| 402 | Payment required (standard x402 flow) |
+| 400 | No open interest for the market (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
 | 429 | Rate limit exceeded |
-| 503 | Data freshness guarantee exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |

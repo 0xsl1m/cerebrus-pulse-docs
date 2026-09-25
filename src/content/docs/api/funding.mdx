@@ -1,15 +1,18 @@
 ---
 title: GET /funding/{coin}
-description: Funding rate analysis with historical lookback.
+description: Hyperliquid funding rate statistics for one perpetual over a 1-168 hour lookback, with hourly rates correctly annualized.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /funding/\{coin\}
 
 <PriceBadge endpoint="funding" />
 
-Returns current and historical funding rate analysis for a Hyperliquid perpetual.
+Funding rate statistics for one Hyperliquid perpetual over a lookback window. Hyperliquid pays funding
+**every hour**, and every rate here is an hourly rate: `0.0000125` (0.00125% an hour) is its baseline, which
+annualizes to 10.95%.
 
 ## Request
 
@@ -21,61 +24,47 @@ GET https://api.cerebruspulse.xyz/funding/{coin}
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`). Case-insensitive. |
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](/api/coins) lists them. |
 
 ### Query Parameters
 
-| Parameter | Type | Default | Range | Description |
-|-----------|------|---------|-------|-------------|
-| `lookback_hours` | integer | `24` | 1–168 | Hours of historical funding data to include. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `lookback_hours` | integer | `24` | Window in hours, 1–168. Outside that range the request is refused with 400 before any price is quoted. |
 
 ## Response
 
+The statistics are flat, at the top level. The response carries no list of individual records.
+
 | Field | Type | Description |
 |-------|------|-------------|
-| `coin` | string | Coin ticker |
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `funding` | object | Funding rate data |
-| `funding.current_rate` | number | Current funding rate (raw) |
-| `funding.annualized_pct` | number | Annualized rate (%) |
-| `funding.lookback_hours` | integer | Lookback window used |
-| `funding.history` | array | Historical funding snapshots |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `funding` |
+| `coin` | string | The symbol, upper-case |
+| `records` | number | Hourly funding records in the window (at most 500) |
+| `lookback_hours` | number | The window used |
+| `avg_funding_rate` | number | Mean hourly funding rate over the window |
+| `annualized_pct` | number | `avg_funding_rate × 24 × 365 × 100` |
+| `funding_interval_hours` | number | `1`: Hyperliquid pays funding hourly |
+| `current` | number | The newest record's hourly rate |
+| `min` | number | Lowest hourly rate in the window |
+| `max` | number | Highest hourly rate in the window |
+| `positive_pct` | number | Share of records with a positive rate (longs paid shorts), in percent |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_funding` |
+
+`meta.as_of.funding` is the time of the newest funding record in the window.
 
 ## Example
 
-```bash
-GET /funding/SOL?lookback_hours=48
-```
-
-```json
-{
-  "coin": "SOL",
-  "timestamp_iso": "2026-03-02T14:30:00Z",
-  "funding": {
-    "current_rate": 0.00008,
-    "annualized_pct": 8.76,
-    "lookback_hours": 48,
-    "average_rate": 0.00007,
-    "max_rate": 0.00015,
-    "min_rate": -0.00002,
-    "history": [
-      { "timestamp": 1740850800, "rate": 0.00006 },
-      { "timestamp": 1740854400, "rate": 0.00008 }
-    ]
-  },
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 120
-  }
-}
-```
+<ResponseExample endpoint="funding" />
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 400 | Invalid coin or lookback_hours out of range |
-| 402 | Payment required (standard x402 flow) |
+| 400 | `lookback_hours` outside 1–168 (before any price is quoted), or no funding records in the window (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
 | 429 | Rate limit exceeded |
+| 503 | Service disabled, payments down, or the funding feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |

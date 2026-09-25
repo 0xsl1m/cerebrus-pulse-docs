@@ -1,18 +1,21 @@
 ---
 title: GET /pulse/{coin}
-description: Crypto technical analysis API — get RSI, EMA, Bollinger Bands, ATR, VWAP, regime detection, and confluence scoring across 6 timeframes for any Hyperliquid perpetual.
+description: Crypto technical analysis API — RSI, EMAs, Bollinger Bands, ATR, VWAP, trend and a confluence vote share on closed candles across 6 timeframes, plus hourly funding, open interest and regime for any Hyperliquid perpetual.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /pulse/\{coin\}
 
 <PriceBadge endpoint="pulse" />
 
-Returns comprehensive multi-timeframe technical analysis for a Hyperliquid perpetual.
+Multi-timeframe technical analysis for one Hyperliquid perpetual: indicators computed on closed candles for
+each requested timeframe, a derivatives snapshot, the market regime and a confluence vote share.
 
 :::tip[Try it free first]
-Use `GET /demo/{coin}` for a free preview with 1h + 4h timeframes — no wallet needed. Rate limited to 3 requests/minute.
+`GET /demo/{coin}` returns this response for 1h and 4h, cached for 60 seconds, 3 requests per minute, no
+wallet. It adds `meta.demo`, `meta.cache_ttl_seconds`, `meta.upgrade`, `meta.join` and `meta.why_join`.
 :::
 
 ## Request
@@ -25,170 +28,137 @@ GET https://api.cerebruspulse.xyz/pulse/{coin}
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`, `SOL`). Case-insensitive. |
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). Hyperliquid's name for a 1000-token market (`kPEPE`) works too. [`GET /coins`](/api/coins) lists them. |
 
 ### Query Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `timeframes` | string | `1h,4h` | Comma-separated timeframes. Valid: `5m`, `15m`, `1h`, `4h`, `1d`, `1w`. |
+| `timeframes` | string | `1h,4h` | Comma-separated, from `5m`, `15m`, `1h`, `4h`, `1d`, `1w`. `1d` and `1w` are built from 1h candles. |
+
+An unknown coin (404) or timeframe (400) is refused before any price is quoted.
 
 ## Response
 
-### Top-Level Fields
+### Top level
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `coin` | string | Coin ticker |
-| `timestamp_iso` | string | ISO 8601 timestamp of analysis |
-| `price.current` | number | Current mid price (USD) |
-| `timeframes` | object | Per-timeframe indicator data |
-| `derivatives` | object | Funding, OI, spread data |
-| `regime` | object | Current market regime |
-| `confluence` | object | Multi-signal scoring |
-| `meta` | object | Provider metadata |
+| `coin` | string | The symbol, upper-case (`PEPE`, not `kPEPE`) |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | What prices are quoted per, and what sizes count: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `price.current` | number | Hyperliquid mid price in USD per `price_unit`. Absent if the price feed has no mid for the market |
+| `timeframes` | object | One entry per requested timeframe, keyed by timeframe (`"1h"`) |
+| `derivatives` | object | Funding, open interest and impact prices. Empty if Hyperliquid's context lacks the market |
+| `regime` | object | The market regime |
+| `confluence` | object | A vote share across four indicators |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
 
-### Per-Timeframe Indicators
+### Per timeframe
 
-Each timeframe key (e.g., `"1h"`) contains:
+Indicators use closed candles only; the candle still forming is never included.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `rsi_14` | number | RSI (14-period), range 0–100 |
-| `rsi_zone` | string | `overbought` (≥70), `bullish` (60–70), `neutral` (40–60), `bearish` (30–40), `oversold` (≤30) |
-| `atr_14` | number | Average True Range (14-period), absolute |
-| `atr_pct` | number | ATR as percentage of price |
-| `ema_20` | number | 20-period EMA |
-| `ema_50` | number | 50-period EMA |
-| `ema_200` | number | 200-period EMA |
-| `vwap_20` | number | Volume-weighted average price (20-period) |
-| `zscore_100` | number | Z-score (100-period mean deviation) |
-| `bollinger.upper` | number | Upper Bollinger Band (2σ) |
-| `bollinger.middle` | number | Middle Bollinger Band (20-period SMA) |
-| `bollinger.lower` | number | Lower Bollinger Band (2σ) |
-| `bollinger.width_pct` | number | Band width as percentage |
-| `bollinger.position_pct` | number | Price position within bands (0.0 = lower, 1.0 = upper) |
-| `trend.direction` | number | `1` = bullish, `-1` = bearish, `0` = neutral |
-| `trend.label` | string | `bullish`, `bearish`, or `neutral` |
-| `trend.ema_stack` | string | `bull_aligned`, `bear_aligned`, `mixed`, `flat` |
-| `candle_freshness_seconds` | number | Age of most recent candle data |
+| `timeframes.<tf>.indicators.rsi_14` | number \| null | RSI (14, Wilder's smoothing), 0–100 |
+| `timeframes.<tf>.indicators.rsi_zone` | string | `overbought` (≥ 70), `bullish` (60–70), `neutral` (40–60), `bearish` (30–40), `oversold` (≤ 30), `unknown` |
+| `timeframes.<tf>.indicators.atr_14` | number \| null | Average true range (14), in price units |
+| `timeframes.<tf>.indicators.atr_pct` | number \| null | ATR as a percentage of the last close |
+| `timeframes.<tf>.indicators.ema_20` | number \| null | 20-period EMA of closes; null with fewer than 20 candles |
+| `timeframes.<tf>.indicators.ema_50` | number \| null | 50-period EMA; null with fewer than 50 candles |
+| `timeframes.<tf>.indicators.ema_200` | number \| null | 200-period EMA; null with fewer than 200 candles |
+| `timeframes.<tf>.indicators.vwap_20` | number \| null | Volume-weighted average close of the last 20 candles |
+| `timeframes.<tf>.indicators.zscore_100` | number \| null | Z-score of the last close against the last 100 closes |
+| `timeframes.<tf>.indicators.bollinger.upper` | number | 20-period SMA + 2 standard deviations |
+| `timeframes.<tf>.indicators.bollinger.middle` | number | 20-period SMA |
+| `timeframes.<tf>.indicators.bollinger.lower` | number | 20-period SMA − 2 standard deviations |
+| `timeframes.<tf>.indicators.bollinger.width_pct` | number | (upper − lower) / middle, as a percentage |
+| `timeframes.<tf>.indicators.bollinger.position_pct` | number | Where the last close sits in the bands as a fraction: 0 = lower band, 1 = upper band; outside 0–1 when the close is outside the bands |
+| `timeframes.<tf>.indicators.trend.direction` | number | `1`, `-1` or `0` |
+| `timeframes.<tf>.indicators.trend.label` | string | `bullish` (price > EMA20 > EMA50 > EMA200), `bearish` (the reverse), `weak_bullish` (above EMA200 otherwise), `weak_bearish` (below it), `neutral`, or `insufficient_data` (fewer than 200 candles) |
+| `timeframes.<tf>.indicators.trend.ema_stack` | string | `bull_aligned`, `bear_aligned`, `mixed`, `flat`, or `unknown` with `insufficient_data` |
+| `timeframes.<tf>.candle_freshness_seconds` | number | Seconds since the newest closed candle closed |
+| `timeframes.<tf>.last_closed_candle_time` | string | When the newest closed candle closed (ISO 8601, UTC) |
+| `timeframes.<tf>.stale` | boolean | `true` when no candle has closed for two intervals (the candle feed stalled) |
+| `timeframes.<tf>.error` | string | Optional. Replaces the fields above when a timeframe cannot be computed, e.g. `insufficient_data (12 candles)`. If every requested timeframe fails, the request gets a 400 and is not charged |
 
 ### Derivatives
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `funding_rate` | number | Current funding rate (raw) |
-| `funding_annualized_pct` | number | Annualized funding rate (%) |
-| `open_interest` | number | Open interest (USD notional) |
-| `impact_bid` | number | Impact bid price |
-| `impact_ask` | number | Impact ask price |
-| `spread_bps` | number | Bid-ask spread in basis points |
+| `derivatives.funding_rate` | number | Current Hyperliquid funding rate **per hour**. `0.0000125` (0.00125% an hour) is Hyperliquid's baseline |
+| `derivatives.funding_annualized_pct` | number | `funding_rate × 24 × 365 × 100`: the baseline annualizes to 10.95% |
+| `derivatives.funding_interval_hours` | number | `1`: Hyperliquid pays funding every hour |
+| `derivatives.open_interest` | number | Open interest counted in `price_unit` (BTC for BTC), **not USD**. Multiply by `price.current` for USD notional |
+| `derivatives.impact_bid` | number | Hyperliquid's impact bid: the average fill price of an impact-size market sell, not the top of the book |
+| `derivatives.impact_ask` | number | Hyperliquid's impact ask |
+| `derivatives.impact_spread_bps` | number | `(impact_ask − impact_bid) / mid × 10000` |
+| `derivatives.spread_bps` | number | Deprecated: the same value as `impact_spread_bps` |
 
 ### Regime
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `current` | string | Regime label (e.g., `RISK_ON`, `RISK_OFF`) |
-| `as_of` | number | Unix timestamp of regime calculation |
+| `regime.current` | string | The market regime label published by the trading system, lower-case (for example `risk_on`, `risk_off`), or `unknown` when none is published. Treat values you do not recognize as opaque |
+| `regime.as_of` | number | Unix time in seconds (may be fractional) the regime was set; `0` when unknown |
+| `regime.stale` | boolean | Optional. Added by the gateway when the regime is more than 6 hours old; `current` is then the last known regime, not a live one |
+| `regime.age_seconds` | number | Optional. With `stale`: how old the regime is |
+| `regime.note` | string | Optional. With `stale`: a sentence saying so |
 
 ### Confluence
 
+The confluence score is a **vote share**, not a confidence or probability, and it has not been validated as
+predictive. Four indicators vote on the primary timeframe: bullish counts 1, neutral 0.5, bearish 0.
+
 | Field | Type | Description |
 |-------|------|-------------|
-| `score` | number | Confidence score (0.0–1.0) |
-| `bias` | string | `bullish`, `bearish`, or `neutral` |
-| `signals` | object | Per-indicator signal direction |
-| `bullish_count` | number | Number of bullish signals |
-| `bearish_count` | number | Number of bearish signals |
+| `confluence.score` | number | The primary timeframe's vote share, 0–1, to 2 decimals: 1 = every vote bullish, 0.5 = balanced or neutral, 0 = every vote bearish. Sort by it to rank bullish to bearish, not by strength |
+| `confluence.bull_fraction` | number \| null | The same share to 3 decimals |
+| `confluence.bias` | string | `bullish` (share ≥ 0.625), `bearish` (≤ 0.375), `neutral`, or `unknown` when no timeframe computed |
+| `confluence.signals.rsi` | string | RSI ≥ 60 `bullish`, ≤ 40 `bearish`, else `neutral` |
+| `confluence.signals.trend` | string | The EMA trend direction |
+| `confluence.signals.bollinger` | string | Mean reversion: position above 0.8 `bearish`, below 0.2 `bullish` |
+| `confluence.signals.zscore` | string | Mean reversion: above 1.5 `bearish`, below −1.5 `bullish` |
+| `confluence.bullish_count` | number | Bullish votes on the primary timeframe |
+| `confluence.bearish_count` | number | Bearish votes on the primary timeframe |
+| `confluence.family_scores.trend_following` | number \| null | Vote share of `rsi` and `trend` alone |
+| `confluence.family_scores.mean_reversion` | number \| null | Vote share of `bollinger` and `zscore` alone. The two families often disagree, which the combined score hides |
+| `confluence.primary_timeframe` | string \| null | The first requested timeframe that computed; every top-level confluence field comes from it only |
+| `confluence.per_timeframe.<tf>` | object | The same `score`, `bull_fraction`, `family_scores`, `bias`, `signals` and counts for each computed timeframe |
+| `confluence.aligned` | boolean | `true` when at least two timeframes lean the same way and none leans the other, or all are neutral |
+| `confluence.alignment_score` | number | Share of timeframes leaning the common way; 0 when they disagree, 0.5 when all are neutral |
+| `confluence.score_type` | string | `heuristic_vote_share` |
+| `confluence.validated` | boolean | `false`: the score has no measured predictive value |
+| `confluence.definition` | string | The formula, as text |
 
 ### Meta
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `provider` | string | Always `"Cerebrus Pulse"` |
-| `offering` | string | Always `"cerebrus_pulse"` |
-| `execution_ms` | number | Server-side processing time (ms) |
-| `coins_available` | number | Total coins supported |
-| `data_age_seconds` | number | Age of underlying market data |
-| `warning` | string | Optional. `"stale_data"` if data is older than 2 hours. |
+| `meta.offering` | string | `cerebrus_pulse` |
+| `meta.coins_available` | number | How many markets the API covers |
+| `meta.as_of.<input>` | string | When each input was current: `market_data` (price and derivatives feed) and `candles_<tf>` (close of the newest closed candle) |
+| `meta.warning` | string | Optional. `stale_data` when the price feed is more than 15 minutes old |
+| `meta.warnings` | array | Optional. `stale_candles` when a timeframe's candles stalled; the gateway adds `stale_regime` |
 
 ## Example
 
-```bash
-GET /pulse/ETH?timeframes=1h
-```
-
-```json
-{
-  "coin": "ETH",
-  "timestamp_iso": "2026-03-02T14:30:00Z",
-  "price": { "current": 3842.15 },
-  "timeframes": {
-    "1h": {
-      "indicators": {
-        "rsi_14": 58.3,
-        "rsi_zone": "neutral",
-        "atr_14": 42.80,
-        "atr_pct": 1.11,
-        "ema_20": 3830.45,
-        "ema_50": 3815.20,
-        "ema_200": 3780.10,
-        "vwap_20": 3835.60,
-        "zscore_100": 0.85,
-        "bollinger": {
-          "upper": 3900.00,
-          "middle": 3840.00,
-          "lower": 3780.00,
-          "width_pct": 3.13,
-          "position_pct": 0.52
-        },
-        "trend": {
-          "direction": 1,
-          "label": "bullish",
-          "ema_stack": "bull_aligned"
-        }
-      },
-      "candle_freshness_seconds": 120.5
-    }
-  },
-  "derivatives": {
-    "funding_rate": 0.0001,
-    "funding_annualized_pct": 10.95,
-    "open_interest": 8500000000,
-    "impact_bid": 3841.50,
-    "impact_ask": 3842.80,
-    "spread_bps": 3.39
-  },
-  "regime": { "current": "RISK_ON", "as_of": 1740939296 },
-  "confluence": {
-    "score": 0.50,
-    "bias": "neutral",
-    "signals": { "rsi": "neutral", "trend": "bullish", "bollinger": "neutral", "zscore": "neutral" },
-    "bullish_count": 1,
-    "bearish_count": 0
-  },
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 189,
-    "coins_available": 51
-  }
-}
-```
-
-## Next Steps
-
-- **[GET /screener](/api/screener)** — Scan all 50+ coins at once before drilling into individual assets
-- **[Python SDK Guide](/guides/python-sdk)** — Complete Python integration with code examples
-- **[TypeScript SDK Guide](/guides/typescript-sdk)** — Complete TypeScript/Node.js integration
-- **[Response Schemas](/reference/response-schemas)** — Detailed field descriptions and value ranges
-- **[x402 Payments](/guides/x402-payments)** — Deep dive into the micropayment flow
+<ResponseExample endpoint="pulse" />
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 400 | Invalid coin or insufficient candle data |
-| 402 | Payment required (standard x402 flow) |
+| 400 | Unsupported timeframe (before any price is quoted), or no requested timeframe could be computed (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
 | 429 | Rate limit exceeded |
-| 504 | Engine timeout (>15s) |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+## Next Steps
+
+- **[GET /screener](/api/screener)** — Rank every market in one call before drilling into one
+- **[Response Schemas](/reference/response-schemas)** — Units, enums and the common `meta` fields
+- **[Python SDK Guide](/guides/python-sdk)** and **[TypeScript SDK Guide](/guides/typescript-sdk)** — Paying from code

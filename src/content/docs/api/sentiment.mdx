@@ -1,15 +1,19 @@
 ---
 title: GET /sentiment
-description: Market sentiment analysis across the crypto market.
+description: A bucketed crypto market sentiment label built from the live inputs of a multi-source collector, with the count of live inputs and their providers.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /sentiment
 
 <PriceBadge endpoint="sentiment" />
 
-Returns aggregated market sentiment labels.
+One market-wide sentiment label. A collector reads up to eight inputs (the Crypto Fear & Greed Index,
+Hyperliquid funding, news headlines, DefiLlama on-chain data, FRED macro series, CoinGecko market data, and
+two inputs that currently produce nothing). The label is the equal-weight mean of the inputs that are live,
+bucketed; the raw score is never returned. `sources_live` says how many inputs it rests on.
 
 ## Request
 
@@ -17,46 +21,31 @@ Returns aggregated market sentiment labels.
 GET https://api.cerebruspulse.xyz/sentiment
 ```
 
-No parameters required.
+No parameters.
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `sentiment` | object | Sentiment data and labels |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `sentiment` |
+| `sentiment.label` | string | `very_bearish` (mean ≤ −0.5), `bearish` (≤ −0.15), `neutral` (≤ 0.15), `bullish` (≤ 0.5), `very_bullish`, or `unknown` when no input is live or the collector's file cannot be read |
+| `sentiment.as_of` | number | When the collector last wrote (Unix seconds); `0` when unknown |
+| `sentiment.composite_method` | string | `live_mean` (the mean of the live inputs, the default) or `collector` (the collector's own weighted composite) |
+| `sentiment.sources_live` | string | Live inputs out of all inputs, e.g. `5/8`. An input reading exactly 0 counts as dead |
+| `sentiment.live_sources` | array | The live inputs, from `fear_greed`, `twitter`, `funding_sentiment`, `news_vader`, `onchain`, `macro`, `political`, `broad_market` |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)); `meta.sources` names the providers of the live inputs only, with any attribution notice they require |
+| `meta.offering` | string | `pulse_sentiment` |
+| `meta.sources_live` | string | The same count as `sentiment.sources_live` |
 
 ## Example
 
-```bash
-GET /sentiment
-```
-
-```json
-{
-  "timestamp_iso": "2026-03-02T14:30:00Z",
-  "sentiment": {
-    "overall": "bullish",
-    "score": 0.68,
-    "labels": {
-      "fear_greed": "greed",
-      "momentum": "positive",
-      "funding_bias": "long"
-    }
-  },
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 95
-  }
-}
-```
+<ResponseExample endpoint="sentiment" />
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 402 | Payment required (standard x402 flow) |
+| 402 | Payment required (the standard x402 flow) |
 | 429 | Rate limit exceeded |
-| 500 | Internal processing error |
+| 503 | Service disabled, payments down, or the sentiment feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |

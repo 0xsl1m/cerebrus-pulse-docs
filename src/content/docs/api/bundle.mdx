@@ -1,10 +1,11 @@
 ---
 title: GET /bundle/{coin}
-description: Complete analysis bundle — pulse, sentiment, and funding combined.
+description: The /pulse analysis, 24-hour funding statistics and market sentiment for one Hyperliquid perpetual in a single request.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
 import BundleMath from '../../../components/docs/BundleMath.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /bundle/\{coin\}
 
@@ -22,78 +23,69 @@ GET https://api.cerebruspulse.xyz/bundle/{coin}
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`). Case-insensitive. |
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](/api/coins) lists them. |
 
 ### Query Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `timeframes` | string | `1h,4h` | Comma-separated timeframes. Valid: `5m`, `15m`, `1h`, `4h`, `1d`, `1w`. |
+| `timeframes` | string | `1h,4h` | Comma-separated, from `5m`, `15m`, `1h`, `4h`, `1d`, `1w`, as for [/pulse](/api/pulse). |
+
+The funding window is always 24 hours; use [/funding](/api/funding) for another lookback.
 
 ## Response
 
-The response combines all four endpoint responses under top-level keys:
+The technical sections are the same objects [/pulse](/api/pulse) returns; see that page for their fields.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `coin` | string | Coin ticker |
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `pulse` | object | Full pulse analysis (same as `/pulse/{coin}` response) |
-| `sentiment` | object | Sentiment data (same as `/sentiment` response) |
-| `funding` | object | Funding analysis (same as `/funding/{coin}` response) |
-| `spread` | object | Spread & liquidity data (same as `/spread/{coin}` response) |
-| `meta` | object | Provider metadata with bundle info |
+| `endpoint` | string | `bundle` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | What prices are quoted per: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `price.current` | number | Hyperliquid mid price in USD per `price_unit` |
+| `timeframes` | object | Per-timeframe indicators, as in /pulse |
+| `confluence` | object | The confluence vote share, as in /pulse |
+| `derivatives` | object | Hourly funding, open interest in contracts and impact prices, as in /pulse |
+| `regime` | object | The market regime, as in /pulse |
+| `funding_24h.coin` | string | The symbol |
+| `funding_24h.records` | number | Hourly funding records in the last 24 hours |
+| `funding_24h.lookback_hours` | number | `24` |
+| `funding_24h.avg_funding_rate` | number | Mean hourly funding rate over the window |
+| `funding_24h.annualized_pct` | number | `avg_funding_rate × 24 × 365 × 100` |
+| `funding_24h.funding_interval_hours` | number | `1`: Hyperliquid pays funding hourly |
+| `funding_24h.current` | number | The newest record's hourly rate |
+| `funding_24h.min` | number | Lowest hourly rate in the window |
+| `funding_24h.max` | number | Highest hourly rate in the window |
+| `funding_24h.positive_pct` | number | Share of records with a positive rate (longs paid shorts), in percent |
+| `funding_24h.note` | string | Optional. `unavailable`, in place of the statistics, when the funding history cannot be read |
+| `sentiment.label` | string | The market sentiment label, as in [/sentiment](/api/sentiment) |
+| `sentiment.as_of` | number | When the sentiment collector last wrote (Unix seconds) |
+| `sentiment.composite_method` | string | `live_mean` or `collector` |
+| `sentiment.sources_live` | string | Live inputs out of all inputs, e.g. `5/8` |
+| `sentiment.live_sources` | array | Names of the live inputs |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_bundle` |
+
+`meta.as_of` holds `market_data`, one `candles_<tf>` per timeframe and `funding` (the newest funding record).
 
 ## Example
 
-```bash
-GET /bundle/BTC?timeframes=1h,4h
-```
-
-```json
-{
-  "coin": "BTC",
-  "timestamp_iso": "2026-03-02T14:30:00Z",
-  "pulse": {
-    "price": { "current": 98765.43 },
-    "timeframes": {
-      "1h": { "indicators": { "rsi_14": 65.4, "rsi_zone": "bullish", "..." : "..." } },
-      "4h": { "indicators": { "rsi_14": 58.1, "rsi_zone": "neutral", "..." : "..." } }
-    },
-    "derivatives": { "funding_rate": 0.000125, "open_interest": 1850000000, "..." : "..." },
-    "regime": { "current": "RISK_ON", "as_of": 1740939296 },
-    "confluence": { "score": 0.75, "bias": "bullish", "..." : "..." }
-  },
-  "sentiment": {
-    "overall": "bullish",
-    "score": 0.68,
-    "labels": { "fear_greed": "greed", "momentum": "positive", "funding_bias": "long" }
-  },
-  "funding": {
-    "current_rate": 0.000125,
-    "annualized_pct": 13.65,
-    "lookback_hours": 24,
-    "history": [ "..." ]
-  },
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "bundle": true,
-    "execution_ms": 340
-  }
-}
-```
+<ResponseExample endpoint="bundle" />
 
 ## When to Use Bundle
 
-- **Use bundle** when you need a complete market view for a single coin — one request instead of three.
-- **Use individual endpoints** when you only need one type of data, or when querying sentiment (which isn't coin-specific).
+- **Use bundle** when you want the technical picture, recent funding and market sentiment for one coin: one request instead of three.
+- **Use individual endpoints** when you only need one of them, a funding window other than 24 hours, or sentiment (which is not coin-specific) on its own.
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 400 | Invalid coin |
-| 402 | Payment required (standard x402 flow) |
+| 400 | Unsupported timeframe (before any price is quoted), or no requested timeframe could be computed (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
 | 429 | Rate limit exceeded |
-| 504 | Engine timeout |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |

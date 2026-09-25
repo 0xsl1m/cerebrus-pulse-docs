@@ -1,15 +1,21 @@
 ---
 title: GET /correlation
-description: BTC-alt correlation matrix with regime classification.
+description: Pearson correlation of 1h returns between BTC and 14 large Hyperliquid perpetuals over a 30-hour, 7-day or 30-day window, with sample sizes, standard errors, sector averages and a regime label.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /correlation
 
 <PriceBadge endpoint="correlation" />
 
-Returns a BTC-alt correlation matrix across the top 15 Hyperliquid perpetuals, with 30-day rolling correlation, regime classification, and sector averages. Essential for portfolio agents managing multi-asset exposure.
+How closely 14 large perpetuals move with BTC: the Pearson correlation of **hourly** returns over one window,
+by default the last **30 hours** (30 returns), not 30 days. Returns are joined on candle time; a coin whose
+newest candle lags BTC's is left out rather than mismatched. Each correlation comes with its sample size and
+standard error, so a noisy 30-hour figure can be told apart from a 30-day one.
+
+Coins: BTC, ETH, SOL, DOGE, XRP, AVAX, LINK, ARB, OP, SUI, NEAR, INJ, APT, ADA, PEPE.
 
 ## Request
 
@@ -17,72 +23,47 @@ Returns a BTC-alt correlation matrix across the top 15 Hyperliquid perpetuals, w
 GET https://api.cerebruspulse.xyz/correlation
 ```
 
-No parameters required.
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `window` | string | `30h` | `30h` (30 hourly returns), `7d` (168) or `30d` (719). Any other value is refused with 400 before any price is quoted. |
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `coins_analyzed` | integer | Number of coins in the matrix |
-| `avg_correlation` | number | Average BTC-alt correlation across all coins |
-| `regime` | string | `CORRELATED`, `DECORRELATED`, or `MIXED` |
-| `correlations` | object | Per-coin correlation with BTC |
-| `correlations.{coin}` | number | 30-day rolling correlation coefficient (-1.0 to 1.0) |
-| `sector_averages` | object | Average correlation by sector |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `correlation` |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `btc_correlation.<coin>` | number \| null | Pearson r of the coin's 1h returns against BTC's, −1 to 1. `BTC` is `1.0`. Null when the coin lags BTC, lacks candles, or has fewer than max(20, window / 2) joined returns |
+| `correlation_stats.<coin>` | object | For each coin with a correlation: `n` (joined returns used) and `stderr` (`(1 − r²) / √(n − 1)`) |
+| `average_correlation` | number \| null | Mean of the non-null correlations, BTC excluded |
+| `regime` | string | `CORRELATED` (average > 0.7), `DECORRELATED` (< 0.3), `MIXED`, or `UNKNOWN` |
+| `sector_averages.<sector>` | number | Mean correlation per sector with data: `L1` (ETH, SOL, AVAX, NEAR, APT, SUI, ADA), `L2` (ARB, OP), `DeFi` (LINK, INJ), `Meme` (DOGE, PEPE) |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_correlation` |
+| `meta.coins_analyzed` | number | Coins with a correlation, BTC included |
+| `meta.window` | string | The window used |
+| `meta.lookback_bars` | number | Hourly returns in the window |
+| `meta.timeframe` | string | `1h` |
+| `meta.method` | string | The method, as text |
+| `meta.lagging_coins` | array | Coins left out because their newest candle is older than BTC's (also flagged in `meta.warnings` as `lagging_coins`) |
+
+`meta.as_of.candles_1h` is the close of BTC's newest candle, which every correlated coin reaches.
 
 ## Example
 
-```bash
-GET /correlation
-```
+<ResponseExample endpoint="correlation" />
 
-```json
-{
-  "timestamp_iso": "2026-03-04T10:00:00Z",
-  "coins_analyzed": 15,
-  "avg_correlation": 0.76,
-  "regime": "CORRELATED",
-  "correlations": {
-    "ETH": 0.89,
-    "SOL": 0.82,
-    "DOGE": 0.71,
-    "AVAX": 0.78,
-    "LINK": 0.74,
-    "ARB": 0.68,
-    "OP": 0.65,
-    "SUI": 0.72,
-    "WIF": 0.58,
-    "PEPE": 0.53,
-    "INJ": 0.61,
-    "SEI": 0.59,
-    "TIA": 0.55,
-    "JUP": 0.62,
-    "ONDO": 0.57
-  },
-  "sector_averages": {
-    "L1": 0.82,
-    "L2": 0.67,
-    "DeFi": 0.65,
-    "Meme": 0.56
-  },
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 340
-  }
-}
-```
-
-:::tip[Portfolio use case]
-When `regime` is `DECORRELATED`, diversification benefits are highest. When `CORRELATED`, consider reducing position count to avoid correlated drawdowns.
-:::
+This capture held 1h candles for BTC, ETH and DOGE only, so the other coins read null and `coins_analyzed`
+is 3. A live response fills every coin that has enough data.
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 402 | Payment required (standard x402 flow) |
+| 400 | `window` not one of `30h`, `7d`, `30d` (before any price is quoted), or not enough BTC candles (not charged) |
+| 402 | Payment required (the standard x402 flow) |
 | 429 | Rate limit exceeded |
-| 503 | Data freshness guarantee exceeded |
+| 503 | Service disabled, payments down, or the candle feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |

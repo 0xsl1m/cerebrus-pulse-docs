@@ -1,15 +1,20 @@
 ---
 title: GET /screener
-description: Crypto screener API endpoint — scan 50+ Hyperliquid perpetuals for RSI signals, trend direction, volatility regime, confluence bias, and CEX-DEX divergence in one call.
+description: Crypto screener API — every covered Hyperliquid perpetual ranked by indicator extremity, with RSI zone, trend, volatility regime, hourly funding bias, confluence and OI trend in one call.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /screener
 
 <PriceBadge endpoint="screener" />
 
-Scans all available Hyperliquid perpetuals and returns a compact summary for each coin — signal strength, RSI zone, trend direction, volatility regime, funding bias, confluence, and open interest trend. Ideal for market-wide scanning before drilling into individual coins.
+Scans every covered Hyperliquid perpetual on its 1h candles and returns one compact row per market, sorted by
+`signal_strength`: how extreme the readings are, not which way they point. Use it to find the markets worth
+a closer look, then call [/pulse](/api/pulse) on them.
+
+The full scan is cached for 60 seconds; each request takes its own `top_n` rows from it.
 
 ## Request
 
@@ -21,86 +26,61 @@ GET https://api.cerebruspulse.xyz/screener
 
 | Parameter | Type | Default | Range | Description |
 |-----------|------|---------|-------|-------------|
-| `top_n` | integer | `50` | 1–50 | Maximum number of coins to return. |
+| `top_n` | integer | `50` | 1–50 | How many rows to return. Outside the range the request is refused with 400 before any price is quoted. |
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `coins_scanned` | integer | Number of coins analyzed |
-| `coins` | array | Per-coin summary objects |
-| `coins[].coin` | string | Coin ticker |
-| `coins[].signal_strength` | number | Overall signal strength (0.0–1.0) |
-| `coins[].rsi_zone` | string | RSI zone: `OVERSOLD`, `NEUTRAL`, `OVERBOUGHT` |
-| `coins[].trend` | string | Trend direction: `BULLISH`, `BEARISH`, `NEUTRAL` |
-| `coins[].vol_regime` | string | Volatility regime: `LOW`, `NORMAL`, `HIGH`, `EXTREME` |
-| `coins[].funding_bias` | string | Funding bias: `LONG_PAYING`, `SHORT_PAYING`, `NEUTRAL` |
-| `coins[].confluence_bias` | string | Confluence bias: `BULLISH`, `BEARISH`, `NEUTRAL` |
-| `coins[].oi_trend` | string | OI trend: `RISING`, `FALLING`, `FLAT` |
-| `coins[].cex_dex_spread_bps` | number | CEX-DEX price divergence in basis points (where available) |
-| `coins[].cex_dex_direction` | string | `cex_premium`, `dex_premium`, or `null` |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `screener` |
+| `coins_scanned` | number | Markets the scan computed |
+| `top_n` | number | Rows returned |
+| `results[].coin` | string | The symbol |
+| `results[].market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `results[].price_unit` | string | What `price` is quoted per: `1 BTC`, or `1000 PEPE` |
+| `results[].price` | number | Hyperliquid mid price in USD per `price_unit`. Absent when the feed has no mid |
+| `results[].signal_strength` | number | 0 to 3.5, higher = more extreme: `abs(RSI − 50) / 50` + `min(abs(z) / 2, 1)` + `min(ATR% / 5, 1)` + 0.5 when the trend has a direction. It measures intensity, not direction |
+| `results[].rsi_14` | number \| null | 1h RSI (14) |
+| `results[].rsi_zone` | string | `overbought`, `bullish`, `neutral`, `bearish`, `oversold` or `unknown`, as in [/pulse](/api/pulse) |
+| `results[].trend` | string | The 1h trend label: `bullish`, `weak_bullish`, `neutral`, `weak_bearish`, `bearish` or `insufficient_data` |
+| `results[].zscore` | number \| null | 1h z-score of the close against the last 100 closes |
+| `results[].atr_pct` | number \| null | 1h ATR as a percentage of the close |
+| `results[].vol_regime` | string | From `atr_pct`: `LOW` (< 1), `NORMAL` (< 3), `HIGH` (< 6), `EXTREME`, or `UNKNOWN` |
+| `results[].funding_rate` | number \| null | Current Hyperliquid funding rate, per hour |
+| `results[].funding_bias` | string | `long_pays` above the 0.0000125/h baseline, `short_pays` below −0.0000125/h, else `neutral` |
+| `results[].confluence_bias` | string | The 1h confluence bias: `bullish`, `bearish`, `neutral` or `unknown` |
+| `results[].confluence_score` | number | The 1h confluence vote share, 0–1 (see [/pulse](/api/pulse)) |
+| `results[].oi_trend` | string | From the 4h open-interest change: `RISING` (> +3%), `FALLING` (< −3%), `FLAT`, or `UNKNOWN` without history |
+| `results[].cex_dex_spread_bps` | number \| null | Coinbase vs DEX/Chainlink divergence in basis points, where the CEX-DEX feed covers the token; else null |
+| `results[].cex_dex_direction` | string \| null | `cex_premium` or `dex_premium`, or null |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_screener` |
+| `meta.cex_dex_data_age_seconds` | number | Age of the CEX-DEX snapshot the divergence columns come from |
+| `meta.cex_dex_tokens_available` | number | Tokens that snapshot covers |
+| `meta.cached` | boolean | Optional. `true` when the rows come from the 60-second cache |
+| `meta.cache_age_seconds` | number | Optional. With `cached`: how old the cached scan is |
+
+`meta.as_of` holds `market_data`, `candles_1h` and `candles_4h` (the oldest of the markets' newest closed
+candles), `oi_history` and `cex_dex`.
 
 ## Example
 
-```bash
-GET /screener?top_n=5
-```
+<ResponseExample endpoint="screener" />
 
-```json
-{
-  "timestamp_iso": "2026-03-04T10:00:00Z",
-  "coins_scanned": 48,
-  "coins": [
-    {
-      "coin": "BTC",
-      "signal_strength": 0.72,
-      "rsi_zone": "NEUTRAL",
-      "trend": "BULLISH",
-      "vol_regime": "NORMAL",
-      "funding_bias": "LONG_PAYING",
-      "confluence_bias": "BULLISH",
-      "oi_trend": "RISING",
-      "cex_dex_spread_bps": 5.2,
-      "cex_dex_direction": "cex_premium"
-    },
-    {
-      "coin": "ETH",
-      "signal_strength": 0.58,
-      "rsi_zone": "NEUTRAL",
-      "trend": "NEUTRAL",
-      "vol_regime": "LOW",
-      "funding_bias": "NEUTRAL",
-      "confluence_bias": "NEUTRAL",
-      "oi_trend": "FLAT",
-      "cex_dex_spread_bps": 8.6,
-      "cex_dex_direction": "cex_premium"
-    }
-  ],
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 2400
-  }
-}
-```
-
-:::tip[Value proposition]
-One `/screener` call at $0.06 replaces 50+ individual `/pulse` calls at $0.025 each ($1.25+ total) — a 95% saving for market-wide scanning.
-:::
-
-## Next Steps
-
-- **[GET /pulse/\{coin\}](/api/pulse)** — Drill into a specific coin with full multi-timeframe analysis
-- **[Python SDK Guide](/guides/python-sdk)** — Build a screener integration in Python
-- **[TypeScript SDK Guide](/guides/typescript-sdk)** — Build a screener integration in TypeScript
-- **[x402 Payments](/guides/x402-payments)** — Understand the payment flow
+This capture held 1h candles for three markets only, so `coins_scanned` is 3; a live scan covers every
+market in [`/coins`](/api/coins).
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 402 | Payment required (standard x402 flow) |
+| 400 | `top_n` outside 1–50 (before any price is quoted) |
+| 402 | Payment required (the standard x402 flow) |
 | 429 | Rate limit exceeded |
-| 503 | Data freshness guarantee exceeded |
+| 503 | Service disabled, payments down, or an upstream feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
+
+## Next Steps
+
+- **[GET /pulse/\{coin\}](/api/pulse)** — Every timeframe and field for one market
+- **[Response Schemas](/reference/response-schemas)** — Units, enums and the common `meta` fields

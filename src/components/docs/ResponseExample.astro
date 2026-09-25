@@ -1,0 +1,18 @@
+---
+// A real engine response for one endpoint, from src/data/response-examples.json
+// (copied from the gateway by scripts/sync-gateway.mjs; F006). Never hand-written.
+import { Code } from '@astrojs/starlight/components';
+import examples from '../../data/response-examples.json';
+import { exampleCaption } from '../../lib/examples.mjs';
+
+interface Props {
+  endpoint: string;
+}
+
+const { endpoint } = Astro.props;
+const example = (examples.examples as Record<string, unknown>)[endpoint];
+if (example === undefined) throw new Error(`no engine example for "${endpoint}" in response-examples.json`);
+---
+
+<p><em>{exampleCaption(examples, endpoint)}</em></p>
+<Code code={JSON.stringify(example, null, 2)} lang="json" />

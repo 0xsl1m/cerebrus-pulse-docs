@@ -1,18 +1,18 @@
 ---
 title: GET /depeg
-description: USDC collateral health monitor via Chainlink oracle on Arbitrum.
+description: USDC peg status from the Chainlink USDC/USD feed on Arbitrum, with the Arbitrum sequencer's status.
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /depeg
 
 <PriceBadge endpoint="depeg" /> <Badge text="Powered by Chainlink" variant="note" />
 
-Real-time USDC peg health monitoring via Chainlink's USDC/USD price feed on Arbitrum. Reports deviation from the $1.00 peg, risk classification, and Arbitrum L2 sequencer status.
-
-**Why it matters:** USDC is the margin currency for Hyperliquid perpetuals. A depeg event directly impacts the real value of all positions, margin, and PnL. This endpoint provides an early warning system for stablecoin risk.
+How far USDC is from $1.00, read from Chainlink's USDC/USD feed on Arbitrum, plus whether the Arbitrum
+sequencer was up when the feeds were read.
 
 ## Request
 
@@ -20,76 +20,39 @@ Real-time USDC peg health monitoring via Chainlink's USDC/USD price feed on Arbi
 GET https://api.cerebruspulse.xyz/depeg
 ```
 
-No parameters required.
+No parameters.
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `usdc.price_usd` | number | Current USDC price from Chainlink (8 decimal precision) |
-| `usdc.deviation_bps` | number | Absolute deviation from $1.00 in basis points |
-| `usdc.deviation_pct` | number | Deviation as percentage |
-| `usdc.peg_status` | string | `HEALTHY`, `ELEVATED`, `WARNING`, or `CRITICAL` |
-| `usdc.risk_level` | string | `low`, `medium`, `high`, or `critical` |
-| `usdc.interpretation` | string | Human-readable risk assessment |
-| `infrastructure.arbitrum_sequencer` | string | `up`, `down`, or `unknown` |
-| `infrastructure.chainlink_feeds_active` | integer | Number of active Chainlink feeds |
-| `meta` | object | Provider metadata |
-
-### Peg Status Levels
-
-| Status | Deviation | Risk | Action |
-|--------|----------|------|--------|
-| `HEALTHY` | < 10 bps | Low | Normal conditions |
-| `ELEVATED` | 10–50 bps | Medium | Monitor closely |
-| `WARNING` | 50–200 bps | High | Consider reducing USDC exposure |
-| `CRITICAL` | > 200 bps | Critical | Major depeg event in progress |
+| `endpoint` | string | `depeg` |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `usdc.price_usd` | number | Chainlink USDC/USD price |
+| `usdc.deviation_bps` | number | `abs(price_usd − 1) × 10000` |
+| `usdc.deviation_pct` | number | The same deviation in percent |
+| `usdc.peg_status` | string | `HEALTHY` (< 10 bps), `ELEVATED` (10–50), `WARNING` (50–200) or `CRITICAL` (200 or more) |
+| `usdc.risk_level` | string | `low`, `medium`, `high` or `critical`, matching `peg_status` |
+| `usdc.interpretation` | string | The deviation in words |
+| `infrastructure.arbitrum_sequencer` | string | `up`, `down`, or `unknown` when the check itself failed. While it is not `up`, treat Arbitrum Chainlink prices as possibly stale |
+| `infrastructure.chainlink_feeds_active` | number | Chainlink prices in the snapshot |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_depeg` |
+| `meta.chainlink_data_age_seconds` | number \| null | Age of the Chainlink snapshot. Above 120 seconds, `meta.warning` is `stale_chainlink_data` |
+| `meta.chainlink_round_age_seconds` | number \| null | Age of the USDC round, when the snapshot records it; null otherwise |
+| `meta.oracle_network` | string | `arbitrum` |
+| `meta.feed_address` | string | The Chainlink USDC/USD feed on Arbitrum |
 
 ## Example
 
-```bash
-GET /depeg
-```
-
-```json
-{
-  "endpoint": "depeg",
-  "timestamp_iso": "2026-03-08T01:51:11Z",
-  "usdc": {
-    "price_usd": 1.0000406,
-    "deviation_bps": 0.41,
-    "deviation_pct": 0.0041,
-    "peg_status": "HEALTHY",
-    "risk_level": "low",
-    "interpretation": "USDC trading within 10bps of peg — normal conditions"
-  },
-  "infrastructure": {
-    "arbitrum_sequencer": "up",
-    "chainlink_feeds_active": 12
-  },
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "pulse_depeg",
-    "execution_ms": 0.1,
-    "chainlink_data_age_seconds": 42.5,
-    "oracle_network": "arbitrum",
-    "feed_address": "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3"
-  }
-}
-```
-
-:::caution[Sequencer dependency]
-If `arbitrum_sequencer` shows `down`, Chainlink price feeds on Arbitrum may be stale. The sequencer uptime is verified via Chainlink's L2 Sequencer Uptime Feed before serving data. If the sequencer is down, all Chainlink-dependent endpoints (`/basis`, `/depeg`) should be treated as potentially stale.
-:::
-
-:::tip[Risk management integration]
-Use `/depeg` as a circuit breaker input for automated trading systems. Poll every 60 seconds and trigger position reduction when `peg_status` transitions to `WARNING` or `CRITICAL`. Combine with `/arb` stress index for a comprehensive risk dashboard.
-:::
+<ResponseExample endpoint="depeg" />
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 402 | Payment required (standard x402 flow) |
+| 400 | No Chainlink snapshot yet, or no USDC price in it (the error names the sequencer status); not charged |
+| 402 | Payment required (the standard x402 flow) |
 | 429 | Rate limit exceeded |
-| 503 | Chainlink data temporarily unavailable |
+| 503 | Service disabled, payments down, or the Chainlink feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |

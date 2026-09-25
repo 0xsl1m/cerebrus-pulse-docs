@@ -1,6 +1,6 @@
 ---
 title: GET /arb
-description: Market Stress Index derived from cross-chain arbitrage signals.
+description: A market stress index built from the most recent cross-chain arbitrage scans across 8 chains, with the scans behind it.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
@@ -9,7 +9,9 @@ import PriceBadge from '../../../components/docs/PriceBadge.astro';
 
 <PriceBadge endpoint="arb" />
 
-Returns a Market Stress Index derived from cross-chain price dislocations across decentralized exchanges. Higher stress levels indicate broader market dislocation, increased volatility risk, and potential mean-reversion opportunities.
+A market stress index from a cross-chain arbitrage scanner that runs every 5 minutes: how many cross-chain
+price dislocations the most recent scans found and how wide they were, summarised as one level and score.
+The thresholds are heuristics.
 
 ## Request
 
@@ -17,61 +19,64 @@ Returns a Market Stress Index derived from cross-chain price dislocations across
 GET https://api.cerebruspulse.xyz/arb
 ```
 
-No parameters required.
+### Query Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `limit` | integer | `10` | 1–50 | How many of the most recent scans to analyze. Outside the range the request is refused with 400 before any price is quoted. |
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `stress_level` | string | `LOW`, `MODERATE`, `HIGH`, or `EXTREME` |
-| `stress_score` | number | Normalized stress score (0.0–1.0) |
-| `dislocations_count` | integer | Number of active cross-chain price dislocations |
-| `avg_dislocation_bps` | number | Average dislocation magnitude in basis points |
-| `max_dislocation_bps` | number | Maximum single dislocation in basis points |
-| `data_age_seconds` | number | Age of underlying arb scanner data |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `arb` |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `stress_index.level` | string | `LOW`, `MODERATE`, `HIGH` or `EXTREME` (see below) |
+| `stress_index.score` | number | 0 to 1 within the level's band |
+| `stress_index.interpretation` | string | The level in words |
+| `statistics.scans_analyzed` | number | Scans read (up to `limit`) |
+| `statistics.total_opportunities` | number | Dislocations found across those scans |
+| `statistics.total_profitable` | number | Of those, the ones the scanner rated profitable after costs |
+| `statistics.avg_spread_bps` | number | Mean spread of the dislocations, in basis points |
+| `statistics.max_spread_bps` | number | Widest spread, in basis points |
+| `statistics.unique_tokens_involved` | array | Tokens in the dislocated pairs |
+| `statistics.chain_routes` | array | Buy-chain to sell-chain routes, as `chain->chain` |
+| `recent_scans[].timestamp` | string | When the scan ran |
+| `recent_scans[].scan_duration_s` | number | How long it took |
+| `recent_scans[].opportunities_found` | number | Dislocations in the scan |
+| `recent_scans[].profitable_count` | number | Of those, rated profitable |
+| `recent_scans[].chains_scanned` | number | Chains checked |
+| `recent_scans[].pairs_scanned` | number | Token pairs checked |
+| `recent_scans[].opportunities` | array | Optional. Present when the scan found any: `pair`, `spread_bps` and `estimated_profit_usd` for each |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_stress` |
+| `meta.scan_interval_minutes` | number | `5` |
+| `meta.data_source` | string | The scanner's price sources: DeFiLlama, Chainlink and Coinbase |
+| `meta.excluded` | string | Optional. Present while Coinbase-derived data is switched off: opportunities with a Coinbase-priced leg are left out |
+| `meta.cached` | boolean | Optional. `true` when the result is reused because no new scan has been logged |
 
-### Stress Levels
+`meta.as_of.arb_log` is the time of the newest scan.
 
-| Level | Score Range | Interpretation |
-|-------|-----------|----------------|
-| `LOW` | 0.0–0.25 | Normal market conditions, tight cross-venue pricing |
-| `MODERATE` | 0.25–0.50 | Mild stress, some price dislocations emerging |
-| `HIGH` | 0.50–0.75 | Significant stress, wide dislocations across venues |
-| `EXTREME` | 0.75–1.0 | Severe market stress, large cross-chain pricing gaps |
+### Stress levels
+
+| Level | When | Score |
+|-------|------|-------|
+| `LOW` | No dislocations, or at most 2 with every spread under 100 bps | 0 to 0.3 |
+| `MODERATE` | At most 5 dislocations, or a widest spread under 200 bps | 0.3 to 0.7 |
+| `HIGH` | At most 10 dislocations, or a widest spread under 500 bps | 0.7 to 0.9 |
+| `EXTREME` | More, and wider | 0.9 to 1.0 |
 
 ## Example
 
-```bash
-GET /arb
-```
-
-```json
-{
-  "timestamp_iso": "2026-03-07T06:00:00Z",
-  "stress_level": "LOW",
-  "stress_score": 0.12,
-  "dislocations_count": 3,
-  "avg_dislocation_bps": 8.5,
-  "max_dislocation_bps": 22.1,
-  "data_age_seconds": 142,
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 45
-  }
-}
-```
-
-:::tip[Use case]
-Use the stress index as a leading indicator for volatility. When stress transitions from LOW to MODERATE or higher, it often precedes large price moves. Combine with `/correlation` to identify which sectors are most affected.
-:::
+No captured example: the data capture held no arbitrage log. The fields above follow the engine's
+`process_arb`.
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 402 | Payment required (standard x402 flow) |
+| 400 | `limit` outside 1–50 (before any price is quoted), or no scan data yet (not charged) |
+| 402 | Payment required (the standard x402 flow) |
 | 429 | Rate limit exceeded |
-| 503 | Data freshness guarantee exceeded |
+| 503 | Service disabled, payments down, or the arbitrage log is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |

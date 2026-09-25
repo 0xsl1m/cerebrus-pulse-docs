@@ -1,15 +1,19 @@
 ---
 title: GET /spread/{coin}
-description: Spread analysis with slippage estimates and liquidity scoring.
+description: Hyperliquid impact spread for one perpetual, with uncalibrated slippage estimates at $10k-$500k and a liquidity score.
 ---
 
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import ResponseExample from '../../../components/docs/ResponseExample.astro';
 
 # GET /spread/\{coin\}
 
 <PriceBadge endpoint="spread" />
 
-Returns bid-ask spread, estimated slippage at various notional sizes, and a liquidity score. Critical for execution-focused agents that need to account for market impact before placing orders.
+The spread between Hyperliquid's impact prices for one perpetual, slippage estimates at four order sizes,
+and a 1–10 liquidity score. The impact spread is **not** the top-of-book bid-ask spread: Hyperliquid's
+impact prices are the average fill of an impact-size market order. The slippage figures come from a formula
+on that spread, not from the order book, and are the same for buys and sells.
 
 ## Request
 
@@ -21,58 +25,43 @@ GET https://api.cerebruspulse.xyz/spread/{coin}
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `coin` | string | Yes | Coin ticker (e.g., `BTC`, `ETH`). Case-insensitive. |
+| `coin` | string | Yes | Market symbol, case-insensitive (`BTC`, `ETH`, `SOL`). [`GET /coins`](/api/coins) lists them. |
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `coin` | string | Coin ticker |
-| `timestamp_iso` | string | ISO 8601 timestamp |
-| `spread` | object | Spread and liquidity data |
-| `spread.bid_ask_bps` | number | Bid-ask spread in basis points |
-| `spread.slippage_10k_bps` | number | Estimated slippage at $10k notional (bps) |
-| `spread.slippage_50k_bps` | number | Estimated slippage at $50k notional (bps) |
-| `spread.slippage_100k_bps` | number | Estimated slippage at $100k notional (bps) |
-| `spread.slippage_500k_bps` | number | Estimated slippage at $500k notional (bps) |
-| `spread.liquidity_score` | integer | Liquidity score (1–10, 10 = most liquid) |
-| `meta` | object | Provider metadata |
+| `endpoint` | string | `spread` |
+| `coin` | string | The symbol, upper-case |
+| `market_symbol` | string | Hyperliquid's name for the market (`kPEPE` for PEPE) |
+| `price_unit` | string | What prices are quoted per: `1 BTC`, or `1000 PEPE` for a 1000-token market |
+| `timestamp_iso` | string | When the response was computed (UTC) |
+| `spread.impact_spread_bps` | number | `(impact_ask − impact_bid) / mid × 10000` |
+| `spread.bid_ask_spread_bps` | number | Deprecated: the same impact spread under an old name (see `meta.deprecated`) |
+| `spread.impact_bid` | number | Hyperliquid's impact bid price |
+| `spread.impact_ask` | number | Hyperliquid's impact ask price |
+| `spread.mid_price` | number | Midpoint of the two impact prices |
+| `spread.mid_price_source` | string | `impact_prices` |
+| `spread.estimated_slippage_bps.<size>` | number | Estimated slippage in basis points for a market order of `$10k`, `$50k`, `$100k` or `$500k` |
+| `spread.slippage_model.formula` | string | `impact_spread_bps / 2 * sqrt(notional_usd / 1e6)` |
+| `spread.slippage_model.calibrated` | boolean | `false`: not measured against fills or the book |
+| `spread.slippage_model.side_aware` | boolean | `false`: one figure for both buys and sells |
+| `spread.liquidity_score` | number | 10 (impact spread < 2 bps), 8 (< 5), 6 (< 10), 4 (< 20), 2 (< 50), else 1 |
+| `meta` | object | Common metadata ([Response Schemas](/reference/response-schemas#meta)) |
+| `meta.offering` | string | `pulse_spread` |
+| `meta.deprecated` | object | Fields kept for old clients, each with what to read instead |
 
 ## Example
 
-```bash
-GET /spread/BTC
-```
-
-```json
-{
-  "coin": "BTC",
-  "timestamp_iso": "2026-03-04T10:00:00Z",
-  "spread": {
-    "bid_ask_bps": 0.14,
-    "slippage_10k_bps": 0.007,
-    "slippage_50k_bps": 0.016,
-    "slippage_100k_bps": 0.022,
-    "slippage_500k_bps": 0.049,
-    "liquidity_score": 10
-  },
-  "meta": {
-    "provider": "Cerebrus Pulse",
-    "offering": "cerebrus_pulse",
-    "execution_ms": 65
-  }
-}
-```
-
-:::note
-Slippage estimates use the formula `(spread_bps / 2) * (notional / 1M)^0.5`, calibrated against Hyperliquid's order book depth. Actual slippage may vary based on real-time conditions.
-:::
+<ResponseExample endpoint="spread" />
 
 ## Errors
 
 | Status | Reason |
 |--------|--------|
-| 400 | Invalid coin ticker |
-| 402 | Payment required (standard x402 flow) |
+| 400 | No impact prices for the market (not charged) |
+| 402 | Payment required (the standard x402 flow) |
+| 404 | Unknown coin (before any price is quoted) |
 | 429 | Rate limit exceeded |
-| 503 | Data freshness guarantee exceeded |
+| 503 | Service disabled, payments down, or the market data feed is missing or stale; no price is quoted |
+| 504 | Engine timeout (not charged) |
