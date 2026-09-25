@@ -1,6 +1,16 @@
 ---
 import Default from '@astrojs/starlight/components/Head.astro';
 import Analytics from '@vercel/analytics/astro';
+
+// The 404 page is not a real URL, so it must not declare a canonical or og:url.
+const route = Astro.locals.starlightRoute;
+if (route.id === '404') {
+  route.head = route.head.filter(
+    ({ tag, attrs }) =>
+      !(tag === 'link' && attrs?.rel === 'canonical') &&
+      !(tag === 'meta' && attrs?.property === 'og:url')
+  );
+}
 ---
 <Default><slot /></Default>
 <meta name="keywords" content="crypto API, hyperliquid API, MCP server crypto, x402 micropayments, crypto intelligence, confluence scoring, regime detection, A2A protocol crypto, DeFi API, perpetual futures API" />

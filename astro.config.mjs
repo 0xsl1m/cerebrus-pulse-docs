@@ -5,6 +5,10 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://cerebruspulse.xyz',
+  // Match vercel.json "trailingSlash": false. Without this, Starlight emits
+  // canonicals, og:url, sidebar links and sitemap entries with a trailing slash,
+  // and Vercel 308-redirects every one of them.
+  trailingSlash: 'never',
   // Astro's dev server binds ::1 by default, which refuses IPv4 localhost.
   // Bind IPv4 loopback explicitly (not all interfaces, which would expose it to the LAN).
   server: { host: '127.0.0.1' },
