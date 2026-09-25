@@ -3,6 +3,8 @@ title: x402 Payments
 description: How x402 micropayments work with Cerebrus Pulse.
 ---
 
+import PriceRange from '../../../components/docs/PriceRange.astro';
+
 # x402 Payments
 
 Cerebrus Pulse uses the [x402 protocol](https://www.x402.org/) for payments — an open standard for HTTP-native micropayments built on the `402 Payment Required` status code.
@@ -10,29 +12,39 @@ Cerebrus Pulse uses the [x402 protocol](https://www.x402.org/) for payments — 
 ## How It Works
 
 ```
-Client                          Pulse Gateway               Base / Solana
-  |                                  |                                |
-  |  GET /pulse/BTC                  |                                |
-  |--------------------------------->|                                |
-  |                                  |                                |
-  |  402 Payment Required            |                                |
-  |  + payment options (Base+Solana) |                                |
-  |<---------------------------------|                                |
-  |                                  |                                |
-  |  Sign USDC payment              |                                |
-  |  (x402 SDK picks your chain)    |                                |
-  |--------------------------------------------> USDC transfer        |
-  |                                  |                                |
-  |  Retry request + payment proof   |                                |
-  |--------------------------------->|                                |
-  |                                  |  Verify payment via facilitator|
-  |                                  |------------------------------->|
-  |                                  |<-------------------------------|
-  |  200 OK + analysis data          |                                |
-  |<---------------------------------|                                |
+Client (x402 v2 SDK)              Pulse Gateway                   Facilitator (Coinbase CDP)
+  |                                    |                                     |
+  |  GET /pulse/BTC                    |                                     |
+  |----------------------------------->|                                     |
+  |  402 Payment Required              |                                     |
+  |  PAYMENT-REQUIRED: terms           |                                     |
+  |  (price, Base + Solana, payTo)     |                                     |
+  |<-----------------------------------|                                     |
+  |                                    |                                     |
+  |  Sign a USDC payment authorization |                                     |
+  |  (nothing is sent on-chain yet)    |                                     |
+  |                                    |                                     |
+  |  GET /pulse/BTC                    |                                     |
+  |  PAYMENT-SIGNATURE: signed payload |                                     |
+  |----------------------------------->|  verify                             |
+  |                                    |------------------------------------>|
+  |                                    |<------------------------------------|
+  |                                    |  run the analysis, then settle      |
+  |                                    |------------------------------------>| submits the
+  |                                    |<------------------------------------| USDC transfer
+  |  200 OK + analysis data            |                                     |
+  |  PAYMENT-RESPONSE: receipt         |                                     |
+  |<-----------------------------------|                                     |
 ```
 
-The x402 SDK in your HTTP client handles steps 2–4 automatically. From your perspective, it's just a normal HTTP request that costs $0.01-$0.06. The 402 response includes payment options for **both Base and Solana** — your SDK picks whichever chain your wallet is configured for.
+An x402 **v2** client handles everything after the first request: it reads the terms from the base64
+`PAYMENT-REQUIRED` header, signs, and retries with `PAYMENT-SIGNATURE`. The gateway settles only after it has
+an answer; a request refused with a 4xx or failing with a 5xx is not charged. From your side it is a normal
+HTTP request that costs <PriceRange />. The 402 offers **both Base and Solana**; the SDK pays on a network you
+registered.
+
+The 402 JSON body repeats the Base terms in the older x402 v1 shape for crawlers and directories. It is
+informational: v1 clients, which pay with an `X-PAYMENT` header, are not accepted.
 
 ## Supported Networks
 
@@ -100,27 +112,36 @@ You need a wallet with USDC on **either** chain:
 
 ### Python
 ```bash
-pip install "x402[evm]" httpx    # For Base
-pip install "x402[svm]" httpx    # For Solana
+pip install "x402[evm]" httpx eth-account                                        # For Base
+pip install "x402[svm]" "solana>=0.36,<0.37" "solders>=0.27,<0.28" httpx         # For Solana
 ```
+The Solana pins are needed: solana 0.40 removed a module x402's Solana signer imports.
 See the [Python SDK Guide](/guides/python-sdk) for full integration details.
 
 ### TypeScript / Node.js
 ```bash
-npm install x402-fetch               # Base and Solana
+npm install @x402/fetch @x402/evm viem                         # For Base
+npm install @x402/fetch @x402/svm @solana/kit @scure/base      # For Solana
 ```
+These are the x402 **v2** packages. The older `x402-fetch` 1.x pays with an `X-PAYMENT` header, which this
+API does not accept.
 See the [TypeScript SDK Guide](/guides/typescript-sdk) for full integration details.
 
 ## Budget Controls
 
-The x402 SDKs support budget limits to prevent accidental overspending:
+Both official x402 clients refuse a payment above a per-payment cap, which defaults to **$1**. Set it lower:
 
-```python
-# Python — the SDK supports per-request and global limits
-# Configure in your client setup
+```typescript
+// TypeScript (@x402/fetch)
+wrapFetchWithPaymentFromConfig(fetch, { schemes, spendControls: { maxAmountPerPayment: "$0.10" } });
 ```
 
-At Pulse prices ($0.01-$0.06 per query), $10 of USDC gives you roughly 166-1000 API calls.
+```python
+# Python (x402)
+x402.set_spend_controls({"max_amount_per_payment": "$0.10"})
+```
+
+Each call costs <PriceRange />; set the cap just above the most expensive endpoint you call.
 
 ## Security
 

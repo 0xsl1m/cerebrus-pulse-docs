@@ -30,14 +30,15 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   <TabItem label="Python">
     ```bash
     # For Base (EVM):
-    pip install "x402[evm]" httpx
-    # For Solana:
-    pip install "x402[svm]" httpx
+    pip install "x402[evm]" httpx eth-account
+    # For Solana: pin solana below 0.37 (solana 0.40 removed a module x402's Solana client imports)
+    pip install "x402[svm]" "solana>=0.36,<0.37" "solders>=0.27,<0.28" httpx
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```bash
-    npm install x402-fetch
+    # x402 v2 client. The older x402-fetch 1.x cannot pay this API.
+    npm install @x402/fetch @x402/evm viem
     ```
   </TabItem>
 </Tabs>
@@ -48,17 +49,19 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   <TabItem label="Python">
     ```python
     import asyncio
+    import os
     from eth_account import Account
     from x402 import x402Client
     from x402.http.clients import x402HttpxClient
     from x402.mechanisms.evm.exact import register_exact_evm_client
 
-    # Your Base wallet private key (keep this secure!)
-    PRIVATE_KEY = "0xYOUR_PRIVATE_KEY_HERE"
+    # A dedicated, low-balance Base wallet (keep the key out of source code)
+    PRIVATE_KEY = os.environ["BASE_WALLET_PRIVATE_KEY"]
 
     async def main():
         x402 = x402Client()
         register_exact_evm_client(x402, Account.from_key(PRIVATE_KEY))
+        x402.set_spend_controls({"max_amount_per_payment": "$0.10"})
 
         async with x402HttpxClient(x402) as client:
             # Fetch BTC technical analysis (1h + 4h timeframes)
@@ -81,13 +84,17 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { wrapFetchWithPayment, createSigner } from "x402-fetch";
+    import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+    import { ExactEvmScheme } from "@x402/evm";
+    import { privateKeyToAccount } from "viem/accounts";
 
-    // Your Base wallet private key (keep this secure!)
-    const PRIVATE_KEY = "0xYOUR_PRIVATE_KEY_HERE";
+    // A dedicated, low-balance Base wallet (keep the key out of source code)
+    const account = privateKeyToAccount(process.env.BASE_WALLET_PRIVATE_KEY as `0x${string}`);
 
-    const signer = await createSigner("base", PRIVATE_KEY);
-    const fetchWithPayment = wrapFetchWithPayment(fetch, signer);
+    const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
+      schemes: [{ network: "eip155:8453", client: new ExactEvmScheme(account) }],
+      spendControls: { maxAmountPerPayment: "$0.10" },
+    });
 
     const response = await fetchWithPayment(
       "https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h"
@@ -101,13 +108,14 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   </TabItem>
   <TabItem label="cURL">
     ```bash
-    # Step 1: Initial request returns 402 with payment details
-    curl -i https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h
+    # Step 1: an unpaid request returns 402 with the x402 v2 terms
+    curl -i "https://api.cerebruspulse.xyz/pulse/BTC?timeframes=1h,4h"
     # HTTP/1.1 402 Payment Required
-    # x-402-payment: <base64-encoded payment details>
+    # payment-required: <base64 x402 v2 terms: price, networks, payTo>
 
-    # Step 2: Use an x402-compatible client to handle payment automatically
-    # The x402 SDKs handle this flow for you — see Python/TypeScript examples
+    # Step 2: an x402 v2 client signs a USDC payment and retries the same
+    # request with a PAYMENT-SIGNATURE header. The receipt comes back in
+    # PAYMENT-RESPONSE. See the Python and TypeScript tabs.
     ```
   </TabItem>
 </Tabs>

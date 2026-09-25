@@ -1,162 +1,193 @@
 ---
 title: TypeScript SDK
-description: Integrate Cerebrus Pulse with TypeScript/Node.js using the x402 SDK.
+description: Pay Cerebrus Pulse from TypeScript/Node.js with the x402 v2 fetch client (@x402/fetch).
 ---
-
-# TypeScript SDK Integration
-
-Complete guide to consuming Cerebrus Pulse from TypeScript/Node.js using the x402 SDK and viem.
-
-## Installation
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-```bash
-npm install x402-fetch
-```
+# TypeScript SDK Integration
 
-`x402-fetch` pulls in `x402` and `viem` itself, and its `createSigner` helper
-handles both Base and Solana keys — there is nothing chain-specific to install.
+Cerebrus Pulse takes payment over **x402 v2**. An unpaid request gets `402 Payment Required` with the terms
+in the base64 `PAYMENT-REQUIRED` header; the client pays by retrying with a `PAYMENT-SIGNATURE` header and
+gets the data plus a `PAYMENT-RESPONSE` receipt. The v2 fetch client, `@x402/fetch`, does all of that for you.
+
+:::caution[Do not use `x402-fetch` 1.x]
+The older `x402-fetch` package speaks x402 v1: it pays with an `X-PAYMENT` header, which this API does not
+accept. It signs a payment and gets a second 402. Use `@x402/fetch` (2.x) as shown below.
+:::
+
+## Installation
+
+<Tabs>
+  <TabItem label="Base (EVM)">
+    ```bash
+    npm install @x402/fetch @x402/evm viem
+    ```
+  </TabItem>
+  <TabItem label="Solana (SVM)">
+    ```bash
+    npm install @x402/fetch @x402/svm @solana/kit @scure/base
+    ```
+  </TabItem>
+</Tabs>
+
+The examples were checked against `@x402/fetch`, `@x402/evm` and `@x402/svm` 2.27.0. They are ES modules
+(top-level `await`), for Node.js 18 or later.
 
 ## Setup
 
-`wrapFetchWithPayment` wraps the native `fetch`. It makes the request, reads the
-402 payment terms, signs a payment, and retries — so the rest of your code just
-calls `fetch` and gets data back.
+`wrapFetchWithPaymentFromConfig` wraps the native `fetch`. It makes the request, reads the 402 terms, signs a
+USDC payment on a network you registered, and retries. The rest of your code just calls `fetchWithPayment`.
 
 <Tabs>
   <TabItem label="Base (EVM)">
     ```typescript
-    import { wrapFetchWithPayment, createSigner } from "x402-fetch";
+    import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+    import { ExactEvmScheme } from "@x402/evm";
+    import { privateKeyToAccount } from "viem/accounts";
 
-    // Load your private key securely (env var, secret manager, etc.)
-    const signer = await createSigner(
-      "base",
-      process.env.BASE_WALLET_PRIVATE_KEY!, // 0x-prefixed hex
-    );
+    // A dedicated, low-balance wallet. Read the key from the environment, never from source.
+    const account = privateKeyToAccount(process.env.BASE_WALLET_PRIVATE_KEY as `0x${string}`);
 
-    const fetchWithPayment = wrapFetchWithPayment(fetch, signer);
+    export const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
+      schemes: [{ network: "eip155:8453", client: new ExactEvmScheme(account) }], // Base mainnet
+      spendControls: { maxAmountPerPayment: "$0.10" }, // refuse any single payment above $0.10
+    });
 
-    const BASE_URL = "https://api.cerebruspulse.xyz";
+    export const BASE_URL = "https://api.cerebruspulse.xyz";
     ```
   </TabItem>
   <TabItem label="Solana (SVM)">
     ```typescript
-    import { wrapFetchWithPayment, createSigner } from "x402-fetch";
+    import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+    import { ExactSvmScheme } from "@x402/svm";
+    import { createKeyPairSignerFromBytes } from "@solana/kit";
+    import { base58 } from "@scure/base";
 
-    // Load your private key securely (env var, secret manager, etc.)
-    const signer = await createSigner(
-      "solana",
-      process.env.SOLANA_WALLET_PRIVATE_KEY!, // base58-encoded
+    // A dedicated, low-balance wallet: its base58-encoded secret key, from the environment.
+    const signer = await createKeyPairSignerFromBytes(
+      base58.decode(process.env.SOLANA_WALLET_PRIVATE_KEY!),
     );
 
-    const fetchWithPayment = wrapFetchWithPayment(fetch, signer);
+    export const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
+      // Solana mainnet
+      schemes: [{ network: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", client: new ExactSvmScheme(signer) }],
+      spendControls: { maxAmountPerPayment: "$0.10" }, // refuse any single payment above $0.10
+    });
 
-    const BASE_URL = "https://api.cerebruspulse.xyz";
+    export const BASE_URL = "https://api.cerebruspulse.xyz";
     ```
   </TabItem>
 </Tabs>
 
 :::note[Spend cap]
-`wrapFetchWithPayment` refuses any payment above a maximum, which defaults to
-**0.10 USDC** per request. Every Cerebrus Pulse endpoint is well under that
-(the most expensive is `/screener` at $0.06), so the default is fine. To change
-it, pass base units as the third argument — `wrapFetchWithPayment(fetch, signer,
-BigInt(20_000))` caps each call at $0.02.
+`@x402/fetch` refuses any payment above `spendControls.maxAmountPerPayment`, which defaults to **$1** per
+payment. The most expensive Cerebrus Pulse endpoint costs far less, so a cap of `"$0.10"` loses nothing and
+limits the damage of a wrong URL.
 :::
+
+Register both schemes to let the client pay on whichever rail the 402 offers first (Base is listed first).
 
 ## Making Requests
 
 ```typescript
 // Pulse — multi-timeframe technical analysis
-async function getPulse(coin: string, timeframes = "1h,4h") {
-  const resp = await fetchWithPayment(
-    `${BASE_URL}/pulse/${coin}?timeframes=${timeframes}`
-  );
+export async function getPulse(coin: string, timeframes = "1h,4h") {
+  const resp = await fetchWithPayment(`${BASE_URL}/pulse/${coin}?timeframes=${timeframes}`);
   return resp.json();
 }
 
-// Sentiment — market sentiment labels
-async function getSentiment() {
+// Sentiment — a bucketed market sentiment label
+export async function getSentiment() {
   const resp = await fetchWithPayment(`${BASE_URL}/sentiment`);
   return resp.json();
 }
 
-// Funding — funding rate analysis
-async function getFunding(coin: string, lookbackHours = 24) {
-  const resp = await fetchWithPayment(
-    `${BASE_URL}/funding/${coin}?lookback_hours=${lookbackHours}`
-  );
+// Funding — funding rate statistics over 1-168 hours
+export async function getFunding(coin: string, lookbackHours = 24) {
+  const resp = await fetchWithPayment(`${BASE_URL}/funding/${coin}?lookback_hours=${lookbackHours}`);
   return resp.json();
 }
 
 // Bundle — /pulse, 24h /funding and /sentiment in one request
-async function getBundle(coin: string, timeframes = "1h,4h") {
-  const resp = await fetchWithPayment(
-    `${BASE_URL}/bundle/${coin}?timeframes=${timeframes}`
-  );
+export async function getBundle(coin: string, timeframes = "1h,4h") {
+  const resp = await fetchWithPayment(`${BASE_URL}/bundle/${coin}?timeframes=${timeframes}`);
   return resp.json();
 }
 
-// Free endpoints — no payment needed, use regular fetch
-async function getHealth() {
-  const resp = await fetch(`${BASE_URL}/health`);
-  return resp.json();
-}
-
-async function getCoins() {
+// Free endpoints — no payment needed, use plain fetch
+export async function getCoins(): Promise<{ coins: string[] }> {
   const resp = await fetch(`${BASE_URL}/coins`);
   return resp.json();
 }
 ```
 
-## Working with the Response
+### The payment receipt
+
+A paid response carries the settlement receipt in the `PAYMENT-RESPONSE` header:
 
 ```typescript
+import { decodePaymentResponseHeader } from "@x402/fetch";
+
+const resp = await fetchWithPayment(`${BASE_URL}/pulse/BTC`);
+const receipt = resp.headers.get("PAYMENT-RESPONSE");
+if (receipt) console.log(decodePaymentResponseHeader(receipt)); // transaction, network, payer
+```
+
+## Working with the Response
+
+The shapes below follow what the engine returns; see [GET /pulse](/api/pulse) for every field.
+
+```typescript
+type TrendLabel = "bullish" | "weak_bullish" | "neutral" | "weak_bearish" | "bearish" | "insufficient_data";
+
 interface PulseResponse {
   coin: string;
-  price: { current: number };
+  market_symbol: string; // Hyperliquid's name for the market (e.g. "kPEPE")
+  price_unit: string; // prices are per this many tokens (e.g. "1000 PEPE")
+  price: { current?: number };
   timeframes: Record<string, {
     indicators: {
-      rsi_14: number;
+      rsi_14: number | null;
       rsi_zone: string;
-      trend: { direction: number; label: string; ema_stack: string };
-      bollinger: { position_pct: number; width_pct: number };
-      zscore_100: number;
-      // ... more fields
+      trend: { direction: -1 | 0 | 1; label: TrendLabel; ema_stack: string };
+      bollinger: { position_pct?: number; width_pct?: number };
+      zscore_100: number | null;
     };
-    candle_freshness_seconds: number;
-  }>;
+    last_closed_candle_time?: string;
+    stale?: boolean;
+  } | { error: string }>;
   confluence: {
-    score: number;
-    bias: "bullish" | "bearish" | "neutral";
-    bullish_count: number;
-    bearish_count: number;
+    score: number; // bullish vote share on the primary timeframe: 1 = all bullish, 0.5 = neutral, 0 = all bearish
+    bias: "bullish" | "bearish" | "neutral" | "unknown";
+    primary_timeframe: string | null;
   };
-  regime: { current: string };
+  regime: { current: string; as_of: number; stale?: boolean };
   derivatives: {
-    funding_rate: number;
-    funding_annualized_pct: number;
-    open_interest: number;
-    spread_bps: number;
+    funding_rate?: number; // hourly rate
+    funding_annualized_pct?: number;
+    open_interest?: number; // in contracts (price_unit), not USD
   };
-  meta: { execution_ms: number; warning?: string };
+  meta: { execution_ms: number; warning?: string; warnings?: string[] };
 }
 
 async function analyzeMarket(coin: string) {
   const data: PulseResponse = await getPulse(coin);
 
-  console.log(`${coin} @ $${data.price.current.toLocaleString()}`);
-  console.log(`Regime: ${data.regime.current}`);
-  console.log(`Confluence: ${(data.confluence.score * 100).toFixed(0)}% ${data.confluence.bias}`);
+  console.log(`${coin} @ $${data.price.current?.toLocaleString()} | regime: ${data.regime.current}`);
+  console.log(`Confluence: ${data.confluence.bias} (bullish share ${data.confluence.score})`);
 
   for (const [tf, analysis] of Object.entries(data.timeframes)) {
+    if ("error" in analysis) {
+      console.log(`  [${tf}] ${analysis.error}`);
+      continue;
+    }
     const { rsi_14, rsi_zone, trend } = analysis.indicators;
-    console.log(`  [${tf}] RSI: ${rsi_14.toFixed(1)} (${rsi_zone}) | Trend: ${trend.label}`);
+    console.log(`  [${tf}] RSI: ${rsi_14 ?? "n/a"} (${rsi_zone}) | Trend: ${trend.label}`);
   }
 
-  if (data.meta.warning === "stale_data") {
-    console.warn("Warning: market data is stale (>2 hours old)");
+  if (data.meta.warning || data.meta.warnings?.length) {
+    console.warn("Data warnings:", data.meta.warning, data.meta.warnings);
   }
 }
 ```
@@ -170,10 +201,12 @@ async function safePulse(coin: string) {
 
     if (!resp.ok) {
       switch (resp.status) {
-        case 400: console.error(`Invalid coin: ${coin}`); break;
-        case 429: console.error("Rate limited — wait and retry"); break;
-        case 503: console.error("Service unavailable — maintenance mode"); break;
-        case 504: console.error("Engine timeout — try again"); break;
+        case 400: console.error("Invalid input, e.g. a bad timeframe (not charged)"); break;
+        case 402: console.error("Payment not accepted, e.g. not enough USDC (nothing settled)"); break;
+        case 404: console.error(`Unknown coin: ${coin} (GET /coins lists them)`); break;
+        case 429: console.error("Rate limited: wait and retry"); break;
+        case 503: console.error(`Unavailable; retry after ${resp.headers.get("Retry-After")} s`); break;
+        case 504: console.error("Engine timeout (not charged): try again"); break;
         default: console.error(`Error ${resp.status}`);
       }
       return null;
@@ -181,7 +214,8 @@ async function safePulse(coin: string) {
 
     return resp.json();
   } catch (err) {
-    console.error("Network error:", err);
+    // Also thrown when a payment would exceed spendControls
+    console.error("Request failed:", err);
     return null;
   }
 }
@@ -191,35 +225,31 @@ async function safePulse(coin: string) {
 
 ```typescript
 async function dashboard() {
-  // Get available coins (free)
-  const { coins } = await getCoins();
+  const { coins } = await getCoins(); // free
   console.log(`Scanning ${coins.length} coins...\n`);
 
-  // Fetch top 5 (paid — $0.025 each = $0.125 total)
+  // Paid: five /pulse calls. One /screener call covers every coin instead.
   const results = await Promise.all(
-    coins.slice(0, 5).map(async (coin: string) => {
+    coins.slice(0, 5).map(async (coin) => {
       const data = await safePulse(coin);
       return data ? { coin, ...data.confluence } : null;
-    })
+    }),
   );
 
-  // Sort by confluence score
+  // Highest bullish vote share first (1 = all bullish, 0 = all bearish)
   const sorted = results
-    .filter(Boolean)
-    .sort((a: any, b: any) => b.score - a.score);
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .sort((a, b) => b.score - a.score);
 
-  console.log("Coin     Bias       Score");
-  console.log("─".repeat(30));
-  for (const r of sorted) {
-    console.log(`${r!.coin.padEnd(9)}${r!.bias.padEnd(11)}${(r!.score * 100).toFixed(0)}%`);
-  }
+  console.log("Coin     Bias       Bullish share");
+  for (const r of sorted) console.log(`${r.coin.padEnd(9)}${r.bias.padEnd(11)}${r.score}`);
 }
 ```
 
 ## Tips
 
-- Free endpoints (`/health`, `/coins`) don't need `fetchWithPayment` — use regular `fetch`
-- Use `Promise.all` to batch multiple coin requests in parallel
-- Check `/health` before batch operations to avoid wasting payments
-- The `meta.warning` field indicates stale data (>2 hours old)
+- Free endpoints (`/health`, `/coins`, `/demo/{coin}`) don't need `fetchWithPayment`; use regular `fetch`
+- `Promise.all` batches requests, but the gateway allows 3 concurrent requests and 12 per minute per IP
+- Check `/health` before a batch to avoid paying into a degraded gateway
+- `meta.warning` (`stale_data`) and `meta.warnings` (for example `stale_candles`) flag old inputs
 - `/bundle` returns `/pulse`, 24h `/funding` and `/sentiment` for one coin in one request (one rate-limit slot instead of three); [its page](/api/bundle) shows how its price compares

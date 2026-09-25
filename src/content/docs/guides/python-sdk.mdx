@@ -19,16 +19,25 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   </TabItem>
   <TabItem label="Solana (SVM)">
     ```bash
-    pip install "x402[svm]" httpx
+    pip install "x402[svm]" "solana>=0.36,<0.37" "solders>=0.27,<0.28" httpx
     ```
   </TabItem>
 </Tabs>
+
+:::note[Why the Solana pins]
+`x402[svm]` accepts any `solana>=0.36`, and pip now picks solana 0.40, which removed the `solana.rpc.api`
+module x402's Solana signer imports: `from x402.mechanisms.svm import KeypairSigner` then fails with
+"SVM mechanism requires solana packages". The pins above are the combination the gateway itself runs
+(checked with x402 2.24.0, solana 0.36.12 and solders 0.27.1).
+:::
 
 ## Setup
 
 Build an `x402Client`, register a payment scheme onto it with your signer, then
 hand that client to the HTTP wrapper. The registration goes on the **x402
-client**, not on the HTTP client.
+client**, not on the HTTP client. This is the x402 **v2** client: it pays with the
+`PAYMENT-SIGNATURE` header, the only one this API accepts. The client refuses any
+payment above its spend cap, $1 by default; the setup below lowers it to $0.10.
 
 <Tabs>
   <TabItem label="Base (EVM)">
@@ -46,6 +55,7 @@ client**, not on the HTTP client.
 
     x402 = x402Client()
     register_exact_evm_client(x402, signer)
+    x402.set_spend_controls({"max_amount_per_payment": "$0.10"})  # refuse any payment above $0.10
     ```
   </TabItem>
   <TabItem label="Solana (SVM)">
@@ -63,6 +73,7 @@ client**, not on the HTTP client.
 
     x402 = x402Client()
     register_exact_svm_client(x402, signer)
+    x402.set_spend_controls({"max_amount_per_payment": "$0.10"})  # refuse any payment above $0.10
     ```
   </TabItem>
 </Tabs>
