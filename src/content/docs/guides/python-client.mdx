@@ -18,11 +18,12 @@ This page describes **cerebrus-pulse 0.4.0 or later**. Earlier releases cannot p
 ## Install
 
 ```bash
-pip install cerebrus-pulse              # free endpoints; paid ones raise PaymentRequired with the price
-pip install "cerebrus-pulse[pay]"       # + automatic payment in USDC on Base
-pip install "cerebrus-pulse[pay,svm]"   # + automatic payment in USDC on Solana
+pip install "cerebrus-pulse>=0.4.0"            # free endpoints; paid ones raise PaymentRequired with the price
+pip install "cerebrus-pulse[pay]>=0.4.0"       # + automatic payment in USDC on Base
+pip install "cerebrus-pulse[pay,svm]>=0.4.0"   # + automatic payment in USDC on Solana
 ```
 
+Keep the `>=0.4.0`: without it pip can settle on an older release, which has no `pay` or `svm` extra.
 The `svm` extra pins solana below 0.37 for you: solana 0.40 removed a module x402's Solana signer imports.
 
 ## Quick start

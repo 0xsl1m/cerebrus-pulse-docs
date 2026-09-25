@@ -17,7 +17,9 @@ This page describes **cerebrus-pulse-mcp 0.5.2 or later**. Earlier releases fail
 
 ## Install
 
-The server runs with [`uvx`](https://docs.astral.sh/uv/), so there is nothing to install by hand.
+The server runs with [`uvx`](https://docs.astral.sh/uv/), so there is nothing to install by hand. The
+`--from "cerebrus-pulse-mcp>=0.5.2"` part makes uvx run 0.5.2 or later rather than an older release or an
+older copy it has cached.
 
 ### Claude Desktop, Cursor, Windsurf
 
@@ -28,7 +30,7 @@ Add it to your MCP config (`claude_desktop_config.json`, `.cursor/mcp.json`, ...
   "mcpServers": {
     "cerebrus-pulse": {
       "command": "uvx",
-      "args": ["cerebrus-pulse-mcp"]
+      "args": ["--from", "cerebrus-pulse-mcp>=0.5.2", "cerebrus-pulse-mcp"]
     }
   }
 }
@@ -37,13 +39,13 @@ Add it to your MCP config (`claude_desktop_config.json`, `.cursor/mcp.json`, ...
 ### Claude Code
 
 ```bash
-claude mcp add cerebrus-pulse -- uvx cerebrus-pulse-mcp
+claude mcp add cerebrus-pulse -- uvx --from "cerebrus-pulse-mcp>=0.5.2" cerebrus-pulse-mcp
 ```
 
 ### pip
 
 ```bash
-pip install cerebrus-pulse-mcp
+pip install "cerebrus-pulse-mcp>=0.5.2"
 cerebrus-pulse-mcp            # speaks MCP over stdio
 ```
 
@@ -57,7 +59,7 @@ is needed). The key sits in plain text in the MCP config, so never use a main wa
   "mcpServers": {
     "cerebrus-pulse": {
       "command": "uvx",
-      "args": ["cerebrus-pulse-mcp"],
+      "args": ["--from", "cerebrus-pulse-mcp>=0.5.2", "cerebrus-pulse-mcp"],
       "env": {
         "CEREBRUS_WALLET_KEY": "<private key of a dedicated Base wallet>",
         "CEREBRUS_MAX_PAYMENT_USD": "0.10",

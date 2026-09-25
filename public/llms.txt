@@ -50,9 +50,9 @@ The bundle ($0.05) returns the /pulse output, 24-hour /funding statistics and /s
 
 ## Integrations
 
-- [MCP server](https://cerebruspulse.xyz/guides/mcp-server): `uvx cerebrus-pulse-mcp` for Claude, Cursor or any MCP client; pays inside spend limits.
-- [Python client](https://cerebruspulse.xyz/guides/python-client): `pip install "cerebrus-pulse[pay]"`, typed methods that pay inside spend limits.
-- [LangChain tools](https://cerebruspulse.xyz/guides/langchain): `pip install "langchain-cerebrus-pulse[pay]"`.
+- [MCP server](https://cerebruspulse.xyz/guides/mcp-server): `uvx --from "cerebrus-pulse-mcp>=0.5.2" cerebrus-pulse-mcp` for Claude, Cursor or any MCP client; pays inside spend limits.
+- [Python client](https://cerebruspulse.xyz/guides/python-client): `pip install "cerebrus-pulse[pay]>=0.4.0"`, typed methods that pay inside spend limits.
+- [LangChain tools](https://cerebruspulse.xyz/guides/langchain): `pip install "langchain-cerebrus-pulse[pay]>=0.4.0"`.
 - [Python with x402](https://cerebruspulse.xyz/guides/python-sdk): the raw x402 SDK (`pip install "x402[evm]" httpx eth-account`).
 - [TypeScript with x402](https://cerebruspulse.xyz/guides/typescript-sdk): `npm install @x402/fetch @x402/evm viem`.
 - [A2A](https://cerebruspulse.xyz/guides/a2a-agents): an A2A agent card and `message/send`; A2A names the HTTP endpoint and its x402 terms, and payment happens over HTTP.

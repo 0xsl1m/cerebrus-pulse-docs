@@ -13,6 +13,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { siteFiles } from './lib.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 
@@ -78,10 +79,43 @@ test('every Solana pip install pins solana below 0.37', () => {
 // cerebrus-pulse Python client, the LangChain tools), and the Python client's
 // PyPI documentation link pointed at a page about the raw x402 SDK.
 const GUIDES = {
-  'guides/mcp-server': [/uvx cerebrus-pulse-mcp|"command": "uvx"/, /CEREBRUS_WALLET_KEY/, /CEREBRUS_MAX_PAYMENT_USD/, /0\.5\.2 or later/],
-  'guides/python-client': [/pip install cerebrus-pulse/, /CerebrusPulse\(wallet_key=/, /PaymentBlocked/, /0\.4\.0 or later/],
-  'guides/langchain': [/pip install langchain-cerebrus-pulse/, /tool\(client=client\)/, /create_agent/, /0\.4\.0 or later/],
+  'guides/mcp-server': [/uvx --from "cerebrus-pulse-mcp>=0\.5\.2" cerebrus-pulse-mcp/, /CEREBRUS_WALLET_KEY/, /CEREBRUS_MAX_PAYMENT_USD/, /0\.5\.2 or later/],
+  'guides/python-client': [/pip install "cerebrus-pulse\[pay\]>=0\.4\.0"/, /CerebrusPulse\(wallet_key=/, /PaymentBlocked/, /0\.4\.0 or later/],
+  'guides/langchain': [/pip install "langchain-cerebrus-pulse\[pay\]>=0\.4\.0"/, /tool\(client=client\)/, /create_agent/, /0\.4\.0 or later/],
 };
+
+// Review follow-up (F037): the guides describe cerebrus-pulse 0.4.0,
+// langchain-cerebrus-pulse 0.4.0 and cerebrus-pulse-mcp 0.5.2, while PyPI
+// still serves 0.3.2, 0.3.2 and 0.5.1. An unpinned install resolves the old
+// release, which has no `pay` extra (and whose MCP server fails to start on a
+// fresh install), so every install names the release its guide describes.
+const MIN_VERSION = { 'cerebrus-pulse': '0.4.0', 'langchain-cerebrus-pulse': '0.4.0', 'cerebrus-pulse-mcp': '0.5.2' };
+const PACKAGE_SPEC = /(?<![\w-])(langchain-cerebrus-pulse|cerebrus-pulse-mcp|cerebrus-pulse)(?![\w-])(\[[a-z,]+\])?(>=[0-9.]+)?/g;
+
+test('every install of a client package pins the release its guide describes', () => {
+  let pip = 0;
+  let uvx = 0;
+  for (const file of siteFiles('src', 'public', 'scripts')) {
+    for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+      if (/pip install/.test(line)) {
+        for (const [spec, name, , pin] of line.matchAll(PACKAGE_SPEC)) {
+          pip++;
+          assert.equal(pin, `>=${MIN_VERSION[name]}`, `${file}: ${spec} in: ${line.trim()}`);
+        }
+      }
+      if (/\buvx\b.*cerebrus-pulse-mcp|"args":.*cerebrus-pulse-mcp/.test(line)) {
+        uvx++;
+        assert.match(line, /--from"?,? "cerebrus-pulse-mcp>=0\.5\.2"/, `${file}: ${line.trim()}`);
+      }
+    }
+  }
+  assert.ok(pip >= 10, `only ${pip} client package installs found`);
+  assert.ok(uvx >= 4, `only ${uvx} uvx runs of the MCP server found`);
+  for (const [slug, name] of [['mcp-server', 'cerebrus-pulse-mcp'], ['python-client', 'cerebrus-pulse'], ['langchain', 'langchain-cerebrus-pulse']]) {
+    const page = readFileSync(join(ROOT, 'src/content/docs/guides', `${slug}.mdx`), 'utf8');
+    assert.match(page, new RegExp(`${MIN_VERSION[name].replace(/\./g, '\\.')} or later`), slug);
+  }
+});
 
 test('each published client package has a guide in the sidebar', () => {
   const config = readFileSync(join(ROOT, 'astro.config.mjs'), 'utf8');

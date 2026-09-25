@@ -70,7 +70,7 @@ Prices come from the gateway's payment routes; the 402 response always states th
 - **[API Reference](https://cerebruspulse.xyz/api/pulse)** — Full endpoint documentation
 - **[x402 Payments Guide](https://cerebruspulse.xyz/guides/x402-payments)** — Understand the payment flow
 - **[MCP Server](https://cerebruspulse.xyz/guides/mcp-server)** — Use it from Claude, Cursor or any MCP client
-- **[Python Client](https://cerebruspulse.xyz/guides/python-client)** — `pip install cerebrus-pulse`, pays inside spend limits
+- **[Python Client](https://cerebruspulse.xyz/guides/python-client)** — `pip install "cerebrus-pulse>=0.4.0"`, pays inside spend limits
 - **[LangChain](https://cerebruspulse.xyz/guides/langchain)** — LangChain tools on the same client
 - **[Python with x402](https://cerebruspulse.xyz/guides/python-sdk)** and **[TypeScript with x402](https://cerebruspulse.xyz/guides/typescript-sdk)** — Pay with the x402 SDKs directly
 
@@ -370,7 +370,7 @@ _GET /pulse/BTC?timeframes=1h,4h: real engine output on market data captured at 
 - **[API Reference — /pulse](https://cerebruspulse.xyz/api/pulse)** — Full endpoint documentation with all parameters
 - **[API Reference — /screener](https://cerebruspulse.xyz/api/screener)** — Scan all 50+ coins in one call
 - **[MCP Server](https://cerebruspulse.xyz/guides/mcp-server)** — Use Cerebrus Pulse from Claude, Cursor or any MCP client
-- **[Python Client](https://cerebruspulse.xyz/guides/python-client)** — `pip install cerebrus-pulse`: typed methods that pay for you
+- **[Python Client](https://cerebruspulse.xyz/guides/python-client)** — `pip install "cerebrus-pulse>=0.4.0"`: typed methods that pay for you
 - **[Python with x402](https://cerebruspulse.xyz/guides/python-sdk)** — Full Python integration with the raw x402 SDK
 - **[TypeScript with x402](https://cerebruspulse.xyz/guides/typescript-sdk)** — TypeScript/Node.js integration
 - **[x402 Payments Guide](https://cerebruspulse.xyz/guides/x402-payments)** — Deep dive into how micropayments work
@@ -2552,7 +2552,9 @@ automatically, inside spend limits.
 
 ## Install
 
-The server runs with [`uvx`](https://docs.astral.sh/uv/), so there is nothing to install by hand.
+The server runs with [`uvx`](https://docs.astral.sh/uv/), so there is nothing to install by hand. The
+`--from "cerebrus-pulse-mcp>=0.5.2"` part makes uvx run 0.5.2 or later rather than an older release or an
+older copy it has cached.
 
 ### Claude Desktop, Cursor, Windsurf
 
@@ -2563,7 +2565,7 @@ Add it to your MCP config (`claude_desktop_config.json`, `.cursor/mcp.json`, ...
   "mcpServers": {
     "cerebrus-pulse": {
       "command": "uvx",
-      "args": ["cerebrus-pulse-mcp"]
+      "args": ["--from", "cerebrus-pulse-mcp>=0.5.2", "cerebrus-pulse-mcp"]
     }
   }
 }
@@ -2572,13 +2574,13 @@ Add it to your MCP config (`claude_desktop_config.json`, `.cursor/mcp.json`, ...
 ### Claude Code
 
 ```bash
-claude mcp add cerebrus-pulse -- uvx cerebrus-pulse-mcp
+claude mcp add cerebrus-pulse -- uvx --from "cerebrus-pulse-mcp>=0.5.2" cerebrus-pulse-mcp
 ```
 
 ### pip
 
 ```bash
-pip install cerebrus-pulse-mcp
+pip install "cerebrus-pulse-mcp>=0.5.2"
 cerebrus-pulse-mcp            # speaks MCP over stdio
 ```
 
@@ -2592,7 +2594,7 @@ is needed). The key sits in plain text in the MCP config, so never use a main wa
   "mcpServers": {
     "cerebrus-pulse": {
       "command": "uvx",
-      "args": ["cerebrus-pulse-mcp"],
+      "args": ["--from", "cerebrus-pulse-mcp>=0.5.2", "cerebrus-pulse-mcp"],
       "env": {
         "CEREBRUS_WALLET_KEY": "<private key of a dedicated Base wallet>",
         "CEREBRUS_MAX_PAYMENT_USD": "0.10",
@@ -2673,11 +2675,12 @@ yourself, see [Python with x402](https://cerebruspulse.xyz/guides/python-sdk).
 ## Install
 
 ```bash
-pip install cerebrus-pulse              # free endpoints; paid ones raise PaymentRequired with the price
-pip install "cerebrus-pulse[pay]"       # + automatic payment in USDC on Base
-pip install "cerebrus-pulse[pay,svm]"   # + automatic payment in USDC on Solana
+pip install "cerebrus-pulse>=0.4.0"            # free endpoints; paid ones raise PaymentRequired with the price
+pip install "cerebrus-pulse[pay]>=0.4.0"       # + automatic payment in USDC on Base
+pip install "cerebrus-pulse[pay,svm]>=0.4.0"   # + automatic payment in USDC on Solana
 ```
 
+Keep the `>=0.4.0`: without it pip can settle on an older release, which has no `pay` or `svm` extra.
 The `svm` extra pins solana below 0.37 for you: solana 0.40 removed a module x402's Solana signer imports.
 
 ## Quick start
@@ -2810,10 +2813,12 @@ wallet key and paid tools pay automatically, all under the same spend limits.
 ## Install
 
 ```bash
-pip install langchain-cerebrus-pulse          # tools; paid ones report the price instead of paying
-pip install "langchain-cerebrus-pulse[pay]"   # + automatic payment in USDC on Base
-pip install "langchain-cerebrus-pulse[svm]"   # + automatic payment in USDC on Solana too
+pip install "langchain-cerebrus-pulse>=0.4.0"         # tools; paid ones report the price instead of paying
+pip install "langchain-cerebrus-pulse[pay]>=0.4.0"    # + automatic payment in USDC on Base
+pip install "langchain-cerebrus-pulse[svm]>=0.4.0"    # + automatic payment in USDC on Solana too
 ```
+
+Keep the `>=0.4.0`: without it pip can settle on an older release, which has no `pay` or `svm` extra.
 
 ## Quick start
 
@@ -2901,7 +2906,7 @@ Source: https://cerebruspulse.xyz/guides/python-sdk
 Call Cerebrus Pulse from Python with the official x402 client, handling the payment yourself.
 
 > **Looking for the cerebrus-pulse package?:**
-> `pip install cerebrus-pulse` is a typed client that wraps every endpoint and pays for you inside spend
+> `pip install "cerebrus-pulse>=0.4.0"` is a typed client that wraps every endpoint and pays for you inside spend
 > limits: see [Python Client (cerebrus-pulse)](https://cerebruspulse.xyz/guides/python-client). This page uses the raw x402 SDK.
 
 ## Installation
