@@ -2750,7 +2750,7 @@ response keeps the raw JSON in `.raw`, and a field the API did not send is `None
 | `spread(coin)` | [`GET /spread/{coin}`](https://cerebruspulse.xyz/api/spread) |
 | `correlation()` | [`GET /correlation`](https://cerebruspulse.xyz/api/correlation) |
 | `stress()` | [`GET /arb`](https://cerebruspulse.xyz/api/arb) |
-| `cex_dex(token)` | [`GET /cex-dex/{token}`](https://cerebruspulse.xyz/api/cex-dex) |
+| `cex_dex(coin)` | [`GET /cex-dex/{token}`](https://cerebruspulse.xyz/api/cex-dex) |
 | `basis(coin)` | [`GET /basis/{coin}`](https://cerebruspulse.xyz/api/basis) |
 | `depeg()` | [`GET /depeg`](https://cerebruspulse.xyz/api/depeg) |
 | `liquidations(coin)` | [`GET /liquidations/{coin}`](https://cerebruspulse.xyz/api/liquidations) |
