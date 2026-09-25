@@ -1,0 +1,9 @@
+---
+// What the bundle holds and how its price compares with buying the same data
+// separately, computed from src/data/prices.json (F033). No discount is
+// claimed unless the prices make one.
+import prices from '../../data/prices.json';
+import { bundleMath } from '../../lib/pricing.mjs';
+---
+
+{bundleMath(prices).sentence}

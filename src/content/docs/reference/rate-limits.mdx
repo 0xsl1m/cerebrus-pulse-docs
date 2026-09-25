@@ -86,4 +86,4 @@ All errors return JSON:
 3. **Don't retry on 400** — These are client errors. Fix the request before retrying.
 4. **Retry on 504** — Engine timeouts are usually transient. A single retry typically succeeds.
 5. **Respect 503** — The gateway is in maintenance. Wait for the `retry_after` period.
-6. **Use `/bundle` for multi-data** — Instead of calling `/pulse` + `/sentiment` + `/funding` separately (3 requests), use `/bundle` (1 request). Cheaper and uses fewer rate limit slots.
+6. **Use `/bundle` for multi-data** — Instead of calling `/pulse` + `/sentiment` + `/funding` separately (3 requests), use `/bundle` (1 request), which uses one rate-limit slot instead of three. [Its page](/api/bundle) shows how its price compares with the three calls.

@@ -3,14 +3,14 @@ title: GET /bundle/{coin}
 description: Complete analysis bundle — pulse, sentiment, and funding combined.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
 import PriceBadge from '../../../components/docs/PriceBadge.astro';
+import BundleMath from '../../../components/docs/BundleMath.astro';
 
 # GET /bundle/\{coin\}
 
-<PriceBadge endpoint="bundle" /> <Badge text="Best Value" variant="success" />
+<PriceBadge endpoint="bundle" />
 
-Returns pulse technical analysis, sentiment, funding, and spread data in a single response. **9% cheaper** than calling all four endpoints individually ($0.05 vs $0.055 = $0.025 + $0.01 + $0.01 + $0.015).
+<BundleMath />
 
 ## Request
 
@@ -79,15 +79,14 @@ GET /bundle/BTC?timeframes=1h,4h
     "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
     "bundle": true,
-    "execution_ms": 340,
-    "discount_pct": 20
+    "execution_ms": 340
   }
 }
 ```
 
 ## When to Use Bundle
 
-- **Use bundle** when you need a complete market view for a single coin — saves one payment round-trip and costs less.
+- **Use bundle** when you need a complete market view for a single coin — one request instead of three.
 - **Use individual endpoints** when you only need one type of data, or when querying sentiment (which isn't coin-specific).
 
 ## Errors

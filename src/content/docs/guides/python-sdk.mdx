@@ -223,7 +223,7 @@ async def scan_all_coins():
 ## Tips
 
 - **Reuse the client** within a session to avoid reconnection overhead
-- **Use `/bundle`** instead of calling `/pulse` + `/sentiment` + `/funding` separately — it's cheaper
+- **Use `/bundle`** to get `/pulse`, 24h `/funding` and `/sentiment` in one request (one rate-limit slot instead of three); [its page](/api/bundle) shows how its price compares
 - **Check `/health`** before batch operations to avoid wasting payments on a degraded gateway
 - **Handle stale data** — check `meta.warning` for `"stale_data"` which means the underlying market data is >2 hours old
 

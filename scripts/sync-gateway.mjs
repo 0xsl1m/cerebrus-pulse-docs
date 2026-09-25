@@ -16,7 +16,11 @@
 //
 // The gateway is looked for at $CEREBRUS_GATEWAY_DIR, else ../gateway (the
 // cerebrus-pulse workspace layout). --check without a gateway skips (exit 0)
-// so a checkout without it (CI, Vercel) is not blocked.
+// so a checkout without it (CI, Vercel) is not blocked. Files are read from
+// the gateway's committed HEAD, not its working tree, so someone's unfinished
+// edit there never leaks into the docs; set CEREBRUS_GATEWAY_REF to another
+// ref, or to "worktree" to read the files on disk.
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -79,9 +83,17 @@ export function parseSkills(serverPy, routes) {
   return skills;
 }
 
+/** A gateway file at CEREBRUS_GATEWAY_REF (default HEAD); from disk if the dir is not a git repo. */
+export function readGatewayFile(dir, relPath, ref = process.env.CEREBRUS_GATEWAY_REF || 'HEAD') {
+  if (ref !== 'worktree' && existsSync(join(dir, '.git'))) {
+    return execFileSync('git', ['-C', dir, 'show', `${ref}:${relPath}`], { encoding: 'utf8', maxBuffer: 64 << 20 });
+  }
+  return readFileSync(join(dir, relPath), 'utf8');
+}
+
 export function buildPrices(dir = gatewayDir()) {
-  const serverPy = readFileSync(join(dir, 'service', 'server.py'), 'utf8');
-  const config = JSON.parse(readFileSync(join(dir, 'service', 'x402_server_config.json'), 'utf8'));
+  const serverPy = readGatewayFile(dir, 'service/server.py');
+  const config = JSON.parse(readGatewayFile(dir, 'service/x402_server_config.json'));
   const routes = parseRoutes(serverPy, config);
   const version = serverPy.match(/^API_VERSION = "([^"]+)"/m);
   if (!version) throw new Error('API_VERSION not found in server.py');

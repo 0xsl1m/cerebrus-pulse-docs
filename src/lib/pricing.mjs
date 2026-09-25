@@ -20,6 +20,34 @@ export function sumPrices(...values) {
   return String(micro / 1e6);
 }
 
+// What /bundle returns, by the endpoint that sells the same data alone: the
+// /pulse output, /funding over 24 h (funding_24h) and /sentiment. Its regime
+// is part of /pulse. It carries no /spread analysis (F033).
+export const BUNDLE_PARTS = ['pulse', 'funding', 'sentiment'];
+
+/**
+ * The bundle against buying its contents separately. No discount is claimed
+ * unless the prices make one: at $0.05 against $0.045 the bundle costs more.
+ */
+export function bundleMath(prices) {
+  const bundle = priceOf(prices, 'bundle');
+  const parts = BUNDLE_PARTS.map((endpoint) => ({ endpoint, price: priceOf(prices, endpoint) }));
+  const separately = sumPrices(...parts.map((p) => p.price));
+  const diffMicro = Math.round(Number(bundle) * 1e6) - Math.round(Number(separately) * 1e6);
+  const diff = String(Math.abs(diffMicro) / 1e6);
+  const listed = parts.map((p) => `/${p.endpoint} ${usd(p.price)}`).join(' + ');
+  let comparison;
+  if (diffMicro > 0) comparison = `costs ${usd(diff)} more than buying them separately (${listed} = ${usd(separately)})`;
+  else if (diffMicro < 0) {
+    const pct = Math.round((-diffMicro / Math.round(Number(separately) * 1e6)) * 1000) / 10;
+    comparison = `costs ${usd(diff)} (${pct}%) less than buying them separately (${listed} = ${usd(separately)})`;
+  } else comparison = `costs the same as buying them separately (${listed} = ${usd(separately)})`;
+  const sentence =
+    `The bundle (${usd(bundle)}) returns the /pulse output, 24-hour /funding statistics and /sentiment in one ` +
+    `request. It ${comparison}. It does not include the /spread analysis.`;
+  return { bundle, parts, separately, diff, cheaper: diffMicro < 0, sentence };
+}
+
 /** {min, max} of the paid prices, as strings. */
 export function priceRange(prices) {
   const sorted = prices.routes.map((r) => r.price).sort((a, b) => Number(a) - Number(b));

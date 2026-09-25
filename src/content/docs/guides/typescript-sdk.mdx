@@ -90,7 +90,7 @@ async function getFunding(coin: string, lookbackHours = 24) {
   return resp.json();
 }
 
-// Bundle — all four combined (17% discount)
+// Bundle — /pulse, 24h /funding and /sentiment in one request
 async function getBundle(coin: string, timeframes = "1h,4h") {
   const resp = await fetchWithPayment(
     `${BASE_URL}/bundle/${coin}?timeframes=${timeframes}`
@@ -222,4 +222,4 @@ async function dashboard() {
 - Use `Promise.all` to batch multiple coin requests in parallel
 - Check `/health` before batch operations to avoid wasting payments
 - The `meta.warning` field indicates stale data (>2 hours old)
-- Bundle saves money when you need all three data types for the same coin
+- `/bundle` returns `/pulse`, 24h `/funding` and `/sentiment` for one coin in one request (one rate-limit slot instead of three); [its page](/api/bundle) shows how its price compares

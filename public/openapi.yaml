@@ -1122,9 +1122,6 @@ components:
                 bundle:
                   type: boolean
                   example: true
-                discount_pct:
-                  type: integer
-                  example: 20
 
     Error:
       type: object

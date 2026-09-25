@@ -236,7 +236,7 @@ Errors: 400 (invalid coin or lookback_hours out of range), 402 (payment required
 
 ### GET /bundle/{coin}
 
-Price: $0.05 USDC (20% discount vs calling /pulse + /sentiment + /funding + /spread individually)
+Price: $0.05 USDC (the same data bought separately: /pulse $0.025 + /funding $0.01 + /sentiment $0.01 = $0.045; the bundle has no /spread analysis)
 Description: Complete analysis bundle combining pulse technical analysis, sentiment, and funding data in one response.
 
 Path Parameters:
@@ -275,8 +275,7 @@ Response Schema:
     "provider": "Cerebrus Pulse",
     "offering": "cerebrus_pulse",
     "bundle": true,
-    "execution_ms": 340,
-    "discount_pct": 17
+    "execution_ms": 340
   }
 }
 ```
@@ -619,7 +618,7 @@ print(f"Liquidity score: {spread['spread']['liquidity_score']}/10")
 corr = client.get("https://api.cerebruspulse.xyz/correlation").json()
 print(f"Correlation regime: {corr['regime']}")
 
-# Bundle (all data, 17% cheaper)
+# Bundle (/pulse, 24h /funding and /sentiment in one request)
 bundle = client.get("https://api.cerebruspulse.xyz/bundle/BTC?timeframes=1h,4h").json()
 ```
 
@@ -719,7 +718,7 @@ Error response format (all errors):
 3. Do not retry on 400 — fix the request parameters first
 4. Retry once on 504 — engine timeouts are usually transient
 5. Respect 503 retry_after — gateway is in maintenance
-6. Use GET /bundle for multi-data needs — 1 request instead of 4, 17% cheaper, fewer rate limit slots consumed
+6. Use GET /bundle for multi-data needs — 1 request instead of 3, fewer rate limit slots consumed
 7. Use GET /coins to validate coin tickers before making paid requests
 8. Cache results appropriately — crypto data updates on candle close intervals (5m/15m/1h/4h/1d/1w)
 9. Use GET /screener for market-wide scanning — 1 call at $0.06 vs 50+ individual /pulse calls at $0.025 each

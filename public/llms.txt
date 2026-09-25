@@ -34,7 +34,7 @@ Latency: Low (single HTTP request)
 - GET /arb — $0.02 USDC — Market Stress Index derived from cross-chain arbitrage signals. Stress level (LOW/MODERATE/HIGH/EXTREME) with score 0.0-1.0
 - GET /cex-dex/{token} — $0.02 USDC — CEX-DEX price divergence: Coinbase vs DEX/Chainlink prices for 13 tokens. Spread in bps with directional bias
 - GET /liquidations/{coin} — $0.03 USDC — Liquidation heatmap: estimated liquidation zones across 5 leverage tiers (long/short), cascade risk scoring, and long/short ratio
-- GET /bundle/{coin}?timeframes=1h,4h — $0.05 USDC — Complete bundle: pulse + sentiment + funding + spread combined (20% discount vs individual)
+- GET /bundle/{coin}?timeframes=1h,4h — $0.05 USDC — The /pulse output, 24h /funding statistics and /sentiment in one request ($0.045 bought separately; no /spread analysis)
 
 ### Free Endpoints
 
