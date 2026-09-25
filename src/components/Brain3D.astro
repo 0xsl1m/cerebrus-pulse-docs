@@ -4,7 +4,10 @@
 <canvas id="brain-3d-canvas" class="brain-3d-canvas" aria-hidden="true"></canvas>
 
 <script>
-  import * as THREE from 'three';
+  // Types only: the three.js runtime (~527 KB) is imported lazily inside
+  // initBrain3D(), after the load gate at the bottom of this script passes.
+  import type * as THREE from 'three';
+  import { parseMinWidth, shouldLoadBrain3D } from '../scripts/brain3d-gate.js';
 
   // ============================================================
   // CEREBRUS PULSE — 3D Neural Brain Visualization v2
@@ -13,7 +16,7 @@
   // vertex breathing, scan line, and proximity glow
   // ============================================================
 
-  function initBrain3D() {
+  async function initBrain3D() {
     if ((window as any).__brain3dInit) return;
     (window as any).__brain3dInit = true;
 
@@ -21,6 +24,8 @@
 
     const canvas = document.querySelector('.brain-3d-canvas') as HTMLCanvasElement;
     if (!canvas) return;
+
+    const THREE = await import('three');
 
     // ---- Colors ----
     const BLUE = new THREE.Color(0x3B82F6);
@@ -37,9 +42,11 @@
       alpha: true,
       antialias: true,
       premultipliedAlpha: false,
-      powerPreference: 'high-performance',
+      // 'default' lets dual-GPU laptops stay on the integrated GPU for a
+      // decorative scene; DPR is capped at 1.5 to cut fill cost on HiDPI.
+      powerPreference: 'default',
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setClearColor(0x000000, 0);
     renderer.autoClear = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1616,12 +1623,31 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBrain3D);
-  } else {
-    initBrain3D();
+  // Load gate: skip the scene for reduced-motion and save-data visitors, and
+  // below PUBLIC_BRAIN3D_MIN_WIDTH px when that build variable is set (unset:
+  // every viewport, as before). Otherwise fetch three.js only after the page
+  // has loaded and the main thread is idle, so it never competes with content.
+  function scheduleBrain3D() {
+    const load = shouldLoadBrain3D({
+      reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      saveData: (navigator as any).connection?.saveData === true,
+      viewportWidth: window.innerWidth,
+      minWidth: parseMinWidth(import.meta.env.PUBLIC_BRAIN3D_MIN_WIDTH),
+    });
+    if (!load) return;
+    const start = () => {
+      initBrain3D().catch((err) => console.warn('Brain3D: scene failed to load', err));
+    };
+    const whenIdle = () => {
+      if ('requestIdleCallback' in window) (window as any).requestIdleCallback(start, { timeout: 2000 });
+      else setTimeout(start, 200);
+    };
+    if (document.readyState === 'complete') whenIdle();
+    else window.addEventListener('load', whenIdle, { once: true });
   }
-  document.addEventListener('astro:page-load', initBrain3D);
+
+  scheduleBrain3D();
+  document.addEventListener('astro:page-load', scheduleBrain3D);
 </script>
 
 <style>

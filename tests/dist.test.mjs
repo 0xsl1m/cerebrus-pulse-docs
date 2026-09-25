@@ -86,3 +86,29 @@ test('F046: GSAP ScrollTrigger ships in a same-origin bundle', { skip }, () => {
   const js = walk(join(DIST, '_astro')).filter((p) => p.endsWith('.js'));
   assert.ok(js.some((p) => /ScrollTrigger/.test(read(p))), 'no bundle contains ScrollTrigger');
 });
+
+// ── F049: three.js is a lazy chunk ────────────────────────────────────────
+
+test('F049: the landing page does not load three.js up front', { skip }, () => {
+  const html = read(join(DIST, 'index.html'));
+  const eager = [...html.matchAll(/<(?:script|link)[^>]*(?:src|href)="(\/_astro\/[^"]+\.js)"/g)].map((m) => m[1]);
+  assert.ok(eager.length > 0, 'no module scripts found on the landing page');
+  // Follow static imports too: a chunk pulled in by `import ... from` is
+  // just as eager as the entry script itself.
+  const seen = new Set();
+  const queue = eager.map((src) => join(DIST, src));
+  while (queue.length) {
+    const file = queue.pop();
+    if (seen.has(file)) continue;
+    seen.add(file);
+    const js = read(file);
+    assert.doesNotMatch(js, /THREE\.WebGLRenderer/, `${rel(file)} loads three.js eagerly`);
+    for (const m of js.matchAll(/\b(?:import|export)\s*(?!\()(?:[^"';()]*?from\s*)?["'](\.{1,2}\/[^"']+\.js)["']/g)) {
+      queue.push(join(file, '..', m[1]));
+    }
+  }
+  const lazy = walk(join(DIST, '_astro')).filter(
+    (p) => p.endsWith('.js') && /THREE\.WebGLRenderer/.test(read(p))
+  );
+  assert.equal(lazy.length, 1, 'expected exactly one lazy three.js chunk');
+});
