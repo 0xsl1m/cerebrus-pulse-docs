@@ -1,5 +1,12 @@
 ---
-// Social proof: live metrics + ecosystem badges + integration options
+// Coverage facts + ecosystem badges + integration options. Every number here
+// comes from src/data (the engine's coin list and the gateway's paid routes);
+// nothing is a benchmark or a measurement we have not made (F036).
+import coins from '../data/coins.json';
+import prices from '../data/prices.json';
+import { priceRange, usd } from '../lib/pricing.mjs';
+
+const cheapest = usd(priceRange(prices).min);
 ---
 
 <div class="section-divider"></div>
@@ -17,35 +24,35 @@
   </div>
 
   <div class="mx-auto max-w-5xl relative z-10">
-    <div class="section-eyebrow" data-reveal="slide-up">05 · Performance</div>
+    <div class="section-eyebrow" data-reveal="slide-up">05 · Coverage</div>
     <h2 class="mb-4 text-center text-3xl font-bold md:text-4xl text-[#E8ECF4]" data-reveal="slide-up">
-      <span class="gradient-text">Built for Speed</span>
+      <span class="gradient-text">Built for Agents</span>
     </h2>
     <p class="mb-10 sm:mb-14 text-center text-[#94A3B8] text-base sm:text-lg" data-reveal="slide-up">
-      Real-time analysis, sub-second responses, enterprise-grade reliability.
+      Hyperliquid market data paid per call, with a free demo to try first.
     </p>
 
-    <!-- Live Metrics Grid -->
+    <!-- Coverage grid: counts from src/data -->
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-14" data-reveal="stagger">
       <div class="metric-card">
-        <div class="metric-value text-[#60A5FA]"><span data-countup="200" data-prefix="&lt;" data-suffix="ms">&lt;200ms</span></div>
-        <div class="metric-label">Avg Response</div>
-        <div class="metric-sublabel">p95 under 500ms</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-value text-[#22C55E]"><span data-countup="99.9" data-decimals="1" data-suffix="%">99.9%</span></div>
-        <div class="metric-label">Uptime</div>
-        <div class="metric-sublabel">Monitored 24/7</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-value text-[#FBBF24]"><span data-countup="50" data-suffix="+">50+</span></div>
+        <div class="metric-value text-[#FBBF24]"><span data-countup={coins.count}>{coins.count}</span></div>
         <div class="metric-label">Perpetuals</div>
-        <div class="metric-sublabel">Hyperliquid L1</div>
+        <div class="metric-sublabel">Hyperliquid markets</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value gradient-text"><span data-countup="15">15</span></div>
-        <div class="metric-label">Endpoints</div>
-        <div class="metric-sublabel">6 timeframes per coin</div>
+        <div class="metric-value text-[#60A5FA]"><span data-countup="6">6</span></div>
+        <div class="metric-label">Timeframes</div>
+        <div class="metric-sublabel">5m to 1w, closed candles</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value gradient-text"><span data-countup={prices.routes.length}>{prices.routes.length}</span></div>
+        <div class="metric-label">Paid Endpoints</div>
+        <div class="metric-sublabel">From {cheapest} USDC per call</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value text-[#22C55E]">Free</div>
+        <div class="metric-label">Demo</div>
+        <div class="metric-sublabel">GET /demo/&#123;coin&#125;, no wallet</div>
       </div>
     </div>
 

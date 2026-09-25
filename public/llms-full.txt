@@ -13,7 +13,7 @@ Source: https://cerebruspulse.xyz/overview
 
 **Real-time multi-timeframe technical analysis for 50+ Hyperliquid perpetuals, paid via x402 micropayments on Base or Solana.**
 
-Cerebrus Pulse is an API that delivers institutional-grade technical indicators, derivatives data, market regime detection, cross-exchange divergence signals, and multi-signal confluence scoring — all accessible with a single HTTP request and a USDC micropayment.
+Cerebrus Pulse is an API that delivers technical indicators, derivatives data, market regime detection, cross-exchange divergence signals, and multi-signal confluence scoring — all accessible with a single HTTP request and a USDC micropayment.
 
 ## Key Features
 
@@ -3942,7 +3942,7 @@ Cerebrus services are available through three protocols. Choose based on your us
 | **Authentication** | Wallet signature (no API keys) | None: discovery and quotes are free | ACP SDK + agent wallet |
 | **Discovery** | API docs | Agent Card (`.well-known`) | Virtuals marketplace |
 | **Transport** | HTTP REST | JSON-RPC 2.0 over HTTP | ACP SDK |
-| **Latency** | Low (~200–500ms) | Low (~200–500ms) | Higher (negotiation + escrow) |
+| **Round trips** | One HTTP request (plus the 402 on the first try) | One JSON-RPC request, then the HTTP call | Job negotiation and escrow |
 | **Pricing** | $0.01–$0.06 per call | $0.01–$0.06 per skill (paid over HTTP) | A USDC budget per job (below) |
 | **Settlement** | Instant (Base L2 or Solana) | Over HTTP (x402), as for direct calls | ACP escrow release |
 | **Status** | Live | Live (discovery) | Paused |

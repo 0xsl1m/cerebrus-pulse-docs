@@ -1,6 +1,6 @@
 {
   "name": "Cerebrus Pulse",
-  "description": "Institutional-grade crypto derivatives intelligence. Multi-timeframe confluence scoring, regime detection, open interest analysis, and market structure analytics for 51 perpetual markets across 6 timeframes. Quantitative models with battle-tested analytics.",
+  "description": "Crypto derivatives data for AI agents, paid per call in USDC over x402: multi-timeframe technical analysis with a confluence vote share, market regime, open interest, hourly funding, perp basis and USDC peg health for 51 Hyperliquid perpetual markets across 6 timeframes.",
   "url": "https://api.cerebruspulse.xyz/a2a",
   "version": "1.4.0",
   "documentationUrl": "https://cerebruspulse.xyz/overview",
