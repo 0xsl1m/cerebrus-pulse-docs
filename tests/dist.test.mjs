@@ -112,3 +112,13 @@ test('F049: the landing page does not load three.js up front', { skip }, () => {
   );
   assert.equal(lazy.length, 1, 'expected exactly one lazy three.js chunk');
 });
+
+// ── F050: images ──────────────────────────────────────────────────────────
+
+test('F050: docs pages use the resized logo', { skip }, () => {
+  const html = read(join(DIST, 'overview', 'index.html'));
+  const logo = attr(html, /<a[^>]*class="site-title[^"]*"[^>]*>\s*<img[^>]*src="([^"]+)"/);
+  assert.ok(logo, 'site-title logo not found');
+  const size = readFileSync(join(DIST, logo)).length;
+  assert.ok(size <= 16 * 1024, `${logo} is ${size} B`);
+});

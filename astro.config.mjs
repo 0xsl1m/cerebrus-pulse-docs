@@ -17,7 +17,7 @@ export default defineConfig({
       title: 'Cerebrus Pulse',
       description: 'Real-time crypto intelligence via x402 micropayments and ACP agent commerce',
       logo: {
-        src: './src/assets/pulse-logo.png',
+        src: './src/assets/pulse-logo-128.webp',
         replacesTitle: false,
       },
       components: {
