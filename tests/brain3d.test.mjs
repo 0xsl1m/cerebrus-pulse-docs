@@ -32,13 +32,24 @@ test('PUBLIC_BRAIN3D_MIN_WIDTH parsing: unset or invalid means no minimum', () =
   assert.equal(parseMinWidth('768'), 768);
 });
 
-test('Brain3D.astro imports three.js lazily and only behind the gate', () => {
+test('Brain3D.astro loads the scene (and three.js) lazily, only behind the gate', () => {
   const src = readFileSync(new URL('../src/components/Brain3D.astro', import.meta.url), 'utf8');
-  assert.doesNotMatch(src, /^\s*import \* as THREE from 'three';/m, 'eager value import is back');
-  assert.match(src, /^\s*import type \* as THREE from 'three';/m);
-  assert.match(src, /const THREE = await import\('three'\);/);
+  assert.doesNotMatch(src, /from 'three'/, 'the component must not import three.js itself');
+  assert.doesNotMatch(src, /brain3d-scene['"];?\s*$/m, 'the scene module must not be imported statically');
+  assert.match(src, /import\('\.\.\/scripts\/brain3d-scene'\)/);
   assert.match(src, /shouldLoadBrain3D\(\{/);
   assert.match(src, /requestIdleCallback/);
-  assert.match(src, /powerPreference: 'default'/);
   assert.doesNotMatch(src, /^\s*initBrain3D\(\);$/m, 'unconditional start is back');
+});
+
+test('the scene module keeps a static namespace import so three.js stays tree-shaken', () => {
+  // `const THREE = await import('three')` keeps the whole namespace
+  // (725 KB instead of 527 KB); a static import inside the lazily loaded
+  // module lets the bundler drop unused three.js code as before.
+  const scene = readFileSync(new URL('../src/scripts/brain3d-scene.ts', import.meta.url), 'utf8');
+  assert.match(scene, /^import \* as THREE from 'three';$/m);
+  assert.doesNotMatch(scene, /import\('three'\)/);
+  assert.match(scene, /^export function initBrain3D\(\) \{$/m);
+  assert.match(scene, /powerPreference: 'default'/);
+  assert.match(scene, /setPixelRatio\(Math\.min\(window\.devicePixelRatio, 1\.5\)\)/);
 });

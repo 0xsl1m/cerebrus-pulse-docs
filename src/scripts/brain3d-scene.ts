@@ -1,0 +1,1616 @@
+// Scene for the hero's 3D brain (Brain3D.astro). The component imports this
+// module dynamically, behind its load gate, so three.js stays out of the
+// landing page's eager JavaScript and is tree-shaken exactly as before.
+import * as THREE from 'three';
+
+// ============================================================
+// CEREBRUS PULSE — 3D Neural Brain Visualization v2
+// Holographic wireframe brain with lightning pulses, cascade
+// firing, surge events, mouse parallax, click cascades,
+// vertex breathing, scan line, and proximity glow
+// ============================================================
+
+export function initBrain3D() {
+  if ((window as any).__brain3dInit) return;
+  (window as any).__brain3dInit = true;
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const canvas = document.querySelector('.brain-3d-canvas') as HTMLCanvasElement;
+  if (!canvas) return;
+
+  // ---- Colors ----
+  const BLUE = new THREE.Color(0x3B82F6);
+  const BLUE_LIGHT = new THREE.Color(0x60A5FA);
+  const AMBER = new THREE.Color(0xF59E0B);
+  const AMBER_LIGHT = new THREE.Color(0xFBBF24);
+  const VIOLET = new THREE.Color(0xA78BFA);
+  const VIOLET_LIGHT = new THREE.Color(0xC084FC);
+  const WHITE = new THREE.Color(0xE0F2FE);
+
+  // ---- Renderer ----
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    alpha: true,
+    antialias: true,
+    premultipliedAlpha: false,
+    // 'default' lets dual-GPU laptops stay on the integrated GPU for a
+    // decorative scene; DPR is capped at 1.5 to cut fill cost on HiDPI.
+    powerPreference: 'default',
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.setClearColor(0x000000, 0);
+  renderer.autoClear = true;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+
+  // ---- Scene & Camera ----
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0.6, 6.0);
+  camera.lookAt(0, 0.1, 0);
+
+  // ============================================================
+  // INTERACTIVITY STATE
+  // ============================================================
+  const mouseNDC = new THREE.Vector2(0, 0);
+  const mouseWorld = new THREE.Vector3();
+  const raycaster = new THREE.Raycaster();
+  let isHovering = false;
+  let activityLevel = 0.3; // 0-1 unified activity
+  let targetActivity = 0.3;
+  let lastClickPoint: THREE.Vector3 | null = null;
+  let lastClickTime = 0;
+  let mouseSpeed = 0; // tracks how fast the mouse is moving
+  let prevMouseNDC = new THREE.Vector2(0, 0);
+
+  // Invisible sphere for raycasting mouse position into brain space
+  const hitSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(2.2, 8, 6),
+    new THREE.MeshBasicMaterial({ visible: false })
+  );
+
+  // Smooth rotation targets
+  let targetRotY = 0;
+  let targetRotX = -0.05;
+  // Smoothed mouse for non-jittery parallax
+  let smoothMouseX = 0;
+  let smoothMouseY = 0;
+
+  // ============================================================
+  // BRAIN GEOMETRY
+  // ============================================================
+
+  interface BrainGeometry {
+    leftVerts: THREE.Vector3[];
+    rightVerts: THREE.Vector3[];
+    leftEdges: [number, number][];
+    rightEdges: [number, number][];
+    bridgeEdges: [THREE.Vector3, THREE.Vector3][];
+    stemVerts: THREE.Vector3[];
+    stemEdges: [number, number][];
+    leftAdj: Map<number, number[]>;
+    rightAdj: Map<number, number[]>;
+    leftNormals: THREE.Vector3[];
+    rightNormals: THREE.Vector3[];
+    stemNormals: THREE.Vector3[];
+  }
+
+  function createBrainGeometry(): BrainGeometry {
+    const icoGeo = new THREE.IcosahedronGeometry(1.6, 4);
+    const positions = icoGeo.getAttribute('position');
+    const index = icoGeo.getIndex();
+
+    const vertMap = new Map<string, number>();
+    const allVerts: THREE.Vector3[] = [];
+
+    function addVert(v: THREE.Vector3): number {
+      const key = `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
+      if (vertMap.has(key)) return vertMap.get(key)!;
+      const idx = allVerts.length;
+      vertMap.set(key, idx);
+      allVerts.push(v.clone());
+      return idx;
+    }
+
+    const edgeSet = new Set<string>();
+    const edges: [number, number][] = [];
+
+    function addEdge(a: number, b: number) {
+      const key = a < b ? `${a}-${b}` : `${b}-${a}`;
+      if (!edgeSet.has(key)) {
+        edgeSet.add(key);
+        edges.push([a, b]);
+      }
+    }
+
+    if (index) {
+      for (let i = 0; i < index.count; i += 3) {
+        const idxA = index.getX(i);
+        const idxB = index.getX(i + 1);
+        const idxC = index.getX(i + 2);
+        const vA = new THREE.Vector3().fromBufferAttribute(positions, idxA);
+        const vB = new THREE.Vector3().fromBufferAttribute(positions, idxB);
+        const vC = new THREE.Vector3().fromBufferAttribute(positions, idxC);
+        const a = addVert(vA);
+        const b = addVert(vB);
+        const c = addVert(vC);
+        addEdge(a, b);
+        addEdge(b, c);
+        addEdge(a, c);
+      }
+    } else {
+      for (let i = 0; i < positions.count; i += 3) {
+        const vA = new THREE.Vector3().fromBufferAttribute(positions, i);
+        const vB = new THREE.Vector3().fromBufferAttribute(positions, i + 1);
+        const vC = new THREE.Vector3().fromBufferAttribute(positions, i + 2);
+        const a = addVert(vA);
+        const b = addVert(vB);
+        const c = addVert(vC);
+        addEdge(a, b);
+        addEdge(b, c);
+        addEdge(a, c);
+      }
+    }
+
+    // Store normals before deformation (normalized positions = sphere normals)
+    const allNormals: THREE.Vector3[] = allVerts.map(v => v.clone().normalize());
+
+    // ---- Deform sphere into brain shape ----
+    for (const v of allVerts) {
+      const len = v.length();
+      const nx = v.x / len;
+      const ny = v.y / len;
+      const nz = v.z / len;
+
+      let sx = 1.15;
+      let sy = 0.88;
+      let sz = 1.0;
+
+      if (nx > 0.05) sx *= 1.05;
+      else if (nx < -0.05) sx *= 1.05;
+
+      const midlinePinch = Math.exp(-nx * nx * 20) * 0.15;
+      if (ny > 0) {
+        sy -= midlinePinch * ny;
+      }
+
+      const frontalBulge = Math.max(0, nz) * Math.max(0, ny + 0.3) * 0.2;
+      sz += frontalBulge;
+
+      const temporalBulge = Math.abs(nx) * Math.max(0, -ny - 0.1) * 0.18;
+      sx += temporalBulge;
+
+      const occipitalBulge = Math.max(0, -nz - 0.2) * Math.max(0, -ny) * 0.15;
+      sz += occipitalBulge;
+
+      if (ny < -0.7) {
+        sy *= 0.7 + (ny + 1) * 0.3;
+      }
+
+      const fold1 = Math.sin(nx * 12 + ny * 8) * Math.sin(ny * 15 + nz * 10) * 0.06;
+      const fold2 = Math.sin(nx * 20 + nz * 14) * Math.sin(ny * 18) * 0.03;
+      const foldDisp = (fold1 + fold2) * len;
+
+      v.x = nx * len * sx + nx * foldDisp;
+      v.y = ny * len * sy + ny * foldDisp;
+      v.z = nz * len * sz + nz * foldDisp;
+
+      const jag = (Math.sin(v.x * 30 + v.y * 25) * Math.cos(v.z * 20 + v.x * 15)) * 0.025;
+      v.x += jag;
+      v.y += jag * 0.7;
+      v.z += jag * 0.5;
+    }
+
+    // Split into hemispheres
+    const leftVerts: THREE.Vector3[] = [];
+    const rightVerts: THREE.Vector3[] = [];
+    const leftNormals: THREE.Vector3[] = [];
+    const rightNormals: THREE.Vector3[] = [];
+    const oldToLeft = new Map<number, number>();
+    const oldToRight = new Map<number, number>();
+
+    for (let i = 0; i < allVerts.length; i++) {
+      if (allVerts[i].x <= 0.08) {
+        oldToLeft.set(i, leftVerts.length);
+        leftVerts.push(allVerts[i]);
+        leftNormals.push(allNormals[i]);
+      }
+      if (allVerts[i].x >= -0.08) {
+        oldToRight.set(i, rightVerts.length);
+        rightVerts.push(allVerts[i]);
+        rightNormals.push(allNormals[i]);
+      }
+    }
+
+    const leftEdges: [number, number][] = [];
+    const rightEdges: [number, number][] = [];
+
+    for (const [a, b] of edges) {
+      if (oldToLeft.has(a) && oldToLeft.has(b)) {
+        leftEdges.push([oldToLeft.get(a)!, oldToLeft.get(b)!]);
+      }
+      if (oldToRight.has(a) && oldToRight.has(b)) {
+        rightEdges.push([oldToRight.get(a)!, oldToRight.get(b)!]);
+      }
+    }
+
+    // Build adjacency maps
+    function buildAdj(edgeList: [number, number][]): Map<number, number[]> {
+      const adj = new Map<number, number[]>();
+      for (const [a, b] of edgeList) {
+        if (!adj.has(a)) adj.set(a, []);
+        if (!adj.has(b)) adj.set(b, []);
+        adj.get(a)!.push(b);
+        adj.get(b)!.push(a);
+      }
+      return adj;
+    }
+
+    const leftAdj = buildAdj(leftEdges);
+    const rightAdj = buildAdj(rightEdges);
+
+    // ---- Bridge connections (corpus callosum) ----
+    const bridgeEdges: [THREE.Vector3, THREE.Vector3][] = [];
+    const bridgeLeftCandidates = leftVerts.filter(v => v.x > -0.3 && v.x < 0.1 && v.y > -0.5);
+    const bridgeRightCandidates = rightVerts.filter(v => v.x < 0.3 && v.x > -0.1 && v.y > -0.5);
+
+    for (let i = 0; i < Math.min(bridgeLeftCandidates.length, 20); i++) {
+      const lv = bridgeLeftCandidates[i];
+      let bestDist = Infinity;
+      let bestRv: THREE.Vector3 | null = null;
+      for (const rv of bridgeRightCandidates) {
+        const d = lv.distanceTo(rv);
+        if (d > 0.05 && d < 0.6 && d < bestDist) {
+          bestDist = d;
+          bestRv = rv;
+        }
+      }
+      if (bestRv) {
+        bridgeEdges.push([lv, bestRv]);
+      }
+    }
+
+    // ---- Brain stem ----
+    const stemVerts: THREE.Vector3[] = [];
+    const stemNormals: THREE.Vector3[] = [];
+    const stemEdges: [number, number][] = [];
+
+    const stemLevels = 8;
+    const stemRingsPerLevel = 6;
+    for (let level = 0; level < stemLevels; level++) {
+      const t = level / (stemLevels - 1);
+      const y = -1.25 - t * 1.2;
+      let radius = 0.2;
+      if (t < 0.2) radius = 0.25 + (0.2 - t) * 0.5;
+      else radius = 0.22 - t * 0.12;
+
+      for (let r = 0; r < stemRingsPerLevel; r++) {
+        const angle = (r / stemRingsPerLevel) * Math.PI * 2;
+        const jitter = (Math.sin(level * 7 + r * 13) * 0.02);
+        const pos = new THREE.Vector3(
+          Math.cos(angle) * radius + jitter,
+          y + (Math.sin(angle + level) * 0.02),
+          Math.sin(angle) * radius + jitter
+        );
+        stemVerts.push(pos);
+        stemNormals.push(new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)));
+      }
+
+      const baseIdx = level * stemRingsPerLevel;
+      for (let r = 0; r < stemRingsPerLevel; r++) {
+        stemEdges.push([baseIdx + r, baseIdx + (r + 1) % stemRingsPerLevel]);
+      }
+
+      if (level > 0) {
+        const prevBase = (level - 1) * stemRingsPerLevel;
+        for (let r = 0; r < stemRingsPerLevel; r++) {
+          stemEdges.push([prevBase + r, baseIdx + r]);
+          if (r % 2 === 0) {
+            stemEdges.push([prevBase + r, baseIdx + (r + 1) % stemRingsPerLevel]);
+          }
+        }
+      }
+    }
+
+    for (let fiber = 0; fiber < 4; fiber++) {
+      const angle = (fiber / 4) * Math.PI * 2 + Math.PI / 4;
+      const fiberVerts: number[] = [];
+      for (let seg = 0; seg < 6; seg++) {
+        const t = seg / 5;
+        const y = -2.45 - t * 0.8;
+        const spread = t * 0.3;
+        const idx = stemVerts.length;
+        stemVerts.push(new THREE.Vector3(
+          Math.cos(angle) * (0.08 + spread) + Math.sin(seg * 5) * 0.02,
+          y,
+          Math.sin(angle) * (0.08 + spread) + Math.cos(seg * 7) * 0.02
+        ));
+        stemNormals.push(new THREE.Vector3(Math.cos(angle), -0.5, Math.sin(angle)).normalize());
+        fiberVerts.push(idx);
+        if (seg > 0) {
+          stemEdges.push([fiberVerts[seg - 1], idx]);
+        }
+      }
+      const bottomRingBase = (stemLevels - 1) * stemRingsPerLevel;
+      stemEdges.push([bottomRingBase + Math.floor(fiber * stemRingsPerLevel / 4) % stemRingsPerLevel, fiberVerts[0]]);
+    }
+
+    icoGeo.dispose();
+    return { leftVerts, rightVerts, leftEdges, rightEdges, bridgeEdges, stemVerts, stemEdges, leftAdj, rightAdj, leftNormals, rightNormals, stemNormals };
+  }
+
+  // ============================================================
+  // BUILD SCENE
+  // ============================================================
+
+  const brain = createBrainGeometry();
+  const brainGroup = new THREE.Group();
+  scene.add(brainGroup);
+  brainGroup.position.y = 0.35;
+
+  // Add hit sphere to brain group for raycasting
+  brainGroup.add(hitSphere);
+
+  // ---- Scan line shader for outline wireframes ----
+  const scanLineVertexShader = `
+    varying vec3 vWorldPos;
+    void main() {
+      vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+      vWorldPos = worldPosition.xyz;
+      gl_Position = projectionMatrix * viewMatrix * worldPosition;
+    }
+  `;
+
+  const scanLineFragmentShader = `
+    uniform vec3 uColor;
+    uniform float uOpacity;
+    uniform float uScanY;
+    uniform float uSurgeIntensity;
+    uniform float uGlowIntensity;
+    uniform vec3 uMousePos;
+    uniform float uMouseActive;
+    varying vec3 vWorldPos;
+    void main() {
+      float scanDist = abs(vWorldPos.y - uScanY);
+      float scanGlow = smoothstep(0.2, 0.0, scanDist) * 0.4;
+      float surge = uSurgeIntensity * 0.35;
+
+      // Mouse proximity hotspot on wireframe
+      float mouseDist = distance(vWorldPos, uMousePos);
+      float mouseGlow = smoothstep(1.5, 0.0, mouseDist) * uMouseActive * 0.6;
+
+      vec3 col = uColor + vec3(scanGlow * 0.6, scanGlow * 0.8, scanGlow);
+      col = mix(col, vec3(0.9, 0.95, 1.0), uSurgeIntensity * 0.3);
+      col += vec3(uGlowIntensity * 0.15);
+      col += vec3(mouseGlow * 0.4, mouseGlow * 0.6, mouseGlow * 0.8); // white-blue hotspot
+      float alpha = uOpacity + scanGlow + surge + uGlowIntensity * 0.1 + mouseGlow;
+      gl_FragColor = vec4(col, alpha);
+    }
+  `;
+
+  // ---- Helper: create wireframe lines with shader material ----
+  function createShaderWireframe(
+    verts: THREE.Vector3[],
+    edges: [number, number][],
+    color: THREE.Color,
+    opacity: number
+  ): { lines: THREE.LineSegments; material: THREE.ShaderMaterial; origPositions: Float32Array } {
+    const geo = new THREE.BufferGeometry();
+    const posArr: number[] = [];
+    for (const [a, b] of edges) {
+      posArr.push(verts[a].x, verts[a].y, verts[a].z);
+      posArr.push(verts[b].x, verts[b].y, verts[b].z);
+    }
+    const origPositions = new Float32Array(posArr);
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr.slice(), 3));
+
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: scanLineVertexShader,
+      fragmentShader: scanLineFragmentShader,
+      uniforms: {
+        uColor: { value: color },
+        uOpacity: { value: opacity },
+        uScanY: { value: -2.0 },
+        uSurgeIntensity: { value: 0.0 },
+        uGlowIntensity: { value: 0.0 },
+        uMousePos: { value: new THREE.Vector3() },
+        uMouseActive: { value: 0.0 },
+      },
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const lines = new THREE.LineSegments(geo, mat);
+    return { lines, material: mat, origPositions };
+  }
+
+  // ---- Simple wireframe (for inner wireframes) ----
+  function createWireframe(
+    verts: THREE.Vector3[],
+    edges: [number, number][],
+    color: THREE.Color,
+    opacity: number
+  ): { lines: THREE.LineSegments; origPositions: Float32Array } {
+    const geo = new THREE.BufferGeometry();
+    const posArr: number[] = [];
+    for (const [a, b] of edges) {
+      posArr.push(verts[a].x, verts[a].y, verts[a].z);
+      posArr.push(verts[b].x, verts[b].y, verts[b].z);
+    }
+    const origPositions = new Float32Array(posArr);
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr.slice(), 3));
+    const mat = new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    return { lines: new THREE.LineSegments(geo, mat), origPositions };
+  }
+
+  // Store normals for vertex displacement breathing
+  // For wireframes: each edge has 2 vertices, and we store normals per-vertex in the buffer
+  function buildWireframeNormals(verts: THREE.Vector3[], normals: THREE.Vector3[], edges: [number, number][]): Float32Array {
+    const result = new Float32Array(edges.length * 2 * 3);
+    for (let i = 0; i < edges.length; i++) {
+      const [a, b] = edges[i];
+      const na = normals[a];
+      const nb = normals[b];
+      result[i * 6] = na.x;
+      result[i * 6 + 1] = na.y;
+      result[i * 6 + 2] = na.z;
+      result[i * 6 + 3] = nb.x;
+      result[i * 6 + 4] = nb.y;
+      result[i * 6 + 5] = nb.z;
+    }
+    return result;
+  }
+
+  // ---- Left hemisphere ----
+  const leftWireData = createWireframe(brain.leftVerts, brain.leftEdges, BLUE, 0.35);
+  brainGroup.add(leftWireData.lines);
+  const leftWireNormals = buildWireframeNormals(brain.leftVerts, brain.leftNormals, brain.leftEdges);
+
+  const leftOuterEdges = brain.leftEdges.filter(([a, b]) => {
+    const avgLen = (brain.leftVerts[a].length() + brain.leftVerts[b].length()) / 2;
+    return avgLen > 1.45;
+  });
+  const leftOutlineData = createShaderWireframe(brain.leftVerts, leftOuterEdges, BLUE_LIGHT, 0.6);
+  brainGroup.add(leftOutlineData.lines);
+  const leftOutlineNormals = buildWireframeNormals(brain.leftVerts, brain.leftNormals, leftOuterEdges);
+
+  // ---- Right hemisphere ----
+  const rightWireData = createWireframe(brain.rightVerts, brain.rightEdges, AMBER, 0.35);
+  brainGroup.add(rightWireData.lines);
+  const rightWireNormals = buildWireframeNormals(brain.rightVerts, brain.rightNormals, brain.rightEdges);
+
+  const rightOuterEdges = brain.rightEdges.filter(([a, b]) => {
+    const avgLen = (brain.rightVerts[a].length() + brain.rightVerts[b].length()) / 2;
+    return avgLen > 1.45;
+  });
+  const rightOutlineData = createShaderWireframe(brain.rightVerts, rightOuterEdges, AMBER_LIGHT, 0.6);
+  brainGroup.add(rightOutlineData.lines);
+  const rightOutlineNormals = buildWireframeNormals(brain.rightVerts, brain.rightNormals, rightOuterEdges);
+
+  // ---- Bridge connections ----
+  const bridgeGeo = new THREE.BufferGeometry();
+  const bridgePos: number[] = [];
+  for (const [a, b] of brain.bridgeEdges) {
+    bridgePos.push(a.x, a.y, a.z, b.x, b.y, b.z);
+  }
+  bridgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(bridgePos, 3));
+  const bridgeMat = new THREE.LineBasicMaterial({
+    color: VIOLET,
+    transparent: true,
+    opacity: 0.45,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const bridgeLines = new THREE.LineSegments(bridgeGeo, bridgeMat);
+  brainGroup.add(bridgeLines);
+
+  // ---- Brain stem ----
+  const stemWireData = createWireframe(brain.stemVerts, brain.stemEdges, VIOLET, 0.4);
+  brainGroup.add(stemWireData.lines);
+  const stemWireNormals = buildWireframeNormals(brain.stemVerts, brain.stemNormals, brain.stemEdges);
+
+  // ============================================================
+  // NEURAL NODES — Instanced spheres (smoother geometry)
+  // ============================================================
+
+  const NODE_COUNT_LEFT = Math.min(brain.leftVerts.length, 120);
+  const NODE_COUNT_RIGHT = Math.min(brain.rightVerts.length, 120);
+  const NODE_COUNT_STEM = Math.min(brain.stemVerts.length, 30);
+
+  function pickSubset(verts: THREE.Vector3[], count: number): THREE.Vector3[] {
+    if (verts.length <= count) return verts.slice();
+    const step = verts.length / count;
+    const result: THREE.Vector3[] = [];
+    for (let i = 0; i < count; i++) {
+      result.push(verts[Math.floor(i * step)]);
+    }
+    return result;
+  }
+
+  const nodeGeo = new THREE.SphereGeometry(0.015, 8, 6); // smoother spheres
+
+  function createNodes(
+    verts: THREE.Vector3[],
+    count: number,
+    color: THREE.Color
+  ): { mesh: THREE.InstancedMesh; positions: THREE.Vector3[]; phases: number[]; baseColor: THREE.Color } {
+    const subset = pickSubset(verts, count);
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const mesh = new THREE.InstancedMesh(nodeGeo, mat, subset.length);
+    const dummy = new THREE.Object3D();
+    const phases: number[] = [];
+
+    // Initialize instance colors
+    const colorAttr = new Float32Array(subset.length * 3);
+    for (let i = 0; i < subset.length; i++) {
+      dummy.position.copy(subset[i]);
+      dummy.scale.setScalar(0.5 + Math.random() * 0.4);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      phases.push(Math.random() * Math.PI * 2);
+      colorAttr[i * 3] = color.r;
+      colorAttr[i * 3 + 1] = color.g;
+      colorAttr[i * 3 + 2] = color.b;
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.instanceColor = new THREE.InstancedBufferAttribute(colorAttr, 3);
+    return { mesh, positions: subset, phases, baseColor: color.clone() };
+  }
+
+  const leftNodes = createNodes(brain.leftVerts, NODE_COUNT_LEFT, BLUE_LIGHT);
+  brainGroup.add(leftNodes.mesh);
+
+  const rightNodes = createNodes(brain.rightVerts, NODE_COUNT_RIGHT, AMBER_LIGHT);
+  brainGroup.add(rightNodes.mesh);
+
+  const stemNodes = createNodes(brain.stemVerts, NODE_COUNT_STEM, VIOLET_LIGHT);
+  brainGroup.add(stemNodes.mesh);
+
+  // ============================================================
+  // LIGHTNING BOLT PULSES
+  // ============================================================
+
+  interface LightningPulse {
+    startPos: THREE.Vector3;
+    endPos: THREE.Vector3;
+    progress: number;
+    speed: number;
+    color: THREE.Color;
+    cascadeDepth: number;
+    hemisphere: 'left' | 'right' | 'bridge' | 'stem';
+    endVertIdx: number; // index in the hemisphere's vert array (-1 for bridge)
+    jitterFrame: number;
+  }
+
+  const pulses: LightningPulse[] = [];
+  const MAX_PULSES = 60;
+  const BOLT_SEGMENTS = 6; // 7 points = 6 segments
+
+  // Pre-allocate lightning bolt Line objects
+  const boltLines: THREE.Line[] = [];
+  const boltGeometries: THREE.BufferGeometry[] = [];
+  const boltMaterials: THREE.LineBasicMaterial[] = [];
+
+  for (let i = 0; i < MAX_PULSES; i++) {
+    const geo = new THREE.BufferGeometry();
+    const posArr = new Float32Array((BOLT_SEGMENTS + 1) * 3);
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
+    const mat = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const line = new THREE.Line(geo, mat);
+    line.visible = false;
+    brainGroup.add(line);
+    boltLines.push(line);
+    boltGeometries.push(geo);
+    boltMaterials.push(mat);
+  }
+
+  // Temp vectors for bolt jitter calculation
+  const _boltDir = new THREE.Vector3();
+  const _boltPerp1 = new THREE.Vector3();
+  const _boltPerp2 = new THREE.Vector3();
+
+  function updateBoltGeometry(geo: THREE.BufferGeometry, start: THREE.Vector3, end: THREE.Vector3, jitterAmount: number) {
+    const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
+    const arr = posAttr.array as Float32Array;
+
+    _boltDir.subVectors(end, start);
+    // Find a perpendicular vector
+    if (Math.abs(_boltDir.x) < 0.9) {
+      _boltPerp1.set(1, 0, 0).cross(_boltDir).normalize();
+    } else {
+      _boltPerp1.set(0, 1, 0).cross(_boltDir).normalize();
+    }
+    _boltPerp2.crossVectors(_boltDir, _boltPerp1).normalize();
+
+    for (let i = 0; i <= BOLT_SEGMENTS; i++) {
+      const t = i / BOLT_SEGMENTS;
+      // Interpolate along the edge
+      const x = start.x + _boltDir.x * t;
+      const y = start.y + _boltDir.y * t;
+      const z = start.z + _boltDir.z * t;
+
+      // Add jagged offset (less at endpoints, more in middle)
+      const envelope = Math.sin(t * Math.PI); // 0 at ends, 1 at middle
+      const jit1 = (Math.random() - 0.5) * 2 * jitterAmount * envelope;
+      const jit2 = (Math.random() - 0.5) * 2 * jitterAmount * envelope;
+
+      arr[i * 3] = x + _boltPerp1.x * jit1 + _boltPerp2.x * jit2;
+      arr[i * 3 + 1] = y + _boltPerp1.y * jit1 + _boltPerp2.y * jit2;
+      arr[i * 3 + 2] = z + _boltPerp1.z * jit1 + _boltPerp2.z * jit2;
+    }
+    posAttr.needsUpdate = true;
+  }
+
+  function spawnPulse(forcedStart?: THREE.Vector3, forcedEnd?: THREE.Vector3, forcedColor?: THREE.Color, forcedHemi?: string, forcedEndIdx?: number, cascadeDepth = 0) {
+    if (pulses.length >= MAX_PULSES) return;
+
+    let startPos: THREE.Vector3;
+    let endPos: THREE.Vector3;
+    let color: THREE.Color;
+    let hemisphere: 'left' | 'right' | 'bridge' | 'stem';
+    let endVertIdx = -1;
+
+    if (forcedStart && forcedEnd && forcedColor && forcedHemi) {
+      startPos = forcedStart;
+      endPos = forcedEnd;
+      color = forcedColor;
+      hemisphere = forcedHemi as any;
+      endVertIdx = forcedEndIdx ?? -1;
+    } else {
+      const roll = Math.random();
+
+      if (roll < 0.35 && brain.leftEdges.length > 0) {
+        const edge = brain.leftEdges[Math.floor(Math.random() * brain.leftEdges.length)];
+        startPos = brain.leftVerts[edge[0]];
+        endPos = brain.leftVerts[edge[1]];
+        color = BLUE_LIGHT;
+        hemisphere = 'left';
+        endVertIdx = edge[1];
+      } else if (roll < 0.7 && brain.rightEdges.length > 0) {
+        const edge = brain.rightEdges[Math.floor(Math.random() * brain.rightEdges.length)];
+        startPos = brain.rightVerts[edge[0]];
+        endPos = brain.rightVerts[edge[1]];
+        color = AMBER_LIGHT;
+        hemisphere = 'right';
+        endVertIdx = edge[1];
+      } else if (roll < 0.85 && brain.bridgeEdges.length > 0) {
+        const bridge = brain.bridgeEdges[Math.floor(Math.random() * brain.bridgeEdges.length)];
+        startPos = bridge[0];
+        endPos = bridge[1];
+        color = VIOLET_LIGHT;
+        hemisphere = 'bridge';
+      } else if (brain.stemEdges.length > 0) {
+        const edge = brain.stemEdges[Math.floor(Math.random() * brain.stemEdges.length)];
+        startPos = brain.stemVerts[edge[0]];
+        endPos = brain.stemVerts[edge[1]];
+        color = VIOLET;
+        hemisphere = 'stem';
+      } else {
+        return;
+      }
+    }
+
+    pulses.push({
+      startPos,
+      endPos,
+      progress: 0,
+      speed: (0.8 + Math.random() * 1.6) * (1 + cascadeDepth * 0.2),
+      color,
+      cascadeDepth,
+      hemisphere,
+      endVertIdx,
+      jitterFrame: 0,
+    });
+  }
+
+  // Cascade: spawn new pulses from the endpoint vertex
+  function cascadeFromVertex(vertIdx: number, hemisphere: 'left' | 'right', depth: number) {
+    if (depth >= 3) return;
+    const adj = hemisphere === 'left' ? brain.leftAdj : brain.rightAdj;
+    const verts = hemisphere === 'left' ? brain.leftVerts : brain.rightVerts;
+    const color = hemisphere === 'left' ? BLUE_LIGHT : AMBER_LIGHT;
+    const neighbors = adj.get(vertIdx);
+    if (!neighbors || neighbors.length === 0) return;
+
+    // Spawn 1-2 cascade pulses
+    const count = 1 + (Math.random() < 0.4 ? 1 : 0);
+    const shuffled = neighbors.slice().sort(() => Math.random() - 0.5);
+    for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+      spawnPulse(verts[vertIdx], verts[shuffled[i]], color, hemisphere, shuffled[i], depth + 1);
+    }
+  }
+
+  // ============================================================
+  // SURGE EVENT SYSTEM
+  // ============================================================
+
+  let surgeIntensity = 0;
+  let surgeActive = false;
+  let surgeStartTime = 0;
+  let nextSurgeAt = 4 + Math.random() * 4;
+
+  function triggerSurge(intensity = 1.0, duration = 0.5) {
+    surgeActive = true;
+    surgeStartTime = -1; // will be set in animate
+    surgeIntensity = 0;
+    (window as any).__surgePeakIntensity = intensity;
+    (window as any).__surgeDuration = duration;
+  }
+
+  // ============================================================
+  // BACKGROUND PARTICLES
+  // ============================================================
+
+  const PARTICLE_COUNT = 300;
+  const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+  const particleColors = new Float32Array(PARTICLE_COUNT * 3);
+  const particleSpeeds: number[] = [];
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const i3 = i * 3;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 3 + Math.random() * 5;
+    particlePositions[i3] = r * Math.sin(phi) * Math.cos(theta);
+    particlePositions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+    particlePositions[i3 + 2] = r * Math.cos(phi);
+
+    const roll = Math.random();
+    if (roll > 0.7) {
+      // Amber 30%
+      particleColors[i3] = 0.96;
+      particleColors[i3 + 1] = 0.62;
+      particleColors[i3 + 2] = 0.04;
+    } else if (roll > 0.4) {
+      // Blue 30%
+      particleColors[i3] = 0.23;
+      particleColors[i3 + 1] = 0.51;
+      particleColors[i3 + 2] = 0.96;
+    } else if (roll > 0.15) {
+      // Pink 25%
+      particleColors[i3] = 1.0;
+      particleColors[i3 + 1] = 0.08;
+      particleColors[i3 + 2] = 0.58;
+    } else {
+      // Violet 15%
+      particleColors[i3] = 0.65;
+      particleColors[i3 + 1] = 0.55;
+      particleColors[i3 + 2] = 0.98;
+    }
+    particleSpeeds.push(0.1 + Math.random() * 0.3);
+  }
+
+  const particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute('position', new THREE.Float32BufferAttribute(particlePositions, 3));
+  particleGeo.setAttribute('color', new THREE.Float32BufferAttribute(particleColors, 3));
+
+  const particleMat = new THREE.PointsMaterial({
+    size: 0.02,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.3,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  });
+  const particleField = new THREE.Points(particleGeo, particleMat);
+  scene.add(particleField);
+
+  // ============================================================
+  // CROWN — Intricate Geometric Wireframe Crown (A2A Protocol)
+  // All vertices fully connected — no floating endpoints
+  // Triple-layer glow for visible, thick wireframe lines
+  // ============================================================
+
+  const PINK = new THREE.Color(0xFF1493);
+  const PINK_LIGHT = new THREE.Color(0xFF69B4);
+  const MAGENTA = new THREE.Color(0xFF00FF);
+  const CROWN_WHITE = new THREE.Color(0xFFE0F0);
+
+  const crownGroup = new THREE.Group();
+  brainGroup.add(crownGroup);
+  crownGroup.position.y = 0.75; // overlaps well into brain top
+
+  const CR = 1.75;        // crown radius — surrounds brain with slight clearance
+  const TINES = 7;
+  const SEGS = 42;        // ring segments (divisible by TINES)
+  const BAND_H = 0.12;    // band thickness
+  const TINE_H = 0.55;    // tine peak height
+  const TINE_SEGS = SEGS / TINES; // 6 segments per tine section
+
+  // ---- Build crystalline crown wireframe ----
+  const crownVerts: number[] = [];
+
+  function cl(a: THREE.Vector3, b: THREE.Vector3) {
+    crownVerts.push(a.x, a.y, a.z, b.x, b.y, b.z);
+  }
+
+  // Precompute ring vertices
+  const lo: THREE.Vector3[] = [];
+  const up: THREE.Vector3[] = [];
+  for (let i = 0; i < SEGS; i++) {
+    const a = (i / SEGS) * Math.PI * 2;
+    lo.push(new THREE.Vector3(Math.cos(a) * CR, 0, Math.sin(a) * CR));
+    up.push(new THREE.Vector3(Math.cos(a) * (CR * 0.97), BAND_H, Math.sin(a) * (CR * 0.97)));
+  }
+
+  // ---- Band: both rings + zigzag lattice ----
+  for (let i = 0; i < SEGS; i++) {
+    const n = (i + 1) % SEGS;
+    cl(lo[i], lo[n]);
+    cl(up[i], up[n]);
+    if (i % 2 === 0) { cl(lo[i], up[n]); }
+    else { cl(up[i], lo[n]); }
+  }
+
+  // ---- Tines (7) — crystalline faceted peaks ----
+  const tineTips: THREE.Vector3[] = [];
+  const gemCenters: THREE.Vector3[] = [];
+  const outerGemVerts: {t: THREE.Vector3, b: THREE.Vector3, l: THREE.Vector3, r: THREE.Vector3}[] = [];
+  const innerGemVerts: {t: THREE.Vector3, b: THREE.Vector3, l: THREE.Vector3, r: THREE.Vector3}[] = [];
+
+  for (let t = 0; t < TINES; t++) {
+    const ci = t * TINE_SEGS;
+    const li = (ci - 2 + SEGS) % SEGS;
+    const ri = (ci + 2) % SEGS;
+    const tipAngle = (ci / SEGS) * Math.PI * 2;
+    const tipR = CR * 0.88;
+    const tip = new THREE.Vector3(
+      Math.cos(tipAngle) * tipR, BAND_H + TINE_H, Math.sin(tipAngle) * tipR
+    );
+    tineTips.push(tip);
+
+    // Tine edges — side slopes only, no center spine
+    cl(up[li], tip);
+    cl(up[ri], tip);
+
+    // Floating nested diamond gems — not connected to wireframe
+    const cAngle = (ci / SEGS) * Math.PI * 2;
+    const gemR = CR * 0.91;
+    const gemCY = BAND_H + TINE_H * 0.42;
+    const gemH = TINE_H * 0.28;  // tall diamond
+    const gemW = 0.10;
+    const gPerp = new THREE.Vector3(-Math.sin(cAngle), 0, Math.cos(cAngle));
+    const gCenter = new THREE.Vector3(Math.cos(cAngle) * gemR, gemCY, Math.sin(cAngle) * gemR);
+    gemCenters.push(gCenter.clone());
+    // Outer diamond
+    const gT = gCenter.clone().add(new THREE.Vector3(0, gemH, 0));
+    const gB = gCenter.clone().add(new THREE.Vector3(0, -gemH, 0));
+    const gL = gCenter.clone().add(gPerp.clone().multiplyScalar(-gemW));
+    const gR_v = gCenter.clone().add(gPerp.clone().multiplyScalar(gemW));
+    cl(gT, gL); cl(gL, gB); cl(gB, gR_v); cl(gR_v, gT);
+    outerGemVerts.push({t: gT, b: gB, l: gL, r: gR_v});
+    // Inner diamond (60% scale)
+    const iS = 0.6;
+    const iT = gCenter.clone().add(new THREE.Vector3(0, gemH * iS, 0));
+    const iB = gCenter.clone().add(new THREE.Vector3(0, -gemH * iS, 0));
+    const iL = gCenter.clone().add(gPerp.clone().multiplyScalar(-gemW * iS));
+    const iR = gCenter.clone().add(gPerp.clone().multiplyScalar(gemW * iS));
+    cl(iT, iL); cl(iL, iB); cl(iB, iR); cl(iR, iT);
+    innerGemVerts.push({t: iT, b: iB, l: iL, r: iR});
+  }
+
+  // ---- Minor tines (7) — shorter crystalline peaks between majors ----
+  const MINOR_H = TINE_H * 0.45;
+  for (let t = 0; t < TINES; t++) {
+    const ci = t * TINE_SEGS + Math.round(TINE_SEGS / 2);
+    const li = (ci - 1 + SEGS) % SEGS;
+    const ri = (ci + 1) % SEGS;
+    const tipAngle = (ci / SEGS) * Math.PI * 2;
+    const tipR = CR * 0.93;
+    const mTip = new THREE.Vector3(
+      Math.cos(tipAngle) * tipR, BAND_H + MINOR_H, Math.sin(tipAngle) * tipR
+    );
+
+    // Simple faceted minor tine: two slopes + center spine
+    cl(up[li], mTip);
+    cl(up[ri], mTip);
+    cl(up[ci], mTip);
+  }
+
+  // ---- Create crown frame with triple-layer glow ----
+  const crownFrameGeo = new THREE.BufferGeometry();
+  crownFrameGeo.setAttribute('position', new THREE.Float32BufferAttribute(crownVerts, 3));
+
+  // Core lines (bright, fully opaque)
+  const crownFrameMat = new THREE.LineBasicMaterial({
+    color: PINK,
+    transparent: true,
+    opacity: 1.0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const crownFrame = new THREE.LineSegments(crownFrameGeo, crownFrameMat);
+  crownGroup.add(crownFrame);
+
+  // Glow layer 1 — inner bloom
+  const crownGlow1Mat = new THREE.LineBasicMaterial({
+    color: PINK_LIGHT,
+    transparent: true,
+    opacity: 0.4,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const crownGlow1 = new THREE.LineSegments(crownFrameGeo, crownGlow1Mat);
+  crownGlow1.scale.setScalar(1.012);
+  crownGroup.add(crownGlow1);
+
+  // Glow layer 2 — outer halo
+  const crownGlow2Mat = new THREE.LineBasicMaterial({
+    color: PINK,
+    transparent: true,
+    opacity: 0.18,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const crownGlow2 = new THREE.LineSegments(crownFrameGeo, crownGlow2Mat);
+  crownGlow2.scale.setScalar(1.028);
+  crownGroup.add(crownGlow2);
+
+  // ---- Crown fill mesh (translucent pink solid faces) ----
+  const fillVerts: number[] = [];
+  function tri(a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) {
+    fillVerts.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+  }
+
+  // Band fill
+  for (let i = 0; i < SEGS; i++) {
+    const n = (i + 1) % SEGS;
+    tri(lo[i], lo[n], up[n]);
+    tri(lo[i], up[n], up[i]);
+  }
+
+  // Tine fills
+  for (let t = 0; t < TINES; t++) {
+    const ci = t * TINE_SEGS;
+    const li = (ci - 2 + SEGS) % SEGS;
+    const ri = (ci + 2) % SEGS;
+    const tip = tineTips[t];
+    tri(up[li], tip, up[ci]);
+    tri(up[ci], tip, up[ri]);
+  }
+
+  // Minor tine fills
+  for (let t = 0; t < TINES; t++) {
+    const ci = t * TINE_SEGS + Math.round(TINE_SEGS / 2);
+    const li = (ci - 1 + SEGS) % SEGS;
+    const ri = (ci + 1) % SEGS;
+    const tipAngle = (ci / SEGS) * Math.PI * 2;
+    const tipR = CR * 0.93;
+    const mTip = new THREE.Vector3(
+      Math.cos(tipAngle) * tipR, BAND_H + MINOR_H, Math.sin(tipAngle) * tipR
+    );
+    tri(up[li], mTip, up[ri]);
+  }
+
+  // Pink fill (band + tines + minor tines)
+  const crownFillGeo = new THREE.BufferGeometry();
+  crownFillGeo.setAttribute('position', new THREE.Float32BufferAttribute(fillVerts, 3));
+  crownFillGeo.computeVertexNormals();
+  const isMobile = window.innerWidth < 768;
+  const crownFillMat = new THREE.MeshBasicMaterial({
+    color: PINK,
+    transparent: true,
+    opacity: isMobile ? 0.22 : 0.35,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const crownFill = new THREE.Mesh(crownFillGeo, crownFillMat);
+  crownGroup.add(crownFill);
+
+  // Blue fill — outer diamonds
+  const outerGemFillVerts: number[] = [];
+  for (const g of outerGemVerts) {
+    outerGemFillVerts.push(g.l.x,g.l.y,g.l.z, g.t.x,g.t.y,g.t.z, g.r.x,g.r.y,g.r.z);
+    outerGemFillVerts.push(g.l.x,g.l.y,g.l.z, g.r.x,g.r.y,g.r.z, g.b.x,g.b.y,g.b.z);
+  }
+  const outerGemGeo = new THREE.BufferGeometry();
+  outerGemGeo.setAttribute('position', new THREE.Float32BufferAttribute(outerGemFillVerts, 3));
+  outerGemGeo.computeVertexNormals();
+  const outerGemMat = new THREE.MeshBasicMaterial({
+    color: 0x3B82F6,
+    transparent: true,
+    opacity: 0.35,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  crownGroup.add(new THREE.Mesh(outerGemGeo, outerGemMat));
+
+  // Amber fill — inner diamonds
+  const innerGemFillVerts: number[] = [];
+  for (const g of innerGemVerts) {
+    innerGemFillVerts.push(g.l.x,g.l.y,g.l.z, g.t.x,g.t.y,g.t.z, g.r.x,g.r.y,g.r.z);
+    innerGemFillVerts.push(g.l.x,g.l.y,g.l.z, g.r.x,g.r.y,g.r.z, g.b.x,g.b.y,g.b.z);
+  }
+  const innerGemGeo = new THREE.BufferGeometry();
+  innerGemGeo.setAttribute('position', new THREE.Float32BufferAttribute(innerGemFillVerts, 3));
+  innerGemGeo.computeVertexNormals();
+  const innerGemMat = new THREE.MeshBasicMaterial({
+    color: 0xF59E0B,
+    transparent: true,
+    opacity: 0.45,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  crownGroup.add(new THREE.Mesh(innerGemGeo, innerGemMat));
+
+  // ---- Twinkling wireframe stars at each tine tip ----
+  const STAR_R = 0.055;
+  const starGeo = new THREE.BufferGeometry();
+  const starVerts = new Float32Array([
+    // 3 crossed lines through origin = 6-armed 3D star
+    -STAR_R, 0, 0,  STAR_R, 0, 0,
+    0, -STAR_R, 0,  0, STAR_R, 0,
+    0, 0, -STAR_R,  0, 0, STAR_R,
+  ]);
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
+
+  const TOTAL_STARS = TINES * 2; // tips + gems
+  const starGroups: THREE.Group[] = [];
+  const starMats: THREE.LineBasicMaterial[] = [];
+  const starPhases = new Float32Array(TOTAL_STARS);
+
+  // Stars on tine tips
+  for (let t = 0; t < TINES; t++) {
+    starPhases[t] = Math.random() * Math.PI * 2;
+    const mat = new THREE.LineBasicMaterial({
+      color: CROWN_WHITE,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const star = new THREE.LineSegments(starGeo, mat);
+    const group = new THREE.Group();
+    group.position.copy(tineTips[t]);
+    group.add(star);
+    crownGroup.add(group);
+    starGroups.push(group);
+    starMats.push(mat);
+  }
+
+  // Smaller stars on gem centers
+  const GEM_STAR_R = 0.035;
+  const gemStarGeo = new THREE.BufferGeometry();
+  gemStarGeo.setAttribute('position', new THREE.Float32BufferAttribute([
+    -GEM_STAR_R, 0, 0,  GEM_STAR_R, 0, 0,
+    0, -GEM_STAR_R, 0,  0, GEM_STAR_R, 0,
+    0, 0, -GEM_STAR_R,  0, 0, GEM_STAR_R,
+  ], 3));
+  for (let t = 0; t < TINES; t++) {
+    starPhases[TINES + t] = Math.random() * Math.PI * 2;
+    const mat = new THREE.LineBasicMaterial({
+      color: CROWN_WHITE,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const star = new THREE.LineSegments(gemStarGeo, mat);
+    const group = new THREE.Group();
+    group.position.copy(gemCenters[t]);
+    group.add(star);
+    crownGroup.add(group);
+    starGroups.push(group);
+    starMats.push(mat);
+  }
+
+  // ---- Energy beam lines from tips ----
+  const BEAM_H = 0.45;
+  const beamGeo = new THREE.BufferGeometry();
+  const beamVerts: number[] = [];
+  for (let t = 0; t < TINES; t++) {
+    beamVerts.push(
+      tineTips[t].x, tineTips[t].y, tineTips[t].z,
+      tineTips[t].x * 0.85, tineTips[t].y + BEAM_H, tineTips[t].z * 0.85
+    );
+  }
+  beamGeo.setAttribute('position', new THREE.Float32BufferAttribute(beamVerts, 3));
+  const beamMat = new THREE.LineBasicMaterial({
+    color: CROWN_WHITE,
+    transparent: true,
+    opacity: 0.0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const beamLines = new THREE.LineSegments(beamGeo, beamMat);
+  crownGroup.add(beamLines);
+
+  // ---- Point light for soft glow on brain surface ----
+  const crownLight = new THREE.PointLight(0xFF1493, 0.4, 3.0, 2);
+  crownLight.position.set(0, BAND_H + TINE_H * 0.3, 0);
+  crownGroup.add(crownLight);
+
+  // ============================================================
+  // MOUSE / TOUCH EVENT HANDLERS
+  // ============================================================
+
+  function onMouseMove(e: MouseEvent) {
+    if (reducedMotion) return;
+    const rect = canvas.getBoundingClientRect();
+    mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  function onMouseEnter() {
+    isHovering = true;
+  }
+
+  function onMouseLeave() {
+    isHovering = false;
+    mouseNDC.set(0, 0);
+  }
+
+  function handleClick(worldPoint: THREE.Vector3) {
+    lastClickPoint = worldPoint.clone();
+    lastClickTime = performance.now();
+
+    // Find closest vertex across both hemispheres
+    let bestDist = Infinity;
+    let bestIdx = -1;
+    let bestHemi: 'left' | 'right' = 'left';
+
+    const localPoint = brainGroup.worldToLocal(worldPoint.clone());
+
+    for (let i = 0; i < brain.leftVerts.length; i++) {
+      const d = localPoint.distanceTo(brain.leftVerts[i]);
+      if (d < bestDist) { bestDist = d; bestIdx = i; bestHemi = 'left'; }
+    }
+    for (let i = 0; i < brain.rightVerts.length; i++) {
+      const d = localPoint.distanceTo(brain.rightVerts[i]);
+      if (d < bestDist) { bestDist = d; bestIdx = i; bestHemi = 'right'; }
+    }
+
+    if (bestIdx >= 0) {
+      // Spawn 5-8 cascade pulses from click point
+      const adj = bestHemi === 'left' ? brain.leftAdj : brain.rightAdj;
+      const verts = bestHemi === 'left' ? brain.leftVerts : brain.rightVerts;
+      const color = bestHemi === 'left' ? BLUE_LIGHT : AMBER_LIGHT;
+      const neighbors = adj.get(bestIdx);
+      if (neighbors) {
+        const shuffled = neighbors.slice().sort(() => Math.random() - 0.5);
+        const count = Math.min(5 + Math.floor(Math.random() * 4), shuffled.length);
+        for (let i = 0; i < count; i++) {
+          spawnPulse(verts[bestIdx], verts[shuffled[i]], color, bestHemi, shuffled[i], 0);
+        }
+      }
+      // Mini-surge
+      triggerSurge(0.6, 0.3);
+    }
+  }
+
+  function onClick(e: MouseEvent) {
+    if (reducedMotion) return;
+    const rect = canvas.getBoundingClientRect();
+    const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+    const intersects = raycaster.intersectObject(hitSphere);
+    if (intersects.length > 0) {
+      handleClick(intersects[0].point);
+    }
+  }
+
+  function onTouchStart(e: TouchEvent) {
+    if (reducedMotion) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = canvas.getBoundingClientRect();
+    const ndcX = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+    const ndcY = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+    const intersects = raycaster.intersectObject(hitSphere);
+    if (intersects.length > 0) {
+      handleClick(intersects[0].point);
+    }
+  }
+
+  // Listen on the hero section (or document) so mouse tracking works
+  // even when the text overlay (z-10) is on top of the canvas
+  const heroSection = canvas.closest('.landing-hero') || document;
+  heroSection.addEventListener('mousemove', onMouseMove as EventListener);
+  heroSection.addEventListener('mouseenter', onMouseEnter);
+  heroSection.addEventListener('mouseleave', onMouseLeave);
+  heroSection.addEventListener('click', onClick as EventListener);
+  heroSection.addEventListener('touchstart', onTouchStart as EventListener, { passive: true });
+
+  // ============================================================
+  // RESIZE
+  // ============================================================
+
+  function resize() {
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    const w = parent.clientWidth || 700;
+    const h = parent.clientHeight || 650;
+    if (w < 1 || h < 1) return;
+
+    canvas.width = w * Math.min(window.devicePixelRatio, 2);
+    canvas.height = h * Math.min(window.devicePixelRatio, 2);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  setTimeout(resize, 100);
+
+  // ============================================================
+  // VERTEX DISPLACEMENT HELPER
+  // ============================================================
+
+  const _rippleVec = new THREE.Vector3();
+
+  function displaceWireframe(
+    lines: THREE.LineSegments | THREE.Line,
+    origPositions: Float32Array,
+    normals: Float32Array,
+    breathAmount: number,
+    mouseLocalPos: THREE.Vector3 | null,
+    mouseActive: boolean
+  ) {
+    const posAttr = lines.geometry.getAttribute('position') as THREE.BufferAttribute;
+    const arr = posAttr.array as Float32Array;
+    for (let i = 0; i < arr.length; i += 3) {
+      let ripple = 0;
+      // Mouse proximity ripple — vertices near cursor push outward
+      if (mouseActive && mouseLocalPos) {
+        _rippleVec.set(origPositions[i], origPositions[i + 1], origPositions[i + 2]);
+        const dist = _rippleVec.distanceTo(mouseLocalPos);
+        if (dist < 1.2) {
+          const strength = (1 - dist / 1.2);
+          ripple = strength * strength * 0.06 * (1 + mouseSpeed * 3);
+        }
+      }
+      arr[i] = origPositions[i] + normals[i] * (breathAmount + ripple);
+      arr[i + 1] = origPositions[i + 1] + normals[i + 1] * (breathAmount + ripple);
+      arr[i + 2] = origPositions[i + 2] + normals[i + 2] * (breathAmount + ripple);
+    }
+    posAttr.needsUpdate = true;
+  }
+
+  // ============================================================
+  // ANIMATION LOOP
+  // ============================================================
+
+  let animId: number | null = null;
+  let lastSpawnTime = 0;
+  let frameCount = 0;
+  const timer = new THREE.Timer();
+  const _tempColor = new THREE.Color();
+  const _mouseLocal = new THREE.Vector3();
+
+  function animate() {
+    animId = requestAnimationFrame(animate);
+
+    timer.update();
+    const elapsed = timer.getElapsed();
+    frameCount++;
+
+    if (reducedMotion) {
+      renderer.render(scene, camera);
+      if (animId) cancelAnimationFrame(animId);
+      animId = null;
+      return;
+    }
+
+    // ---- Activity system ----
+    targetActivity = 0.3;
+    if (isHovering) targetActivity += 0.4;
+    if (surgeActive) targetActivity += 0.3;
+    if (lastClickTime && performance.now() - lastClickTime < 500) targetActivity += 0.3;
+    targetActivity = Math.min(targetActivity, 1.0);
+    activityLevel += (targetActivity - activityLevel) * 0.08;
+
+    // ---- Surge system ----
+    if (!surgeActive && elapsed > nextSurgeAt) {
+      triggerSurge(1.0, 0.5);
+      nextSurgeAt = elapsed + 4 + Math.random() * 4;
+    }
+
+    if (surgeActive) {
+      if (surgeStartTime < 0) surgeStartTime = elapsed;
+      const surgeDuration = (window as any).__surgeDuration || 0.5;
+      const surgeT = (elapsed - surgeStartTime) / surgeDuration;
+      const peakIntensity = (window as any).__surgePeakIntensity || 1.0;
+      if (surgeT >= 1.0) {
+        surgeActive = false;
+        surgeIntensity = 0;
+      } else {
+        surgeIntensity = Math.sin(surgeT * Math.PI) * peakIntensity;
+      }
+    }
+
+    // ---- Mouse speed tracking ----
+    const dx = mouseNDC.x - prevMouseNDC.x;
+    const dy = mouseNDC.y - prevMouseNDC.y;
+    const rawSpeed = Math.sqrt(dx * dx + dy * dy);
+    mouseSpeed += (rawSpeed - mouseSpeed) * 0.15; // smooth it
+    prevMouseNDC.copy(mouseNDC);
+
+    // ---- Mouse parallax rotation (strong, noticeable) ----
+    smoothMouseX += (mouseNDC.x - smoothMouseX) * 0.08;
+    smoothMouseY += (mouseNDC.y - smoothMouseY) * 0.08;
+    targetRotY = Math.sin(elapsed * 0.15) * 0.15 + smoothMouseX * 0.45;
+    targetRotX = Math.sin(elapsed * 0.1) * 0.04 - 0.05 - smoothMouseY * 0.25;
+    brainGroup.rotation.y += (targetRotY - brainGroup.rotation.y) * 0.08;
+    brainGroup.rotation.x += (targetRotX - brainGroup.rotation.x) * 0.08;
+    brainGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.03 + smoothMouseX * 0.04;
+
+    // ---- Scan line ----
+    const scanY = Math.sin(elapsed * 0.7) * 2.5;
+
+    // ---- Vertex displacement breathing + mouse ripple ----
+    const breathDisp = Math.sin(elapsed * 0.5) * 0.015;
+    const mLocal = isHovering ? _mouseLocal : null;
+    displaceWireframe(leftWireData.lines, leftWireData.origPositions, leftWireNormals, breathDisp, mLocal, isHovering);
+    displaceWireframe(rightWireData.lines, rightWireData.origPositions, rightWireNormals, breathDisp, mLocal, isHovering);
+    displaceWireframe(leftOutlineData.lines, leftOutlineData.origPositions, leftOutlineNormals, breathDisp, mLocal, isHovering);
+    displaceWireframe(rightOutlineData.lines, rightOutlineData.origPositions, rightOutlineNormals, breathDisp, mLocal, isHovering);
+    displaceWireframe(stemWireData.lines, stemWireData.origPositions, stemWireNormals, breathDisp * 0.5, mLocal, isHovering);
+
+    // ---- Mouse world position for proximity ----
+    if (isHovering) {
+      raycaster.setFromCamera(mouseNDC, camera);
+      const hits = raycaster.intersectObject(hitSphere);
+      if (hits.length > 0) {
+        mouseWorld.copy(hits[0].point);
+        _mouseLocal.copy(mouseWorld);
+        brainGroup.worldToLocal(_mouseLocal);
+      }
+    }
+
+    // ---- Wireframe opacity + shader uniforms ----
+    const breathe = 0.3 + Math.sin(elapsed * 0.5) * 0.08 + activityLevel * 0.15;
+    const flickerL = Math.random() < 0.03 ? 0.3 + Math.random() * 0.4 : 0;
+    const flickerR = Math.random() < 0.03 ? 0.3 + Math.random() * 0.4 : 0;
+    const flickerB = Math.random() < 0.05 ? 0.2 + Math.random() * 0.3 : 0;
+
+    (leftWireData.lines.material as THREE.LineBasicMaterial).opacity = breathe + surgeIntensity * 0.2;
+    (rightWireData.lines.material as THREE.LineBasicMaterial).opacity = breathe + surgeIntensity * 0.2;
+
+    // Outline shader uniforms
+    const hoverGlow = isHovering ? activityLevel * 0.5 + mouseSpeed * 2 : 0;
+    leftOutlineData.material.uniforms.uOpacity.value = 0.6 + flickerL + surgeIntensity * 0.3;
+    leftOutlineData.material.uniforms.uScanY.value = scanY;
+    leftOutlineData.material.uniforms.uSurgeIntensity.value = surgeIntensity;
+    leftOutlineData.material.uniforms.uGlowIntensity.value = hoverGlow;
+    leftOutlineData.material.uniforms.uMousePos.value.copy(isHovering ? mouseWorld : _mouseLocal);
+    leftOutlineData.material.uniforms.uMouseActive.value = isHovering ? 1.0 : 0.0;
+
+    rightOutlineData.material.uniforms.uOpacity.value = 0.6 + flickerR + surgeIntensity * 0.3;
+    rightOutlineData.material.uniforms.uScanY.value = scanY;
+    rightOutlineData.material.uniforms.uSurgeIntensity.value = surgeIntensity;
+    rightOutlineData.material.uniforms.uGlowIntensity.value = hoverGlow;
+    rightOutlineData.material.uniforms.uMousePos.value.copy(isHovering ? mouseWorld : _mouseLocal);
+    rightOutlineData.material.uniforms.uMouseActive.value = isHovering ? 1.0 : 0.0;
+
+    (bridgeLines.material as THREE.LineBasicMaterial).opacity = 0.45 + flickerB + surgeIntensity * 0.2;
+    (stemWireData.lines.material as THREE.LineBasicMaterial).opacity = 0.4 + surgeIntensity * 0.15;
+
+    // ---- Node firing + proximity glow ----
+    const dummy = new THREE.Object3D();
+    const fireNodes = (nodes: typeof leftNodes, baseScale: number) => {
+      for (let i = 0; i < nodes.positions.length; i++) {
+        const phase = nodes.phases[i];
+        const raw = Math.sin(elapsed * (2.0 + activityLevel) + phase);
+        const fireIntensity = Math.pow(Math.max(0, raw), 6); // sharper spikes
+        let scale = baseScale * (0.4 + fireIntensity * 1.5 + surgeIntensity * 0.5);
+
+        // Proximity glow — large radius, strong effect
+        let proxBright = 0;
+        if (isHovering) {
+          const dist = nodes.positions[i].distanceTo(_mouseLocal);
+          if (dist < 1.5) {
+            proxBright = (1 - dist / 1.5);
+            proxBright = proxBright * proxBright; // quadratic falloff for hotspot feel
+            scale += proxBright * 1.2 * (1 + mouseSpeed * 4);
+          }
+        }
+
+        dummy.position.copy(nodes.positions[i]);
+        dummy.scale.setScalar(scale);
+        dummy.updateMatrix();
+        nodes.mesh.setMatrixAt(i, dummy.matrix);
+
+        // Per-instance color: brighten near mouse
+        if (nodes.mesh.instanceColor) {
+          const bright = proxBright * 0.5 + fireIntensity * 0.2 + surgeIntensity * 0.3;
+          _tempColor.copy(nodes.baseColor).lerp(WHITE, bright);
+          nodes.mesh.instanceColor.setXYZ(i, _tempColor.r, _tempColor.g, _tempColor.b);
+        }
+      }
+      nodes.mesh.instanceMatrix.needsUpdate = true;
+      if (nodes.mesh.instanceColor) (nodes.mesh.instanceColor as THREE.InstancedBufferAttribute).needsUpdate = true;
+    };
+
+    fireNodes(leftNodes, 0.8);
+    fireNodes(rightNodes, 0.8);
+    fireNodes(stemNodes, 0.6);
+
+    // ---- Spawn lightning pulses ----
+    const spawnInterval = 0.04 / (1 + activityLevel);
+    if (elapsed - lastSpawnTime > spawnInterval) {
+      spawnPulse();
+      // During surge, spawn extra
+      if (surgeIntensity > 0.3) {
+        spawnPulse();
+        spawnPulse();
+      }
+      // Mouse-attracted pulses: spawn near cursor while hovering
+      if (isHovering && Math.random() < 0.4 + mouseSpeed * 3) {
+        // Find closest vertex to mouse and spawn a pulse from it
+        let bestDist = Infinity;
+        let bestIdx = -1;
+        let bestHemi: 'left' | 'right' = 'left';
+        for (let vi = 0; vi < brain.leftVerts.length; vi++) {
+          const d = brain.leftVerts[vi].distanceTo(_mouseLocal);
+          if (d < bestDist) { bestDist = d; bestIdx = vi; bestHemi = 'left'; }
+        }
+        for (let vi = 0; vi < brain.rightVerts.length; vi++) {
+          const d = brain.rightVerts[vi].distanceTo(_mouseLocal);
+          if (d < bestDist) { bestDist = d; bestIdx = vi; bestHemi = 'right'; }
+        }
+        if (bestIdx >= 0 && bestDist < 1.5) {
+          const adj = bestHemi === 'left' ? brain.leftAdj : brain.rightAdj;
+          const verts = bestHemi === 'left' ? brain.leftVerts : brain.rightVerts;
+          const color = bestHemi === 'left' ? BLUE_LIGHT : AMBER_LIGHT;
+          const neighbors = adj.get(bestIdx);
+          if (neighbors && neighbors.length > 0) {
+            const target = neighbors[Math.floor(Math.random() * neighbors.length)];
+            spawnPulse(verts[bestIdx], verts[target], color, bestHemi, target, 0);
+          }
+        }
+      }
+      lastSpawnTime = elapsed;
+    }
+
+    // ---- Update lightning pulses ----
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      const p = pulses[i];
+      p.progress += p.speed * 0.016;
+      p.jitterFrame++;
+
+      if (p.progress >= 1) {
+        // Cascade firing
+        if (p.endVertIdx >= 0 && (p.hemisphere === 'left' || p.hemisphere === 'right') && Math.random() < 0.3) {
+          cascadeFromVertex(p.endVertIdx, p.hemisphere, p.cascadeDepth);
+        }
+        pulses.splice(i, 1);
+        if (i < boltLines.length) boltLines[i].visible = false;
+        continue;
+      }
+
+      if (i < boltLines.length) {
+        const line = boltLines[i];
+        line.visible = true;
+
+        // Re-jitter every 3 frames for crackling
+        const jitterInterval = Math.max(1, 3 - Math.floor(activityLevel * 2));
+        if (p.jitterFrame % jitterInterval === 0) {
+          const jitterAmount = 0.04 * (1 - p.cascadeDepth * 0.15);
+          updateBoltGeometry(boltGeometries[i], p.startPos, p.endPos, jitterAmount);
+        }
+
+        const mat = boltMaterials[i];
+        mat.color.copy(p.color);
+        const fade = Math.sin(p.progress * Math.PI);
+        mat.opacity = fade * (0.8 + surgeIntensity * 0.3);
+      }
+    }
+
+    // Hide unused bolt lines
+    for (let i = pulses.length; i < boltLines.length; i++) {
+      boltLines[i].visible = false;
+    }
+
+    // ---- Crown animation ----
+    crownGroup.rotation.y = elapsed * 0.15;
+
+    // Triple glow pulse
+    const glowPulse = Math.sin(elapsed * 1.5);
+    crownGlow1Mat.opacity = 0.35 + glowPulse * 0.1;
+    crownGlow2Mat.opacity = 0.15 + glowPulse * 0.06;
+
+    // Point light pulse
+    crownLight.intensity = 0.3 + Math.sin(elapsed * 2) * 0.15;
+
+    // Twinkling stars — rotate + sporadic shimmer (tips + gems)
+    for (let i = 0; i < TOTAL_STARS; i++) {
+      const sp = starPhases[i];
+      starGroups[i].rotation.y = elapsed * (1.5 + i * 0.3);
+      starGroups[i].rotation.z = elapsed * (0.8 + i * 0.2);
+      // Layer multiple sine waves at irrational ratios for aperiodic sparkle
+      const t1 = Math.sin(elapsed * 4.7 + sp);
+      const t2 = Math.sin(elapsed * 7.3 + sp * 1.7);
+      const t3 = Math.sin(elapsed * 13.1 + sp * 3.1);
+      const burst = Math.max(0, t1 * t2 * t3); // only sparkle when all align
+      const flicker = Math.pow(burst, 2.5); // sharpen into brief flashes
+      starMats[i].opacity = 0.08 + flicker * 0.9;
+      const s = 0.8 + flicker * 0.5;
+      starGroups[i].scale.setScalar(s);
+    }
+
+    // Energy beams — sequential firing
+    const beamCycle = (elapsed * 0.7) % TINES;
+    const activeBeam = Math.floor(beamCycle);
+    const beamIntensity = 1.0 - (beamCycle - activeBeam);
+    beamMat.opacity = beamIntensity * 0.5;
+    const bPos = beamGeo.getAttribute('position') as THREE.BufferAttribute;
+    for (let t = 0; t < TINES; t++) {
+      const vis = (t === activeBeam) ? 1 : (t === (activeBeam + TINES - 1) % TINES ? beamIntensity * 0.3 : 0);
+      bPos.setY(t * 2 + 1, tineTips[t].y + BEAM_H * vis);
+    }
+    bPos.needsUpdate = true;
+
+    // ---- Rotate particle field ----
+    particleField.rotation.y = elapsed * 0.02;
+    particleField.rotation.x = Math.sin(elapsed * 0.05) * 0.1;
+
+    // ---- Render ----
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  // ---- IntersectionObserver: pause when off-screen ----
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        if (!animId) animate();
+      } else {
+        if (animId) {
+          cancelAnimationFrame(animId);
+          animId = null;
+        }
+      }
+    },
+    { threshold: 0, rootMargin: '200px' }
+  );
+  observer.observe(canvas);
+
+  // ---- Cleanup ----
+  document.addEventListener('astro:before-swap', () => {
+    if (animId) cancelAnimationFrame(animId);
+    observer.disconnect();
+    heroSection.removeEventListener('mousemove', onMouseMove as EventListener);
+    heroSection.removeEventListener('mouseenter', onMouseEnter);
+    heroSection.removeEventListener('mouseleave', onMouseLeave);
+    heroSection.removeEventListener('click', onClick as EventListener);
+    heroSection.removeEventListener('touchstart', onTouchStart as EventListener);
+    renderer.dispose();
+    nodeGeo.dispose();
+    particleGeo.dispose();
+    crownFrameGeo.dispose();
+    crownFillGeo.dispose();
+    starGeo.dispose();
+    gemStarGeo.dispose();
+    beamGeo.dispose();
+    for (const geo of boltGeometries) geo.dispose();
+    for (const mat of boltMaterials) mat.dispose();
+  });
+}
