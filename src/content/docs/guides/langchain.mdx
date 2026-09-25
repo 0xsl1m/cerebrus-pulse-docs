@@ -1,0 +1,101 @@
+---
+title: LangChain
+description: LangChain tools for Cerebrus Pulse (langchain-cerebrus-pulse), sharing one paying client and its spend limits.
+---
+
+# LangChain Tools (langchain-cerebrus-pulse)
+
+[`langchain-cerebrus-pulse`](https://pypi.org/project/langchain-cerebrus-pulse/) turns every Cerebrus Pulse
+endpoint into a LangChain tool. The tools share one [`cerebrus-pulse`](/guides/python-client) client: give it a
+wallet key and paid tools pay automatically, all under the same spend limits.
+
+:::note[Version]
+This page describes **langchain-cerebrus-pulse 0.4.0 or later**, which needs `langchain-core` 1.x and
+`cerebrus-pulse` 0.4. Earlier releases cannot pay.
+:::
+
+## Install
+
+```bash
+pip install langchain-cerebrus-pulse          # tools; paid ones report the price instead of paying
+pip install "langchain-cerebrus-pulse[pay]"   # + automatic payment in USDC on Base
+pip install "langchain-cerebrus-pulse[svm]"   # + automatic payment in USDC on Solana too
+```
+
+## Quick start
+
+```python
+import os
+from cerebrus_pulse import CerebrusPulse
+from langchain_cerebrus_pulse import (
+    CerebrusListCoinsTool, CerebrusPulseTool, CerebrusScreenerTool,
+    CerebrusLiquidationsTool, CerebrusFundingTool, CerebrusBundleTool,
+)
+
+# A dedicated, low-balance Base wallet holding a little USDC. Omit wallet_key
+# and paid tools return the price and payee instead of data.
+client = CerebrusPulse(
+    wallet_key=os.environ["CEREBRUS_WALLET_KEY"],
+    max_payment_usd="0.10",  # most one call may cost
+    max_spend_usd="1.00",    # most this client may spend in total
+)
+
+tools = [
+    tool(client=client)
+    for tool in (
+        CerebrusListCoinsTool, CerebrusPulseTool, CerebrusScreenerTool,
+        CerebrusLiquidationsTool, CerebrusFundingTool, CerebrusBundleTool,
+    )
+]
+```
+
+## With an agent
+
+```python
+from langchain.agents import create_agent
+
+agent = create_agent(
+    "openai:gpt-4o",  # any chat model that supports tool calling
+    tools=tools,
+    system_prompt="You answer questions about Hyperliquid markets with Cerebrus Pulse data.",
+)
+
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "Where are the modelled BTC liquidation clusters?"}]
+})
+print(result["messages"][-1].content)
+print(f"Spent: ${client.spent_usd}")
+```
+
+When a paid tool cannot pay, it returns JSON the model can read:
+`{"error": ..., "payment_required": true, "price_usd": "...", "payment_terms": [...]}`. A refusal by the spend
+limits adds a `reason`, and nothing is signed.
+
+## Tools
+
+Each paid tool costs what its endpoint costs; see the [endpoint table](/overview#endpoints).
+
+| Tool | Endpoint |
+|------|----------|
+| `CerebrusListCoinsTool` | `GET /coins` (free) |
+| `CerebrusPulseTool` | [`GET /pulse/{coin}`](/api/pulse) |
+| `CerebrusScreenerTool` | [`GET /screener`](/api/screener) |
+| `CerebrusLiquidationsTool` | [`GET /liquidations/{coin}`](/api/liquidations) |
+| `CerebrusStressTool` | [`GET /arb`](/api/arb) |
+| `CerebrusCexDexTool` | [`GET /cex-dex/{token}`](/api/cex-dex) |
+| `CerebrusBasisTool` | [`GET /basis/{coin}`](/api/basis) |
+| `CerebrusDepegTool` | [`GET /depeg`](/api/depeg) |
+| `CerebrusSentimentTool` | [`GET /sentiment`](/api/sentiment) |
+| `CerebrusFundingTool` | [`GET /funding/{coin}`](/api/funding) |
+| `CerebrusOITool` | [`GET /oi/{coin}`](/api/oi) |
+| `CerebrusSpreadTool` | [`GET /spread/{coin}`](/api/spread) |
+| `CerebrusCorrelationTool` | [`GET /correlation`](/api/correlation) |
+| `CerebrusBundleTool` | [`GET /bundle/{coin}`](/api/bundle) |
+
+The spend limits also read `CEREBRUS_MAX_PAYMENT_USD`, `CEREBRUS_MAX_SPEND_USD` and `CEREBRUS_ALLOWED_PAYTO`;
+see the [Python client](/guides/python-client#spend-limits).
+
+## Links
+
+- [PyPI](https://pypi.org/project/langchain-cerebrus-pulse/) and [GitHub](https://github.com/0xsl1m/langchain-cerebrus-pulse)
+- [Python Client (cerebrus-pulse)](/guides/python-client)

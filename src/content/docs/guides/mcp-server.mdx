@@ -1,0 +1,121 @@
+---
+title: MCP Server
+description: Use Cerebrus Pulse from Claude Desktop, Claude Code, Cursor or any MCP client with the cerebrus-pulse-mcp server, with optional x402 auto-payment inside spend limits.
+---
+
+# MCP Server (cerebrus-pulse-mcp)
+
+[`cerebrus-pulse-mcp`](https://pypi.org/project/cerebrus-pulse-mcp/) is a Model Context Protocol server that
+gives an MCP client 15 tools: every paid Cerebrus Pulse endpoint plus `/health` and `/coins`. Without a
+wallet, paid tools return the exact price and payment terms instead of data; with a Base wallet key they pay
+automatically, inside spend limits.
+
+:::note[Version]
+This page describes **cerebrus-pulse-mcp 0.5.2 or later**. Earlier releases fail to start on a fresh install
+(they accept MCP SDK 2.x, which removed the API the server uses) and cannot pay when run with `uvx`.
+:::
+
+## Install
+
+The server runs with [`uvx`](https://docs.astral.sh/uv/), so there is nothing to install by hand.
+
+### Claude Desktop, Cursor, Windsurf
+
+Add it to your MCP config (`claude_desktop_config.json`, `.cursor/mcp.json`, ...):
+
+```json
+{
+  "mcpServers": {
+    "cerebrus-pulse": {
+      "command": "uvx",
+      "args": ["cerebrus-pulse-mcp"]
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add cerebrus-pulse -- uvx cerebrus-pulse-mcp
+```
+
+### pip
+
+```bash
+pip install cerebrus-pulse-mcp
+cerebrus-pulse-mcp            # speaks MCP over stdio
+```
+
+## Automatic payment
+
+Give the server the private key of a **dedicated, low-balance** Base wallet that holds a little USDC (no ETH
+is needed). The key sits in plain text in the MCP config, so never use a main wallet.
+
+```json
+{
+  "mcpServers": {
+    "cerebrus-pulse": {
+      "command": "uvx",
+      "args": ["cerebrus-pulse-mcp"],
+      "env": {
+        "CEREBRUS_WALLET_KEY": "<private key of a dedicated Base wallet>",
+        "CEREBRUS_MAX_PAYMENT_USD": "0.10",
+        "CEREBRUS_MAX_SPEND_USD": "1.00"
+      }
+    }
+  }
+}
+```
+
+Every payment is checked before anything is signed:
+
+| Variable | Default | Limit |
+|----------|---------|-------|
+| `CEREBRUS_MAX_PAYMENT_USD` | `0.10` | The most a single call may cost |
+| `CEREBRUS_MAX_SPEND_USD` | `1.00` | The most the server may spend while it runs (a restart resets it) |
+| `CEREBRUS_ALLOWED_PAYTO` | The Cerebrus Pulse Base payTo the release ships with | Comma-separated addresses the server may pay; a changed or mistyped `CEREBRUS_BASE_URL` cannot redirect payments |
+| `CEREBRUS_BASE_URL` | `https://api.cerebruspulse.xyz` | The API to call |
+
+Only USDC on Base is paid, and only x402 v2 terms. A refused payment returns `"status": "payment_blocked"`
+with the reason; a malformed limit turns auto-payment off rather than lifting the limit. Automatic payment
+covers **Base only**: `CEREBRUS_WALLET_KEY_SOLANA` is reserved and not used yet.
+
+## Tools
+
+Each paid tool costs what its endpoint costs; see the [endpoint table](/overview#endpoints).
+
+| Tool | Endpoint |
+|------|----------|
+| `cerebrus_health` | `GET /health` (free) |
+| `cerebrus_list_coins` | `GET /coins` (free) |
+| `cerebrus_pulse` | [`GET /pulse/{coin}`](/api/pulse) |
+| `cerebrus_sentiment` | [`GET /sentiment`](/api/sentiment) |
+| `cerebrus_funding` | [`GET /funding/{coin}`](/api/funding) |
+| `cerebrus_bundle` | [`GET /bundle/{coin}`](/api/bundle) |
+| `cerebrus_screener` | [`GET /screener`](/api/screener) |
+| `cerebrus_oi` | [`GET /oi/{coin}`](/api/oi) |
+| `cerebrus_spread` | [`GET /spread/{coin}`](/api/spread) |
+| `cerebrus_correlation` | [`GET /correlation`](/api/correlation) |
+| `cerebrus_stress` | [`GET /arb`](/api/arb) |
+| `cerebrus_cex_dex` | [`GET /cex-dex/{token}`](/api/cex-dex) |
+| `cerebrus_basis` | [`GET /basis/{coin}`](/api/basis) |
+| `cerebrus_depeg` | [`GET /depeg`](/api/depeg) |
+| `cerebrus_liquidations` | [`GET /liquidations/{coin}`](/api/liquidations) |
+
+## Command line
+
+The same tools run from a shell with `--json`, which is handy for checking the setup:
+
+```bash
+cerebrus-pulse-mcp --json health
+cerebrus-pulse-mcp --json list-coins
+cerebrus-pulse-mcp --json pulse BTC          # the price and terms, or data if a wallet is set
+cerebrus-pulse-mcp --json funding ETH lookback_hours=48
+```
+
+## Links
+
+- [PyPI](https://pypi.org/project/cerebrus-pulse-mcp/) and [GitHub](https://github.com/0xsl1m/cerebrus-pulse-mcp)
+- [x402 Payments](/guides/x402-payments): how the payment works
+- [Response Schemas](/reference/response-schemas): what the tools return

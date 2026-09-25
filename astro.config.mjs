@@ -64,8 +64,11 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { label: 'x402 Payments', slug: 'guides/x402-payments' },
-            { label: 'Python SDK', slug: 'guides/python-sdk' },
-            { label: 'TypeScript SDK', slug: 'guides/typescript-sdk' },
+            { label: 'MCP Server', slug: 'guides/mcp-server' },
+            { label: 'Python Client (cerebrus-pulse)', slug: 'guides/python-client' },
+            { label: 'LangChain', slug: 'guides/langchain' },
+            { label: 'Python (raw x402)', slug: 'guides/python-sdk' },
+            { label: 'TypeScript (x402)', slug: 'guides/typescript-sdk' },
             { label: 'A2A Protocol', slug: 'guides/a2a-agents' },
             { label: 'ACP for Agents', slug: 'guides/acp-agents' },
           ],

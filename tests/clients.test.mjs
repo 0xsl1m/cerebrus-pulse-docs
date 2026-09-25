@@ -73,3 +73,41 @@ test('every Solana pip install pins solana below 0.37', () => {
   }
   assert.ok(seen >= 3, `only ${seen} Solana install lines found`);
 });
+
+// F037: there were no pages for the published packages (the MCP server, the
+// cerebrus-pulse Python client, the LangChain tools), and the Python client's
+// PyPI documentation link pointed at a page about the raw x402 SDK.
+const GUIDES = {
+  'guides/mcp-server': [/uvx cerebrus-pulse-mcp|"command": "uvx"/, /CEREBRUS_WALLET_KEY/, /CEREBRUS_MAX_PAYMENT_USD/, /0\.5\.2 or later/],
+  'guides/python-client': [/pip install cerebrus-pulse/, /CerebrusPulse\(wallet_key=/, /PaymentBlocked/, /0\.4\.0 or later/],
+  'guides/langchain': [/pip install langchain-cerebrus-pulse/, /tool\(client=client\)/, /create_agent/, /0\.4\.0 or later/],
+};
+
+test('each published client package has a guide in the sidebar', () => {
+  const config = readFileSync(join(ROOT, 'astro.config.mjs'), 'utf8');
+  for (const [slug, patterns] of Object.entries(GUIDES)) {
+    assert.match(config, new RegExp(`slug: '${slug}'`), slug);
+    const page = readFileSync(join(ROOT, 'src/content/docs', `${slug}.mdx`), 'utf8');
+    for (const p of patterns) assert.match(page, p, `${slug}: ${p}`);
+  }
+  assert.match(config, /label: 'Python \(raw x402\)', slug: 'guides\/python-sdk'/);
+});
+
+test('client guides map every tool or method to a real paid endpoint, without typing prices', () => {
+  const prices = JSON.parse(readFileSync(join(ROOT, 'src/data/prices.json'), 'utf8'));
+  const paths = new Set(prices.routes.map((r) => r.path));
+  for (const slug of Object.keys(GUIDES)) {
+    const page = readFileSync(join(ROOT, 'src/content/docs', `${slug}.mdx`), 'utf8');
+    const linked = [...page.matchAll(/\[`GET (\/[^`]+)`\]\(\/api\//g)].map((m) => m[1]);
+    assert.ok(linked.length >= 13, `${slug} maps only ${linked.length} endpoints`);
+    for (const path of linked) assert.ok(paths.has(path), `${slug}: ${path}`);
+    assert.doesNotMatch(page, /\|\s*\$0\.\d+\s*\|/, `${slug} types a price`);
+  }
+});
+
+test('the landing integration cards open the guides', () => {
+  const metrics = readFileSync(join(ROOT, 'src/components/Metrics.astro'), 'utf8');
+  for (const href of ['/guides/mcp-server', '/guides/python-client', '/guides/typescript-sdk', '/guides/langchain']) {
+    assert.match(metrics, new RegExp(`href="${href}"`), href);
+  }
+});

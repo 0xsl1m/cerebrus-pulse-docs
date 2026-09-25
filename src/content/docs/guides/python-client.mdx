@@ -1,0 +1,140 @@
+---
+title: Python Client (cerebrus-pulse)
+description: The cerebrus-pulse Python package, a typed client for every Cerebrus Pulse endpoint that pays x402 automatically inside spend limits.
+---
+
+# Python Client (cerebrus-pulse)
+
+[`cerebrus-pulse`](https://pypi.org/project/cerebrus-pulse/) wraps every endpoint in a method that returns a
+typed response object. With a wallet key it pays the x402 402 challenge for you, inside spend limits; without
+one, paid methods raise `PaymentRequired` carrying the price and terms. If you would rather drive x402
+yourself, see [Python with x402](/guides/python-sdk).
+
+:::note[Version]
+This page describes **cerebrus-pulse 0.4.0 or later**. Earlier releases cannot pay and parse `/funding` and
+`/sentiment` incorrectly.
+:::
+
+## Install
+
+```bash
+pip install cerebrus-pulse              # free endpoints; paid ones raise PaymentRequired with the price
+pip install "cerebrus-pulse[pay]"       # + automatic payment in USDC on Base
+pip install "cerebrus-pulse[pay,svm]"   # + automatic payment in USDC on Solana
+```
+
+The `svm` extra pins solana below 0.37 for you: solana 0.40 removed a module x402's Solana signer imports.
+
+## Quick start
+
+```python
+from cerebrus_pulse import CerebrusPulse
+
+client = CerebrusPulse()
+print(len(client.coins()), "coins")      # free
+print(client.health()["status"])         # free
+```
+
+## Paying for endpoints
+
+Give the client the private key of a **dedicated, low-balance** Base wallet holding a little USDC (no ETH is
+needed). On a 402 it signs an x402 v2 payment, resends the request with the `PAYMENT-SIGNATURE` header, and
+returns the data.
+
+```python
+import os
+from cerebrus_pulse import CerebrusPulse
+
+client = CerebrusPulse(wallet_key=os.environ["CEREBRUS_WALLET_KEY"])
+
+pulse = client.pulse("BTC", timeframes="1h,4h")
+print(pulse.confluence.score, pulse.confluence.bias)
+print(f"Spent by this client: ${client.spent_usd}")
+```
+
+You can pass your own configured `x402.x402ClientSync` as `x402_client=` instead of a key.
+
+### Spend limits
+
+Every payment is checked before it is signed; a refused one raises `PaymentBlocked` and nothing is signed.
+
+| Argument / environment variable | Default | Limit |
+|---------------------------------|---------|-------|
+| `max_payment_usd` / `CEREBRUS_MAX_PAYMENT_USD` | `0.10` | The most one call may cost |
+| `max_spend_usd` / `CEREBRUS_MAX_SPEND_USD` | `1.00` | The most one client may sign in total |
+| `allowed_pay_to` / `CEREBRUS_ALLOWED_PAYTO` | The API's Base payTo the release ships with | Base addresses the client will pay |
+| `allowed_pay_to_solana` / `CEREBRUS_ALLOWED_PAYTO_SOLANA` | none | Solana addresses the client will pay; empty means Solana is never paid |
+
+Arguments win over environment variables. Only USDC is paid, only x402 v2 terms, and a malformed setting
+raises `ValueError` instead of lifting a limit.
+
+### Solana
+
+```python
+client = CerebrusPulse(
+    solana_key=os.environ["CEREBRUS_SOLANA_KEY"],   # base58 keypair
+    allowed_pay_to_solana="<the Solana payTo in the API's 402 terms>",
+)
+```
+
+### Without a wallet
+
+```python
+from cerebrus_pulse import CerebrusPulse, PaymentRequired
+
+try:
+    CerebrusPulse().pulse("BTC")
+except PaymentRequired as e:
+    term = e.terms[0]
+    print(f"Costs ${e.price_usd} USDC, paid to {term.pay_to} on {term.network}")
+```
+
+## Methods
+
+Each paid method costs what its endpoint costs; see the [endpoint table](/overview#endpoints). Every
+response keeps the raw JSON in `.raw`, and a field the API did not send is `None`, never a made-up `0`.
+
+| Method | Endpoint |
+|--------|----------|
+| `health()`, `coins()` | `GET /health`, `GET /coins` (free) |
+| `pulse(coin, timeframes=...)` | [`GET /pulse/{coin}`](/api/pulse) |
+| `sentiment()` | [`GET /sentiment`](/api/sentiment) |
+| `funding(coin, lookback_hours=...)` | [`GET /funding/{coin}`](/api/funding) |
+| `bundle(coin)` | [`GET /bundle/{coin}`](/api/bundle) |
+| `screener(top_n=...)` | [`GET /screener`](/api/screener) |
+| `oi(coin)` | [`GET /oi/{coin}`](/api/oi) |
+| `spread(coin)` | [`GET /spread/{coin}`](/api/spread) |
+| `correlation()` | [`GET /correlation`](/api/correlation) |
+| `stress()` | [`GET /arb`](/api/arb) |
+| `cex_dex(token)` | [`GET /cex-dex/{token}`](/api/cex-dex) |
+| `basis(coin)` | [`GET /basis/{coin}`](/api/basis) |
+| `depeg()` | [`GET /depeg`](/api/depeg) |
+| `liquidations(coin)` | [`GET /liquidations/{coin}`](/api/liquidations) |
+
+## Errors
+
+```python
+from cerebrus_pulse import (
+    CerebrusPulse, CerebrusPulseError, PaymentBlocked, PaymentRejected,
+    PaymentRequired, RateLimited,
+)
+
+try:
+    pulse = client.pulse("BTC")
+except PaymentBlocked as e:
+    print(f"Refused by the spend limits, nothing signed: {e.reason}")
+except PaymentRejected:
+    print("Paid, but the API did not accept the payment. Check the wallet's USDC.")
+except PaymentRequired as e:
+    print(f"Payment needed: ${e.price_usd} USDC")
+except RateLimited:
+    print("Too many requests; back off")
+except CerebrusPulseError as e:
+    print(f"API error: {e.status_code} {e.detail}")
+```
+
+## Links
+
+- [PyPI](https://pypi.org/project/cerebrus-pulse/) and [GitHub](https://github.com/0xsl1m/cerebrus-pulse-python)
+- [LangChain tools](/guides/langchain), built on this client
+- [Response Schemas](/reference/response-schemas)
