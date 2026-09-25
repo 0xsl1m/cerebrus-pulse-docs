@@ -9,7 +9,8 @@ import { Badge } from '@astrojs/starlight/components';
 
 <Badge text="Free" variant="success" />
 
-Returns the current health status of the Pulse gateway. No payment required. Not rate limited.
+The gateway's health: whether it can serve and take payment, and how fresh its data feeds are. No payment
+required. Not rate limited.
 
 ## Request
 
@@ -23,24 +24,25 @@ No parameters.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `status` | string | `ok` or `degraded` |
-| `engine` | string | `available` or `unavailable` |
-| `kill_switch` | string | `enabled` or `disabled` |
-| `version` | string | Gateway version |
-
-## Example
-
-```json
-{
-  "status": "ok",
-  "engine": "available",
-  "kill_switch": "enabled",
-  "version": "1.0.0"
-}
-```
+| `status` | string | `ok`, or `degraded` when the engine, payments or the settlement ledger is not working |
+| `engine` | string | `available` or `missing` |
+| `payments` | string | `active`, or `DOWN (paid endpoints fail closed)` |
+| `ledger` | string | `writable` or `NOT WRITABLE` (the settlement record) |
+| `kill_switch` | string | `enabled` (serving) or `disabled` (paid endpoints answer 503) |
+| `a2a` | string | `enabled` |
+| `a2a_payment` | string | `http route only`: A2A names the HTTP endpoint and payment happens there |
+| `networks` | array | Payment networks: `eip155:8453` (Base), plus Solana when its rail is on |
+| `paid_routes` | number | Paid endpoints currently priced |
+| `engine_pool` | string | `warm`, or `spawn-per-request (fallback)` |
+| `engine_workers` | array | Per-worker status of the engine pool |
+| `settlements_since_start` | number | Payments settled since the gateway started |
+| `feeds` | object | Age of each upstream data feed, as the stale-feed gate sees it |
+| `concurrency` | object | `in_use` and `max` concurrent requests; a full gauge means paid routes answer 429 |
+| `version` | string | Gateway API version |
 
 ## Notes
 
-- If `engine` is `unavailable`, paid endpoints will return 500 errors. The gateway is running but the analysis engine is not.
-- If `kill_switch` is `disabled`, all paid endpoints will return 503 with `retry_after: 3600`. The gateway is in maintenance mode.
-- Use this endpoint for uptime monitoring and pre-flight checks before making paid requests.
+- If `payments` is not `active`, paid endpoints answer 503 and quote no price (they fail closed).
+- If `kill_switch` is `disabled`, paid endpoints answer 503 with `retry_after: 3600`.
+- A feed past its age budget makes the endpoints that read it answer 503 until it is fresh again.
+- Use this endpoint for uptime monitoring and as a check before a batch of paid requests.

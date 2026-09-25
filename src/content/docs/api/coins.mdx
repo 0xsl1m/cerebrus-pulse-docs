@@ -23,9 +23,9 @@ No parameters.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `coins` | string[] | Array of available coin tickers |
-| `count` | number | Total number of coins |
-| `timestamp_iso` | string | ISO 8601 timestamp |
+| `coins` | string[] | The available market symbols, sorted |
+| `count` | number | How many there are |
+| `meta` | object | `provider` and `offering` |
 
 ## Example
 
@@ -41,7 +41,7 @@ No parameters.
     "WLD", "XLM", "XRP"
   ],
   "count": 51,
-  "timestamp_iso": "2026-03-02T14:30:00Z"
+  "meta": { "provider": "Cerebrus Pulse", "offering": "cerebrus_pulse" }
 }
 ```
 
@@ -50,4 +50,5 @@ No parameters.
 - The coin list is dynamic and may change as new perpetuals are added on Hyperliquid.
 - Always use this endpoint for discovery rather than hardcoding coin lists.
 - Coin tickers are case-insensitive in API requests (`btc`, `BTC`, and `Btc` all work).
-- Some Hyperliquid coins have non-standard tickers (e.g., `kPEPE` instead of `PEPE`). The API normalizes these automatically.
+- Some tokens trade on Hyperliquid only as 1000-token markets: `PEPE` is the `kPEPE` market, so its prices are per 1000 PEPE and its open interest counts 1000-PEPE units. Responses say so in `market_symbol` and `price_unit`, and `kPEPE` is accepted as a symbol too.
+- The same list is also served at `/api/v1/coins`.
