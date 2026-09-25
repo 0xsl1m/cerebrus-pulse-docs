@@ -1,23 +1,33 @@
 ---
 title: A2A Protocol
-description: Connect to Cerebrus Pulse using Google's Agent-to-Agent (A2A) protocol for agent discovery and task execution.
+description: Discover Cerebrus Pulse over the A2A agent-to-agent protocol. A2A tells your agent which HTTP endpoint serves a skill and its x402 terms; payment happens over HTTP.
 ---
 
 import SkillPrices from '../../../components/docs/SkillPrices.astro';
 
 # Connecting via A2A Protocol
 
-Cerebrus Pulse implements [Google's A2A protocol](https://github.com/google/a2a-spec) (v0.3), an open standard for agent-to-agent communication governed by the Linux Foundation. Payments are handled via x402 USDC micropayments on Base or Solana.
+Cerebrus Pulse publishes an A2A Agent Card and answers A2A `message/send` requests (the
+[A2A protocol](https://github.com/a2aproject/A2A), protocol version 0.3), so an A2A agent can find it and
+ask for a skill in plain language.
+
+:::note[A2A finds the skill; HTTP takes the payment]
+A2A does **not** take payment in-band. For a paid skill, `message/send` replies with the HTTP endpoint that
+serves it, its price, and that endpoint's x402 v2 terms. Your agent then pays by calling the endpoint with an
+x402 v2 client (see the [x402 Payments guide](/guides/x402-payments)). A payment sent inside an A2A message is
+ignored and nothing is charged for it.
+:::
 
 ## Agent Card Discovery
-
-Your agent discovers Cerebrus Pulse by fetching the Agent Card:
 
 ```bash
 curl https://api.cerebruspulse.xyz/.well-known/agent-card.json
 ```
 
-The Agent Card describes all available skills, pricing, and the A2A endpoint URL. Compatible with any A2A-compliant agent framework.
+The card lists every skill with its price, the payment networks, and the A2A endpoint
+(`https://api.cerebruspulse.xyz/a2a`). The same card is served at `/.well-known/agent.json` and
+`/a2a/.well-known/agent-card.json`, and a copy is published at
+`https://cerebruspulse.xyz/.well-known/agent-card.json`.
 
 ## Available Skills
 
@@ -27,7 +37,8 @@ Each skill is served, and priced, by one HTTP endpoint:
 
 ## Sending a Task
 
-Send a JSON-RPC 2.0 `message/send` request to the A2A endpoint:
+Send a JSON-RPC 2.0 `message/send` request to the A2A endpoint. This is free: it returns where and how to
+pay, not data.
 
 ```python
 import json
@@ -53,52 +64,44 @@ req = urllib.request.Request(
 )
 
 with urllib.request.urlopen(req, timeout=15) as resp:
-    result = json.loads(resp.read())
-    print(json.dumps(result, indent=2))
+    result = json.loads(resp.read())["result"]
+
+quote = result["metadata"]["x402"]
+print(result["status"]["state"])                   # input-required
+print(quote["skill_id"], quote["amount"], quote["currency"])
+print(quote["http"]["method"], quote["http"]["url"])  # pay here, with an x402 v2 client
 ```
 
-## Payment Flow
+## The Reply to a Paid Skill
 
-1. **Send task** — Your agent sends a `message/send` request
-2. **Payment required** — Cerebrus Pulse extracts the intent, identifies the skill, and returns a `payment-required` response with x402 payment details
-3. **Pay** — Your agent signs a USDC micropayment on Base or Solana using the x402 SDK
-4. **Receive** — After payment verification, the intelligence is delivered as an A2A task artifact
+The task comes back in state `input-required`. Its message says, in words, what the skill costs and which URL
+to call; `result.metadata.x402` says the same in fields:
 
-### Payment-Required Response
+| Field | Description |
+|-------|-------------|
+| `status` | `payment-required` |
+| `skill_id` | The skill the request was matched to |
+| `amount` | The price in USDC, e.g. `"0.025"` (the price of the endpoint that serves the skill) |
+| `currency` | `USDC` |
+| `networks` | The payment networks, each with `network`, `recipient` and `label` (Base, Solana) |
+| `network`, `recipient` | The Base network and recipient, kept for older clients |
+| `facilitator` | The x402 facilitator the gateway uses |
+| `inBandPayment` | `false`: A2A messages cannot carry payment |
+| `http.method`, `http.url` | The request to make: for example `GET https://api.cerebruspulse.xyz/pulse/BTC` |
+| `http.route` | The route that serves the skill, e.g. `GET /pulse/:coin` |
+| `http.paymentHeader` | `PAYMENT-SIGNATURE`: the header an x402 v2 client pays with |
+| `paymentRequired` | The x402 v2 terms that endpoint's 402 carries (absent if the gateway could not build them; the endpoint's own 402 still has them) |
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": "my-task-1",
-  "result": {
-    "id": "task-uuid",
-    "status": {
-      "state": "completed",
-      "message": {
-        "role": "agent",
-        "parts": [{"type": "text", "text": "Payment required for confluence-analysis"}]
-      }
-    },
-    "metadata": {
-      "x402": {
-        "status": "payment-required",
-        "skill_id": "confluence-analysis",
-        "amount": "0.02",
-        "currency": "USDC",
-        "network": "eip155:8453",
-        "recipient": "0x...",
-        "facilitator": "https://api.cdp.coinbase.com/platform/v2/x402"
-      }
-    }
-  }
-}
-```
+Other outcomes:
+
+- **No coin found** for a skill that needs one: state `input-required`, asking which coin.
+- **Service off, payments down, or a stale data feed**: state `failed`, with the reason. Nothing is quoted.
 
 ## Intent Extraction
 
-You can let Cerebrus Pulse extract the skill from natural language, or specify it explicitly:
+Cerebrus Pulse matches the message to a skill by keywords, or you name the skill in `metadata.skill_id`.
 
-### Natural Language (Automatic)
+### Natural language
 ```json
 {
   "message": {
@@ -107,9 +110,9 @@ You can let Cerebrus Pulse extract the skill from natural language, or specify i
   }
 }
 ```
-This automatically maps to `market-screener`.
+This maps to `market-screener`. Without a match, the default is `confluence-analysis`.
 
-### Explicit Skill ID
+### Explicit skill ID
 ```json
 {
   "message": {
@@ -122,27 +125,21 @@ This automatically maps to `market-screener`.
 
 ## Coin Extraction
 
-For skills that require a coin, Cerebrus Pulse extracts it from the message text. Aliases like "ethereum" → ETH and "bitcoin" → BTC are supported. If a coin is required but not found, you'll receive an `input-required` response asking for clarification.
+For skills that need a coin, the symbol is taken from the message text: an upper-case symbol from
+[`/coins`](/api/coins), or a name such as "ethereum" → ETH or "bitcoin" → BTC.
 
 ## Task Retrieval
 
-Retrieve a previously created task:
-
-```python
-body = json.dumps({
-    "jsonrpc": "2.0",
-    "method": "tasks/get",
-    "id": "get-1",
-    "params": {"id": "task-uuid-from-previous-response"}
-}).encode()
-```
+`tasks/get` returns a task the server stored. Replies to `message/send` are complete as sent and are not
+stored, so there is nothing to poll for; `tasks/get` on their ids reports "Task not found or expired".
 
 ## Rate Limits
 
-The A2A endpoint shares rate limits with the REST API: **12 requests per minute**. See [Rate Limits & Errors](/reference/rate-limits) for details.
+The A2A endpoint shares the REST limits: **12 requests per minute per IP**. See
+[Rate Limits & Errors](/reference/rate-limits).
 
 ## See Also
 
 - [x402 vs A2A vs ACP](/reference/x402-vs-acp) — Protocol comparison
-- [x402 Payments](/guides/x402-payments) — x402 micropayment details
-- [ACP for Agents](/guides/acp-agents) — Alternative: Virtuals Protocol agent commerce
+- [x402 Payments](/guides/x402-payments) — How to pay the endpoint A2A points to
+- [TypeScript SDK](/guides/typescript-sdk) and [Python SDK](/guides/python-sdk) — x402 v2 clients

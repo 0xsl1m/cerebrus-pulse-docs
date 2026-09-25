@@ -24,7 +24,7 @@
     {
       "id": "confluence-analysis",
       "name": "Multi-Timeframe Confluence Analysis",
-      "description": "Comprehensive technical analysis across 6 timeframes (5m, 15m, 1h, 4h, 1d, 1W) with confluence scoring, trend detection, RSI, MACD, Bollinger Bands, and regime classification for any of 51 perpetual markets. $0.025 USDC per call.",
+      "description": "Technical analysis on closed candles across 6 timeframes (5m, 15m, 1h, 4h, 1d, 1w): RSI, EMA trend, Bollinger Bands, z-score, ATR and VWAP, a confluence vote share (a heuristic, not a confidence), hourly funding, open interest and the market regime, for any of 51 perpetual markets. $0.025 USDC per call.",
       "tags": [
         "crypto",
         "derivatives",
@@ -50,7 +50,7 @@
     {
       "id": "market-screener",
       "name": "Derivatives Market Screener",
-      "description": "Screen 51 perpetual markets by confluence score, regime, trend strength, volatility, and momentum. Identify strongest bullish or bearish setups across the entire derivatives universe. $0.06 USDC per call.",
+      "description": "Rank 51 perpetual markets by indicator extremity in one call, with RSI zone, trend, volatility regime, hourly funding bias, confluence and open-interest trend per market. $0.06 USDC per call.",
       "tags": [
         "crypto",
         "screener",
@@ -76,7 +76,7 @@
     {
       "id": "open-interest-analysis",
       "name": "Open Interest Analysis",
-      "description": "Real-time open interest data with delta calculations, percentile ranking, and price-OI divergence detection for perpetual futures. $0.015 USDC per call.",
+      "description": "Hyperliquid open interest in contracts with 1h/4h/24h changes over their stated windows, a percentile, the trend and price-OI divergence. $0.015 USDC per call.",
       "tags": [
         "crypto",
         "open-interest",
@@ -102,7 +102,7 @@
     {
       "id": "spread-analysis",
       "name": "Spread & Liquidity Analysis",
-      "description": "Bid-ask spread analysis with slippage estimates at $10k, $50k, $100k, and $500k notional sizes plus liquidity scoring for perpetual markets. $0.015 USDC per call.",
+      "description": "Hyperliquid impact spread with uncalibrated slippage estimates at $10k, $50k, $100k and $500k notional, and a liquidity score. $0.015 USDC per call.",
       "tags": [
         "crypto",
         "spread",
@@ -127,7 +127,7 @@
     {
       "id": "correlation-matrix",
       "name": "Cross-Asset Correlation Analysis",
-      "description": "BTC-alt correlation matrix with regime classification and sector averages across perpetual markets. Useful for portfolio diversification and risk assessment. $0.05 USDC per call.",
+      "description": "Correlation of 1h returns between BTC and 14 large perpetuals over a 30-hour, 7-day or 30-day window, with sample sizes, sector averages and a regime label. $0.05 USDC per call.",
       "tags": [
         "crypto",
         "correlation",
@@ -178,7 +178,7 @@
     {
       "id": "basis-analysis",
       "name": "Chainlink Basis Analysis",
-      "description": "Compares Hyperliquid perpetual oracle price vs Chainlink aggregated spot price to measure exchange-level premium or discount. Identifies funding pressure, deleveraging events, and mean-reversion signals. $0.02 USDC per call.",
+      "description": "The Hyperliquid perp premium (mark vs its oracle, which funding follows), Hyperliquid's premium index, and how far the Hyperliquid oracle sits from Chainlink spot on Arbitrum. $0.02 USDC per call.",
       "tags": [
         "crypto",
         "chainlink",
@@ -205,7 +205,7 @@
     {
       "id": "cex-dex-divergence",
       "name": "CEX-DEX Price Divergence",
-      "description": "Cross-venue price comparison between Coinbase (CEX) and DEX/Chainlink oracle prices. Detects venue-specific dislocations, arbitrage opportunities, and market stress signals. $0.02 USDC per call.",
+      "description": "Coinbase spot price against a DEX or Chainlink price for one token, as a divergence in basis points with its direction. $0.02 USDC per call.",
       "tags": [
         "crypto",
         "cex",
@@ -232,7 +232,7 @@
     {
       "id": "collateral-health",
       "name": "USDC Collateral Health Monitor",
-      "description": "Real-time USDC peg status via Chainlink oracle on Arbitrum. Monitors stablecoin deviation from $1.00 peg, Arbitrum sequencer health, and provides risk assessment for USDC-margined positions. $0.01 USDC per call.",
+      "description": "USDC peg status from the Chainlink oracle on Arbitrum: deviation from $1.00, a peg status and the Arbitrum sequencer status. $0.01 USDC per call.",
       "tags": [
         "crypto",
         "usdc",
@@ -335,7 +335,8 @@
         "market-stress": "0.02"
       },
       "facilitator": "https://api.cdp.coinbase.com/platform/v2/x402",
-      "pricing_notes": "All prices in USDC per call, from $0.01 to $0.06, settled over x402 v2. Generated from the gateway's payment routes."
+      "pricing_notes": "All prices in USDC per call, from $0.01 to $0.06, settled over x402 v2. Generated from the gateway's payment routes.",
+      "a2a_payment": "A2A message/send takes no payment: for a paid skill it replies with the HTTP endpoint that serves it and that endpoint's x402 v2 terms. Pay there."
     }
   }
 }
