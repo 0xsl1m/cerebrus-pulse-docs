@@ -17,15 +17,15 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.3.0",
-    "@astrojs/starlight": "^0.34.0",
+    "@astrojs/starlight": "^0.42.8",
     "@astrojs/starlight-tailwind": "^3.0.0",
     "@astrojs/tailwind": "^6.0.0",
     "@vercel/analytics": "^1.6.1",
     "astro": "^5.7.0",
-    "gsap": "3.15.0",
-    "sharp": "^0.33.0",
+    "gsap": "3.15.1",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.0",
-    "three": "^0.183.2"
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "js-yaml": "4.3.2"
